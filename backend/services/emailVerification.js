@@ -4,11 +4,13 @@ const {
 	SERVICE,
 	EMAIL_PORT,
 	SECURE,
-	USER,
-	PASS,
+	MAIL_USERNAME,
+	MAIL_PASSWORD,
 } = require("../config");
 
-async function sendEmail (email, subject, text) {
+console.log(MAIL_USERNAME, MAIL_PASSWORD);
+
+async function sendEmail(email, subject, text) {
 	try {
 		const transporter = nodemailer.createTransport({
 			host: HOST,
@@ -16,13 +18,13 @@ async function sendEmail (email, subject, text) {
 			port: Number(EMAIL_PORT),
 			secure: Boolean(SECURE),
 			auth: {
-				user: USER,
-				pass: PASS,
+				user: MAIL_USERNAME,
+				pass: MAIL_PASSWORD,
 			},
 		});
 
 		await transporter.sendMail({
-			from: USER,
+			from: MAIL_USERNAME,
 			to: email,
 			subject: subject,
 			text: text,
@@ -33,6 +35,6 @@ async function sendEmail (email, subject, text) {
 		console.log(error);
 		return error;
 	}
-};
+}
 
-module.exports = sendEmail
+module.exports = sendEmail;
