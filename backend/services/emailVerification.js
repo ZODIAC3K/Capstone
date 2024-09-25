@@ -8,8 +8,6 @@ const {
 	MAIL_PASSWORD,
 } = require("../config");
 
-console.log(MAIL_USERNAME, MAIL_PASSWORD);
-
 async function sendEmail(email, subject, text) {
 	try {
 		const transporter = nodemailer.createTransport({
