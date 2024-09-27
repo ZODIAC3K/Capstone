@@ -4,7 +4,6 @@ const { UserDetail, Admin } = require("../models");
 const { JwtService, CustomErrorHandler } = require("../services");
 
 // Add cryto part for the api key auth
-
 const apiKeyAuth = (req, res, next) => {
 	if (!req.headers["x-api-key"]) throw CustomErrorHandler.unAuthorized();
 

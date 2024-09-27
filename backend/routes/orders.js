@@ -15,6 +15,9 @@ router.post(
 	orderController.razorpayPaymentVerificationAndOrderUpdate
 );
 
+// GET request
+router.get("/", orderController.getAllOrders);
+
 // Classify all other requests to this route as bad requests
 router.all("/", (req, res, next) => {
 	next(CustomErrorHandler.badRequest());
