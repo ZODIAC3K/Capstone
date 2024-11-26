@@ -10,7 +10,7 @@ const CustomButton = ({ type, title, customStyles, handleClick }) => {
   const generateStyle = (type) => {
     if(type === 'filled') {
       return {
-        backgroundColor: snap.color,  //retriving color form valtio defalut state
+        backgroundColor: snap.color,  //retriving color from valtio defalut state
         color: getContrastingColor(snap.color)
       }
     } 

@@ -25,6 +25,19 @@ const Customizer = () => {
     stylishShirt: false,
   })
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.editortabs-container')) {
+        setActiveEditorTab("");
+      }
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, []);
+  
   // show tab content depending on the activeTab
   const generateTabContent = () => {
     switch (activeEditorTab) {
@@ -135,7 +148,8 @@ const Customizer = () => {
                   <Tab 
                     key={tab.name}
                     tab={tab}
-                    handleClick={() => setActiveEditorTab(tab.name)}
+                    // handleClick={() => setActiveEditorTab(tab.name)}
+                    handleClick={() => setActiveEditorTab((prev) => (prev === tab.name ? "" : tab.name))}
                   />
                 ))}
 
