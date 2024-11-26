@@ -11,7 +11,7 @@ const CustomButton = ({ type, title, customStyles, handleClick }) => {
     if(type === 'filled') {
       return {
         backgroundColor: snap.color,  //retriving color from valtio defalut state
-        color: getContrastingColor(snap.color)
+        color: getContrastingColor(snap.color)//for our go back button to be always visible
       }
     } 
     else if(type === "outline") {

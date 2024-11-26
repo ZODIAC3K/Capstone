@@ -47,7 +47,7 @@ const Shirt = () => {
             rotation={[0, 0, 0]}
             scale={0.15}
             map={logoTexture}
-            // map-anisotropy={16} //to change the quality of the texture
+            anisotropy={16} //to change the quality of the texture
             depthTest={false} //it is going to ensure to render On top of the other objects in the scene
             depthWrite={true}
           />
