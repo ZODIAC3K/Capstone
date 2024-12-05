@@ -30,7 +30,7 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     <div className="min-h-screen bg-gray">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="bg-white rounded-lg shadow-md p-6 text-black">
+        <div className=" rounded-lg shadow-md p-6 text-white">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <Image src={product.image} alt={product.name} width={400} height={400} className="rounded-lg" />
             <div>

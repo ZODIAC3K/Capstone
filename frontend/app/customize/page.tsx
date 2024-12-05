@@ -58,7 +58,7 @@ export default function CustomizePage() {
               </TabsList>
               <TabsContent value="front">
                 <Image 
-                  src={product ? product.image : `/tshirt.png`} 
+                  src={product ? product.image : `/product1/front.webp`} 
                   alt="T-shirt front" 
                   width={300} 
                   height={400} 
@@ -66,10 +66,10 @@ export default function CustomizePage() {
                 />
               </TabsContent>
               <TabsContent value="back">
-                <Image src="/tshirt.png" alt="T-shirt back" width={300} height={400} className={`w-full bg-${selectedColor}`} />
+                <Image src="/product1/back.webp" alt="T-shirt back" width={300} height={400} className={`w-full bg-${selectedColor}`} />
               </TabsContent>
               <TabsContent value="side">
-                <Image src="/tshirt.png" alt="T-shirt side" width={300} height={400} className={`w-full bg-${selectedColor}`} />
+                <Image src="/product1/side.webp" alt="T-shirt side" width={300} height={400} className={`w-full bg-${selectedColor}`} />
               </TabsContent>
               <TabsContent value="3d">
               <div style={{ height: '400px' }}>
