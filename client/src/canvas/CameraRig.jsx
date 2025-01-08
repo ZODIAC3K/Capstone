@@ -1,8 +1,7 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { easing } from 'maath';
 import { useSnapshot } from 'valtio';
-
 import state from '../store';
 
 const CameraRig = ({ children }) => {
@@ -25,17 +24,19 @@ const CameraRig = ({ children }) => {
     // if on customiser page
     else {
       if(isMobile) targetPosition = [0, 0, 2.5]
-      else targetPosition = [0, 0, 2];
+      else targetPosition = [0, 0, 1.85];
     }
 
     // setting model camera position
-    easing.damp3(state.camera.position, targetPosition, 0.25, delta)
+    easing.damp3(state.camera.position, targetPosition, 1.25, delta)
 
 
     // setting the model rotation smoothly
     easing.dampE(
       group.current.rotation,
-      [state.pointer.y / 10, -state.pointer.x / 5, 0],
+      // [state.pointer.y / 10, -state.pointer.x / 5, 0],
+      // [state.pointer.y / 2, -state.pointer.x / 0.15 , 0], ////rotation front back
+      [state.pointer.y / 2, -state.pointer.x / 2 , 0],/////silgth rotation in x
       0.25, //smooth time
       delta //from useframe hook
     )
@@ -46,3 +47,7 @@ const CameraRig = ({ children }) => {
 }
 
 export default CameraRig
+
+
+
+
