@@ -47,6 +47,7 @@ app.use("/api/v1/banner", bannerRouter);
 app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/brand", bannerRouter);
 app.use("/api/v1/category", categoryRouter);
+app.use("/api/v1/dalle", dalleRoutes);
 
 // ================ Error Handling middleware ================
 app.use(errorHandler);
