@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect } from 'react'; // Add this import
 import { easing } from 'maath';
 import { useSnapshot } from 'valtio';
 import { useFrame } from '@react-three/fiber';
@@ -10,6 +10,17 @@ const Shirt = () => {
   const snap = useSnapshot(state);
 //   importing the shirt 3d file from public folder
   const { nodes, materials } = useGLTF('/shirt_baked.glb');
+
+
+
+  useEffect(() => {
+    // Debug log when texture changes
+    console.log('Texture updated:', {
+      logo: !!snap.logoDecal,
+      full: !!snap.fullDecal
+    });
+  }, [snap.logoDecal, snap.fullDecal]);
+
 
 
   //textures for shirt
