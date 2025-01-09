@@ -8,7 +8,7 @@ const bannerRouter = require('./banner');
 const offerRouter = require('./offers');
 const brandRouter = require('./brand');
 const categoryRouter = require('./category')
-
+const dalleRouter = require('./dalle')
 module.exports = {
     authRouter,
     emailVerificationRouter,
@@ -19,5 +19,6 @@ module.exports = {
     bannerRouter,
     offerRouter,
     brandRouter,
-    categoryRouter
+    categoryRouter,
+    dalleRouter
 }

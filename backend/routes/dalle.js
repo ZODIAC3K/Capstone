@@ -1,20 +1,20 @@
 
 ///////////////////////// stability api worked
-import express from 'express';
-import * as dotenv from 'dotenv';
-import axios from 'axios';
-const { STABILITY_API_KEY } = require("./config");
-dotenv.config();
+const express = require("express");
+
+const axios =  require('axios');
+const { STABILITY_API_KEY } = require("../config");
 
 const router = express.Router();
 
 // Using Stable Diffusion API endpoint
+console.log(STABILITY_API_KEY)
 const STABLE_DIFFUSION_API_URL = 'https://api.stability.ai/v1/generation/stable-diffusion-v1-6/text-to-image';
 
 router.route('/').post(async (req, res) => {
   try {
     const { prompt } = req.body;
-
+    console.log(STABILITY_API_KEY)
     if (!prompt) {
       return res.status(400).json({ message: "Prompt is required" });
     }
@@ -58,4 +58,4 @@ router.route('/').post(async (req, res) => {
   }
 });
 
-export default router;
+module.exports = router;

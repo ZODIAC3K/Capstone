@@ -13,6 +13,7 @@ const {
 	bannerRouter,
 	offerRouter,
 	categoryRouter,
+	dalleRouter,
 } = require("./routes");
 const cors = require("cors");
 const app = express();
@@ -31,6 +32,7 @@ conn.connectToDatabase();
 app.use(express.urlencoded({ extended: true })); // leave it true because we are dealing with nested json object not the flat json sometime.
 app.use(express.json());
 
+app.use("/api/v1/dalle", dalleRouter); //Moved here as it was saying unauthrized 
 // ================= Email Verification  =================
 app.use(emailVerificationRouter);
 
@@ -47,7 +49,6 @@ app.use("/api/v1/banner", bannerRouter);
 app.use("/api/v1/offers", offerRouter);
 app.use("/api/v1/brand", bannerRouter);
 app.use("/api/v1/category", categoryRouter);
-app.use("/api/v1/dalle", dalleRoutes);
 
 // ================ Error Handling middleware ================
 app.use(errorHandler);
