@@ -18,4 +18,5 @@ module.exports = {
 	F_APP_URL: process.env.F_APP_URL,
 	RAZORPAY_ID_KEY: process.env.RAZORPAY_ID_KEY,
 	RAZORPAY_SECRET_KEY: process.env.RAZORPAY_SECRET_KEY,
+	STABILITY_API_KEY: process.env.STABILITY_API_KEY
 };
