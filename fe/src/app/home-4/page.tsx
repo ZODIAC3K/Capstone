@@ -66,6 +66,7 @@ export default function HomeFourPage() {
                 {/* testimonial area end */}
 
                 {/* blog area   start */}
+                
                 <BlogAreaTwo style_2={true}/>
                 {/* blog area   end */}
 

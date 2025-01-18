@@ -12,57 +12,56 @@ import BrandArea from "../components/brand/brand-area";
 import FooterThree from "@/layout/footer/footer-3";
 
 export const metadata: Metadata = {
-  title: "Home Page Three",
+	title: "Home Page Three",
 };
 
-
 export default function HomeThreePage() {
-  return (
-    <Wrapper bodyCls="bg-black2">
+	return (
+		<Wrapper bodyCls="bg-black2">
+			{/* header area start */}
+			<HeaderTwo />
+			{/* header area end */}
 
-      {/* header area start */}
-      <HeaderTwo />
-      {/* header area end */}
+			<main className="main--area">
+				{/* hero area start */}
+				<HeroBannerThree />
+				{/* hero area end */}
 
-      <main className="main--area">
+				{/* about area start */}
+				<AboutAreaFour />
+				{/* about area end */}
 
-        {/* hero area start */}
-        <HeroBannerThree/>
-        {/* hero area end */}
+				{/* video area start */}
+				<VideoAreaTwo />
+				{/* video area end */}
 
-        {/* about area start */}
-        <AboutAreaFour/>
-        {/* about area end */}
+				{/* service area start */}
+				<ServiceAreaTwo />
+				{/* service area end */}
 
-        {/* video area start */}
-        <VideoAreaTwo/>
-        {/* video area end */}
+				{/* upcoming match area start */}
+				<UpcomingMatchesTwo />
+				{/* upcoming match area end */}
 
-        {/* service area start */}
-        <ServiceAreaTwo/>
-        {/* service area end */}
+				{/* team area start */}
+				<TeamAreaTwo />
+				{/* team area end */}
 
-        {/* upcoming match area start */}
-        <UpcomingMatchesTwo/>
-        {/* upcoming match area end */}
+				{/* blog area start */}
+				<BlogAreaTwo />
+				{/* blog area end */}
 
-        {/* team area start */}
-        <TeamAreaTwo/>
-        {/* team area end */}
+				{/* brand area start */}
+				<BrandArea
+					top_cls="brand-area3 pb-60"
+					hideTitle={true}
+				/>
+				{/* brand area end */}
+			</main>
 
-        {/* blog area start */}
-        <BlogAreaTwo/>
-        {/* blog area end */}
-
-        {/* brand area start */}
-        <BrandArea top_cls="brand-area3 pb-60" hideTitle={true}/>
-        {/* brand area end */}
-
-      </main>
-
-      {/* footer start */}
-      <FooterThree/>
-      {/* footer end */}
-    </Wrapper>
-  )
+			{/* footer start */}
+			<FooterThree />
+			{/* footer end */}
+		</Wrapper>
+	);
 }

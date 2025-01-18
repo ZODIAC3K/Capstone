@@ -11,6 +11,9 @@ import ProjectArea from "../components/projects/project-area";
 import SocialArea from "../components/social/social-area";
 import BrandArea from "../components/brand/brand-area";
 import FooterTwo from "@/layout/footer/footer-2";
+import TrendingNftItems from "../components/nft-item/trending-nft-items";
+import ProductCategory from "../components/category/product-category";
+import ShopAreaTwo from "../components/shop/shop-area-2";
 
 export const metadata: Metadata = {
 	title: "Home Page Two",
@@ -30,7 +33,7 @@ export default function HomeTwo() {
 				{/* hero banner end */}
 
 				{/* match result start */}
-				<MatchResultArea />
+				{/* <MatchResultArea /> */}
 				{/* match result end */}
 
 				{/* area-background-start */}
@@ -43,18 +46,30 @@ export default function HomeTwo() {
 					{/* about-area-end */}
 
 					{/* streamers area start */}
-					<StreamersArea />
+					{/* <StreamersArea /> */}
 					{/* streamers area end */}
 				</div>
 				{/* area-background-end */}
 
 				{/* upcoming matches start */}
-				<UpcomingMatches />
+				{/* <UpcomingMatches /> */}
 				{/* upcoming matches end */}
 
 				{/* project area start */}
-				<ProjectArea />
+				{/* <ProjectArea /> */}
 				{/* project area end */}
+
+				{/* trending nft items start */}
+				<TrendingNftItems />
+				{/* trending nft items end */}
+
+				{/* product category area start */}
+				<ProductCategory />
+				{/* product category area end */}
+
+				{/* shop area start */}
+				<ShopAreaTwo />
+				{/* shop area end */}
 
 				{/* social area start */}
 				<SocialArea />
