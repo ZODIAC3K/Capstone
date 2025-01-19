@@ -19,12 +19,12 @@ const social_data:ISocial[] = [
     icon:'fab fa-twitter',
     title:'Twitter'
   },
-  {
-    id:3,
-    link:'https://www.linkedin.com/',
-    icon:'fab fa-linkedin-in',
-    title:'Linkedin'
-  },
+//   {
+//     id:3,
+//     link:'https://www.linkedin.com/',
+//     icon:'fab fa-linkedin-in',
+//     title:'Linkedin'
+//   },
   {
     id:4,
     link:'https://www.youtube.com/',
