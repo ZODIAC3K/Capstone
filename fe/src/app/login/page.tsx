@@ -1,12 +1,13 @@
+// "use client";
 import Link from "next/link";
 import { Metadata } from "next";
 import Wrapper from "@/layout/wrapper";
-import Header from "@/layout/header/header";
-import Footer from "@/layout/footer/footer";
-import BreadcrumbArea from "../components/breadcrumb/breadcrumb-area";
-import brd_bg from "@/assets/img/bg/breadcrumb_bg01.jpg";
-import brd_img from "@/assets/img/others/breadcrumb_img02.png";
-import { GoogleSvg } from "../components/svg";
+// import Header from "@/layout/header/header";
+// import Footer from "@/layout/footer/footer";
+// import BreadcrumbArea from "../components/breadcrumb/breadcrumb-area";
+// import brd_bg from "@/assets/img/bg/breadcrumb_bg01.jpg";
+// import brd_img from "@/assets/img/others/breadcrumb_img02.png";
+// import { GoogleSvg } from "../components/svg";
 import LoginForm from "@/app/components/forms/login-form";
 
 export const metadata: Metadata = {

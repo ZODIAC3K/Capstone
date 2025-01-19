@@ -1,7 +1,12 @@
 import React from "react";
 
-const ErrorMsg = ({ msg }: { msg: string }) => {
-  return <div style={{ color: "red" }}>{msg}</div>;
+interface ErrorMsgProps {
+	msg?: string;
+}
+
+const ErrorMsg: React.FC<ErrorMsgProps> = ({ msg }) => {
+	if (!msg) return null;
+	return <div style={{ color: "red" }}>{msg}</div>;
 };
 
 export default ErrorMsg;

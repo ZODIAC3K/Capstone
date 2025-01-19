@@ -1,7 +1,8 @@
-import { toast as toastify } from "react-toastify";
+"use client";
+import { toast } from "react-toastify";
 
-const notifySuccess = (message: string) =>
-	toastify.success(message, {
+export const notifySuccess = (message: string) =>
+	toast.success(message, {
 		position: "top-center",
 		autoClose: 3000,
 		hideProgressBar: false,
@@ -11,8 +12,8 @@ const notifySuccess = (message: string) =>
 		progress: undefined,
 	});
 
-const notifyError = (message: string) =>
-	toastify.error(message, {
+export const notifyError = (message: string) =>
+	toast.error(message, {
 		position: "top-center",
 		autoClose: 3000,
 		hideProgressBar: false,
@@ -21,5 +22,3 @@ const notifyError = (message: string) =>
 		draggable: true,
 		progress: undefined,
 	});
-
-export { notifySuccess, notifyError };

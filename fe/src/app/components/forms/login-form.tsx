@@ -18,7 +18,7 @@ export default function LoginForm() {
 		reset,
 	} = useForm<IFormInput>();
 	const onSubmit: SubmitHandler<IFormInput> = (data) => {
-		// console.log(data)
+		console.log(data);
 		if (data.email && data.password) {
 			notifySuccess("Login successful!");
 		} else {

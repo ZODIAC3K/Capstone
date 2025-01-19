@@ -3,7 +3,7 @@ import React, { useEffect } from "react";
 import { animationCreate } from "@/utils/utils";
 import BackToTopCom from "@/app/components/common/back-to-top-com";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+
 import AnimateMouse from "@/app/components/common/animated-mouse";
 import ContextProvider from "@/context/app-context";
 

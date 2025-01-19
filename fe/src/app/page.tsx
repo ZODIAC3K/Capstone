@@ -10,7 +10,7 @@ import UpcomingMatches from "@/app/components/upcoming-match/upcoming-matches";
 import ProjectArea from "@/app/components/projects/project-area";
 import SocialArea from "@/app/components/social/social-area";
 import BrandArea from "@/app/components/brand/brand-area";
-import FooterTwo from "@/layout/footer/footer-2";
+import FooterTwo from "@/layout/footer/footer";
 import TrendingNftItems from "@/app/components/nft-item/trending-nft-items";
 import ProductCategory from "@/app/components/category/product-category";
 import ShopAreaTwo from "@/app/components/shop/shop-area-2";

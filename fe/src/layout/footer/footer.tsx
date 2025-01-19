@@ -1,97 +1,166 @@
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import logo from '@/assets/img/logo/logo.png';
-import icon_1 from '@/assets/img/icons/social_icon01.png';
-import icon_2 from '@/assets/img/icons/social_icon02.png';
-import icon_3 from '@/assets/img/icons/social_icon03.png';
-import icon_4 from '@/assets/img/icons/social_icon04.png';
-import payment from '@/assets/img/others/payment_card.png';
+"use client";
+import React, { useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import logo from "@/assets/img/logo/logo.png";
 
-const Footer = () => {
-  return (
-    <footer className="footer-style-one">
-      <div className="footer__top-wrap">
-        <div className="container">
-          <div className="row">
-            <div className="col-xl-4 col-lg-5 col-md-7">
-              <div className="footer-widget">
-                <div className="footer-logo logo">
-                  <Link href="/contact">
-                    <Image src={logo} alt="Logo" width={177} height={40} />
-                  </Link>
-                </div>
-                <div className="footer-text">
-                  <p className="desc">Lorem ipsum dolor sitamet consectur adipiscing Duis esollici tudin augue euismod. Nulla ullam dolor sitamet consectetur</p>
-                  <p className="social-title">Active <span>With Us <i className="fas fa-angle-double-right"></i></span></p>
-                  <div className="footer-social">
-                    <Link href="#"><Image src={icon_1} alt="iocn" width={30} height={30} /></Link>
-                    <Link href="#"><Image src={icon_2} alt="iocn" width={30} height={30} /></Link>
-                    <Link href="#"><Image src={icon_3} alt="iocn" width={30} height={30} /></Link>
-                    <Link href="#"><Image src={icon_4} alt="iocn" width={30} height={30} /></Link>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="col-xl-2 col-lg-3 col-md-5 col-sm-6">
-              <div className="footer-widget widget_nav_menu">
-                <h4 className="fw-title">quick link</h4>
-                <ul className="list-wrap menu">
-                  <li><Link href="#">Gaming</Link></li>
-                  <li><Link href="#">Product</Link></li>
-                  <li><Link href="#">All NFTs</Link></li>
-                  <li><Link href="#">Social Network</Link></li>
-                  <li><Link href="#">Domain Names</Link></li>
-                  <li><Link href="#">Collectibles</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-xl-2 col-lg-3 col-md-5 col-sm-6">
-              <div className="footer-widget widget_nav_menu">
-                <h4 className="fw-title">Supports</h4>
-                <ul className="list-wrap menu">
-                  <li><Link href="#">Setting & Privacy</Link></li>
-                  <li><Link href="#">Help & Support</Link></li>
-                  <li><Link href="#">Live Auctions</Link></li>
-                  <li><Link href="#">Item Details</Link></li>
-                  <li><Link href="#">24/7 Supports</Link></li>
-                  <li><Link href="#">Our News</Link></li>
-                </ul>
-              </div>
-            </div>
-            <div className="col-xl-4 col-lg-5 col-md-7">
-              <div className="footer-widget">
-                <h4 className="fw-title">Newsletter</h4>
-                <div className="footer-newsletter">
-                  <p>Subscribe our newsletter to get our latest update & newsconsectetur</p>
-                  <form action="#" className="footer-newsletter-form">
-                    <input type="email" placeholder="Your email address" />
-                    <button type="submit"><i className="flaticon-paper-plane"></i></button>
-                  </form>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div className="copyright__wrap">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-md-7">
-              <div className="copyright__text">
-                <p>Copyright © {new Date().getFullYear()} - All Rights Reserved By <span>Mykd</span></p>
-              </div>
-            </div>
-            <div className="col-md-5">
-              <div className="copyright__card text-center text-md-end">
-                <Image src={payment} alt="img" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </footer>
-  );
+const FooterTwo = () => {
+	useEffect(() => {
+		if (!!window.IntersectionObserver) {
+			const observer = new IntersectionObserver(
+				(entries, observer) => {
+					entries.forEach((entry) => {
+						if (entry.isIntersecting) {
+							entry.target.classList.add("active-footer");
+							observer.unobserve(entry.target);
+						}
+					});
+				},
+				{
+					rootMargin: "0px 0px -100px 0px",
+				}
+			);
+
+			document
+				.querySelectorAll(".has-footer-animation")
+				.forEach((block) => {
+					observer.observe(block);
+				});
+		} else {
+			document
+				.querySelectorAll(".has-footer-animation")
+				.forEach((block) => {
+					block.classList.remove("has-footer-animation");
+				});
+		}
+	}, []);
+	return (
+		<footer className="footer-style-two has-footer-animation">
+			<div className="footer__country">
+				<div className="container custom-container">
+					<div className="row">
+						<div className="col-6">
+							<div className="footer__country-name">
+								<h2 className="text">MADE IN</h2>
+							</div>
+						</div>
+						<div className="col-6">
+							<div className="footer__country-name text-center text-sm-end">
+								<h2 className="text">
+									INDIA <i className="fas fa-heart"></i>
+								</h2>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div className="footer__two-widgets">
+				<div className="container custom-container">
+					<div className="row">
+						<div className="col-md-4 col-sm-7 order-1 order-md-0">
+							{/* <div className="footer-el-widget">
+								<h4 className="title">information</h4>
+								<ul className="list-wrap">
+									<li>
+										<Link href="tel:123">
+											+91 XXX-XXX-XXXX
+										</Link>
+									</li>
+									<li>
+										<Link href="mailto:info@exemple.com">
+											harshdeepanshustrix@gmail.com
+										</Link>
+									</li>
+									<li>
+										Firestone building, Sharjah Ain <br />{" "}
+										Box 265, Dubai
+									</li>
+								</ul>
+							</div> */}
+						</div>
+						<div className="col-md-4 col-sm-5 order-0 order-md-2">
+							<div className="footer-el-widget text-start text-md-center widget_nav_menu">
+								<div className="footer-el-logo mb-35">
+									<Link href="/">
+										<Image
+											src={logo}
+											alt="Mykd"
+											style={{ height: "auto" }}
+										/>
+									</Link>
+								</div>
+								<div className="footer-el-menu">
+									<ul className="list-wrap">
+										<li>
+											<Link href="/">Home</Link>
+										</li>
+										<li>
+											<Link href="/about">About Us</Link>
+										</li>
+										{/* <li>
+											<Link href="/contactus">
+												Contact US
+											</Link>
+										</li> */}
+									</ul>
+								</div>
+							</div>
+						</div>
+						<div className="col-md-4 col-sm-7 order-3">
+							<div className="footer-el-widget text-start text-md-end">
+								<h4 className="title">information</h4>
+								<ul className="list-wrap">
+									<li>
+										<Link href="tel:123">
+											+91 XXX-XXX-XXXX
+										</Link>
+									</li>
+									<li>
+										<Link href="mailto:info@exemple.com">
+											harshdeepanshustrix@gmail.com
+										</Link>
+									</li>
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div className="copyright__wrap -style-two">
+				<div className="container custom-container">
+					<div className="row align-items-center">
+						<div className="col-lg-6">
+							<div className="copyright__text text-center text-lg-start">
+								<p>
+									Copyright © {new Date().getFullYear()} - All
+									Rights Reserved By <span>Stylo</span>
+								</p>
+							</div>
+						</div>
+						<div className="col-lg-6">
+							<div className="copyright__menu">
+								<ul className="list-wrap d-flex flex-wrap justify-content-center justify-content-lg-end">
+									{/* <li>
+										<Link href="/contact">Contact Us</Link>
+									</li> */}
+									{/* <li>
+										<Link href="/contact">
+											Join our team
+										</Link>
+									</li> */}
+									{/* <li>
+										<Link href="/contact">
+											Privacy Policy
+										</Link>
+									</li> */}
+								</ul>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</footer>
+	);
 };
 
-export default Footer;
+export default FooterTwo;
