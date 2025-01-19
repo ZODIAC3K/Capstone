@@ -3,14 +3,16 @@ import Wrapper from "@/layout/wrapper";
 import Header from "@/layout/header/header";
 import Footer from "@/layout/footer/footer";
 import BreadcrumbAreaThree from "../components/breadcrumb/breadcrumb-area-3";
-import ShopArea from "../components/shop/shop-area";
+import ShopDetailsArea from "../components/shop-details/shop-details-area";
+import product_data from "@/data/product-data";
 import BrandArea from "../components/brand/brand-area";
 
 export const metadata: Metadata = {
-	title: "Shop Page",
+	title: "Shop Details Page",
 };
 
-export default function ShopPage() {
+export default function ShopDetailsPage() {
+	const product = product_data[0];
 	return (
 		<Wrapper>
 			{/* header start */}
@@ -20,12 +22,12 @@ export default function ShopPage() {
 			{/* main area start */}
 			<main className="main--area">
 				{/* breadcrumb area start */}
-				{/* <BreadcrumbAreaThree title="NFT COLLECTIONS" subtitle="OUR SHOP" /> */}
+				{/* <BreadcrumbAreaThree title="PRODUCT SINGLE" subtitle="PRODUCT SINGLE" /> */}
 				{/* breadcrumb area end */}
 
-				{/* shop area start */}
-				<ShopArea />
-				{/* shop area end */}
+				{/* shop details area start */}
+				<ShopDetailsArea product={product} />
+				{/* shop details area end */}
 				<BrandArea />
 			</main>
 			{/* main area end */}
