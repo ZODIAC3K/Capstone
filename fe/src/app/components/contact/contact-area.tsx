@@ -27,17 +27,17 @@ const ContactArea = () => {
 								<ul className="list-wrap">
 									<li>
 										<Link href="tel:123">
-											+971 333 222 557
+											+91 xxx-xxxx-xxxx
 										</Link>
 									</li>
 									<li>
 										<Link href="mailto:info@exemple.com">
-											info@exemple.com
+											harshdeepanshustrix@gmail.com
 										</Link>
 									</li>
-									<li>
+									{/* <li>
 										New Central Park W7 Street, New York
-									</li>
+									</li> */}
 								</ul>
 							</div>
 						</div>

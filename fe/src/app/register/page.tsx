@@ -33,7 +33,7 @@ export default function RegisterPage() {
 									<p>
 										Hey there! Ready to join the party? We
 										just need a few details from you to get
-										started. {"Let's"} do this!
+										started. Let's do this!
 									</p>
 									<RegisterForm />
 									<div className="account__switch">

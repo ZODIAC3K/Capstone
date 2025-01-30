@@ -1,32 +1,39 @@
-import img_1 from "@/assets/img/team/team01.png";
-import img_2 from "@/assets/img/team/team02.png";
-import img_3 from "@/assets/img/team/team03.png";
-import img_4 from "@/assets/img/team/team04.png";
+import img_1 from "@/assets/img/team/male.png";
+import img_2 from "@/assets/img/team/male.png";
+import img_3 from "@/assets/img/team/female.png";
+import img_4 from "@/assets/img/team/male.png";
+import img_5 from "@/assets/img/team/female.png";
 
 const team_data = [
 	{
 		id: 1,
 		img: img_1,
-		title: "Olive T-Shirt",
-		subtitle: "T-Shirt",
+		title: "Harsh Deepanshu",
+		subtitle: "21BCE10858",
 	},
 	{
 		id: 2,
 		img: img_2,
-		title: "RedPant",
-		subtitle: "Pant",
+		title: "Akshay Kalekar",
+		subtitle: "21BCEXXXX",
 	},
 	{
 		id: 3,
 		img: img_3,
-		title: "BasketBall Shorts",
-		subtitle: "Shorts",
+		title: "Udita",
+		subtitle: "21BCEXXXX",
 	},
 	{
 		id: 4,
 		img: img_4,
-		title: "Dash Shirts",
-		subtitle: "Shirts",
+		title: "Arnav Tiwari",
+		subtitle: "21BCEXXXX",
+	},
+	{
+		id: 5,
+		img: img_5,
+		title: "Vrinda Sharma",
+		subtitle: "21BCEXXXX",
 	},
 ];
 

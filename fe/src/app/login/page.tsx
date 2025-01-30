@@ -22,9 +22,17 @@ export default function LoginPage() {
 					className="signup__area team-bg section-pt-120 section-pb-120"
 					style={{
 						backgroundImage: `url(/assets/img/bg/team_bg.jpg)`,
+						backgroundSize: "cover",
+						backgroundPosition: "center",
 					}}
 				>
-					<div className="container">
+					<div
+						className="container"
+						style={{
+							marginTop: "5rem",
+							marginBottom: "5rem",
+						}}
+					>
 						<div className="row justify-content-center">
 							<div className="col-xl-6 col-lg-8">
 								<div className="singUp-wrap">
@@ -32,14 +40,14 @@ export default function LoginPage() {
 									<p>
 										Hey there! Ready to log in? Just enter
 										your username and password below and you
-										will be back in action in no time.{" "}
-										{"Let's"} go!
+										will be back in action in no time. Let's
+										go!
 									</p>
 									<LoginForm />
 
 									<div className="account__switch">
 										<p>
-											{"Don't"} have an account?
+											Don't have an account?
 											<Link href="/register">
 												Sign Up
 											</Link>

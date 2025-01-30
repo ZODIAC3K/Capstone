@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import banner_bg from "@/assets/img/slider/banner_bg3.png";
+import banner_bg from "@/assets/img/slider/banner_bg_shape5-1.png";
 import shape from "@/assets/img/icons/shape.svg";
 import shape03 from "@/assets/img/icons/shape03.svg";
 import SvgIconCom from "../common/svg-icon-anim";

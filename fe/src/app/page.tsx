@@ -39,7 +39,9 @@ export default function HomeTwo() {
 				{/* area-background-start */}
 				<div
 					className="area-background"
-					style={{ backgroundImage: `url(${area_bg.src})` }}
+					style={{
+						backgroundImage: `url(/assets/img/bg/item-category-bg.png)`,
+					}}
 				>
 					{/* about-area */}
 					<AboutAreaTwo />
@@ -60,7 +62,7 @@ export default function HomeTwo() {
 				{/* project area end */}
 
 				{/* trending nft items start */}
-				<TrendingNftItems />
+				{/* <TrendingNftItems /> */}
 				{/* trending nft items end */}
 
 				{/* product category area start */}
