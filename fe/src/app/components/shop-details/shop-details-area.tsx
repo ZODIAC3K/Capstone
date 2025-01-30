@@ -38,10 +38,11 @@ const ShopDetailsArea = ({ product }: { product: IProduct }) => {
 									( 3 Customer Review )
 								</span>
 							</div>
-							<h2 className="title">game controller</h2>
+							<h2 className="title">Anime T-Shirt</h2>
 							<div className="shop__details-price">
 								<span className="amount">
-									${product.price.toFixed(2)}{" "}
+									<i className="fas fa-rupee-sign"></i>{" "}
+									{product.price.toFixed(2)}{" "}
 									<span className="stock-status">
 										- {product.status}
 									</span>
@@ -69,14 +70,14 @@ const ShopDetailsArea = ({ product }: { product: IProduct }) => {
 									>
 										dat4
 									</li>
-									<li
+									{/* <li
 										onClick={() => setModel("rt30")}
 										className={
 											model === "rt30" ? "active" : ""
 										}
 									>
 										rt30
-									</li>
+									</li> */}
 								</ul>
 							</div>
 							<div className="shop__details-qty">
@@ -115,15 +116,15 @@ const ShopDetailsArea = ({ product }: { product: IProduct }) => {
 							<div className="shop__details-bottom">
 								<div className="posted_in">
 									<b>Categories :</b>
-									<Link href="/shop">Gamdias,</Link>
-									<Link href="/shop">Apple,</Link>
-									<Link href="/shop">Huawei</Link>
+									<Link href="/shop">T-Shirt,</Link>
+									<Link href="/shop">Anime,</Link>
+									{/* <Link href="/shop">Manga</Link> */}
 								</div>
 								<div className="tagged_as">
 									<b>Tags :</b>
-									<Link href="/shop">Silver,</Link>
-									<Link href="/shop">Pink,</Link>
-									<Link href="/shop">Green</Link>
+									<Link href="/shop">Blue,</Link>
+									<Link href="/shop">Anime,</Link>
+									<Link href="/shop">Yellow</Link>
 								</div>
 								<div className="product_share">
 									<b>Share :</b>
