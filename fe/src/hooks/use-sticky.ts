@@ -1,48 +1,47 @@
-"use client"
-import { useEffect, useState } from "react";
+'use client'
+import { useEffect, useState } from 'react'
 
 const useSticky = () => {
-    const [sticky,setSticky] = useState(false)
-    const [isStickyVisible, setIsStickyVisible] = useState(false);
-  
+    const [sticky, setSticky] = useState(false)
+    const [isStickyVisible, setIsStickyVisible] = useState(false)
+
     useEffect(() => {
-      const headerElement = document.getElementById('sticky-header');
-      const headerHeight = headerElement?.offsetHeight || 0;
-  
-      const handleScroll = () => {
-        const windowTop = window.scrollY;
-  
-        if (windowTop >= headerHeight) {
-          setSticky(true);
-        } else {
-          setSticky(false);
-          setIsStickyVisible(false);
+        const headerElement = document.getElementById('sticky-header')
+        const headerHeight = headerElement?.offsetHeight || 0
+
+        const handleScroll = () => {
+            const windowTop = window.scrollY
+
+            if (windowTop >= headerHeight) {
+                setSticky(true)
+            } else {
+                setSticky(false)
+                setIsStickyVisible(false)
+            }
+
+            if (sticky) {
+                if (windowTop < lastScrollTop) {
+                    setIsStickyVisible(true)
+                } else {
+                    setIsStickyVisible(false)
+                }
+            }
+
+            lastScrollTop = windowTop
         }
-  
-        if (sticky) {
-          if (windowTop < lastScrollTop) {
-            setIsStickyVisible(true);
-          } else {
-            setIsStickyVisible(false);
-          }
+
+        let lastScrollTop = 0
+        window.addEventListener('scroll', handleScroll)
+
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
         }
-  
-        lastScrollTop = windowTop;
-      };
-  
-      let lastScrollTop = 0;
-      window.addEventListener('scroll', handleScroll);
-  
-      return () => {
-        window.removeEventListener('scroll', handleScroll);
-      };
-    }, [sticky]);
+    }, [sticky])
 
     return {
         sticky,
-        isStickyVisible,
+        isStickyVisible
     }
-
 }
 
-export default useSticky;
+export default useSticky

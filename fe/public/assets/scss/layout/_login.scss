@@ -10,7 +10,7 @@
         background-image: -webkit-linear-gradient(90deg, #0c0e12 0%, rgba(31, 41, 53, 0.36078) 100%);
         background-image: -ms-linear-gradient(90deg, #0c0e12 0%, rgba(31, 41, 53, 0.36078) 100%);
         @include border-radius(8px);
-        border: 1px solid rgba(76, 76, 76, .2);
+        border: 1px solid rgba(76, 76, 76, 0.2);
         padding: 30px 50px 40px;
         @media #{$xs} {
             padding: 30px 20px 30px;
@@ -42,7 +42,7 @@
             align-items: center;
             justify-content: center;
             background: var(--tg-common-color-black);
-            border: 1px solid rgba(76, 76, 76, .2);
+            border: 1px solid rgba(76, 76, 76, 0.2);
             @include border-radius(2px);
             font-size: 16px;
             gap: 10px;
@@ -61,13 +61,13 @@
         margin-block-start: 35px;
         &::before,
         &::after {
-            content: "";
+            content: '';
             height: 1px;
             width: 40%;
             left: 0;
             top: 50%;
             @include transform(translateY(-50%));
-            background: rgba(76, 76, 76, .5);
+            background: rgba(76, 76, 76, 0.5);
             position: absolute;
         }
         &::after {
@@ -93,16 +93,16 @@
                 padding: 14px 20px;
                 font-size: 16px;
                 color: var(--tg-heading-color);
-                border: 1px solid rgba(76, 76, 76, .2);
+                border: 1px solid rgba(76, 76, 76, 0.2);
                 background: var(--tg-common-color-gray);
                 @include border-radius(2px);
                 line-height: 1;
-                @include transition(.3s);
+                @include transition(0.3s);
                 &::placeholder {
                     font-weight: 400;
                     font-size: 16px;
                     color: var(--tg-body-color);
-                    opacity: .8;
+                    opacity: 0.8;
                     text-transform: capitalize;
                 }
                 &:focus {

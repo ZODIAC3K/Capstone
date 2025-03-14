@@ -53,7 +53,7 @@
         @include border-radius(50%);
         background: #1f2935;
         cursor: pointer;
-        @include transition(.3s);
+        @include transition(0.3s);
         &:hover {
             background: var(--tg-theme-primary);
             color: var(--tg-common-color-black);
@@ -79,14 +79,14 @@
         & .small-title {
             margin: 0 0 22px;
             font-size: 16px;
-            letter-spacing: .5px;
+            letter-spacing: 0.5px;
             font-weight: var(--tg-fw-semi-bold);
             color: var(--tg-theme-primary);
         }
         &-form {
             position: relative;
             margin: 0 0 20px;
-            & [type=email] {
+            & [type='email'] {
                 display: block;
                 width: 100%;
                 background: transparent;
@@ -95,12 +95,12 @@
                 font-size: 14px;
                 font-family: var(--tg-heading-font-family);
                 font-weight: var(--tg-fw-medium);
-                @include transition(.3s);
+                @include transition(0.3s);
                 &:focus {
                     border-color: #535d68;
                 }
             }
-            & [type=submit] {
+            & [type='submit'] {
                 position: absolute;
                 right: 0;
                 top: 0;
@@ -110,7 +110,7 @@
                 width: 60px;
                 font-size: 22px;
                 &::before {
-                    content: "";
+                    content: '';
                     position: absolute;
                     width: 1px;
                     top: 6px;
@@ -131,7 +131,7 @@
         & .small-title {
             margin: 0 0 22px;
             font-size: 16px;
-            letter-spacing: .5px;
+            letter-spacing: 0.5px;
             font-weight: var(--tg-fw-semi-bold);
         }
         &-list {
@@ -143,14 +143,14 @@
                 padding-left: 23px;
                 margin: 0 0 8px;
                 &::before {
-                    content: "";
+                    content: '';
                     position: absolute;
                     left: 0;
                     top: 11px;
                     width: 7px;
                     height: 7px;
                     background: var(--tg-body-color);
-                    @include transition(.3s);
+                    @include transition(0.3s);
                 }
                 &:hover {
                     &::before {
@@ -163,7 +163,7 @@
                 & a {
                     color: var(--tg-body-color);
                     &:hover {
-                        color: var(--tg-theme-primary)
+                        color: var(--tg-theme-primary);
                     }
                 }
             }
@@ -184,7 +184,7 @@
                 font-size: 16px;
                 color: var(--tg-common-color-white);
                 &:hover {
-                    color: var(--tg-theme-primary)
+                    color: var(--tg-theme-primary);
                 }
             }
         }

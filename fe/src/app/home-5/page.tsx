@@ -1,57 +1,53 @@
-import { Metadata } from "next";
-import Wrapper from "@/layout/wrapper";
-import FooterFour from "@/layout/footer/footer-4";
-import HeaderFour from "@/layout/header/header-four";
-import HeroBannerFive from "../components/hero-banner/hero-banner-5";
-import ProductCategory from "../components/category/product-category";
-import ShopOfferArea from "../components/shop/shop-offer-area";
-import ShopAreaTwo from "../components/shop/shop-area-2";
-import ShopDealArea from "../components/shop/shop-deal-area";
-import CtaArea from "../components/cta/cta-area";
+import { Metadata } from 'next'
+import Wrapper from '@/layout/wrapper'
+import FooterFour from '@/layout/footer/footer-4'
+import HeaderFour from '@/layout/header/header-four'
+import HeroBannerFive from '../components/hero-banner/hero-banner-5'
+import ProductCategory from '../components/category/product-category'
+import ShopOfferArea from '../components/shop/shop-offer-area'
+import ShopAreaTwo from '../components/shop/shop-area-2'
+import ShopDealArea from '../components/shop/shop-deal-area'
+import CtaArea from '../components/cta/cta-area'
 
 export const metadata: Metadata = {
-    title: "Home Page Five",
-};
-
+    title: 'Home Page Five'
+}
 
 export default function HomeFourPage() {
     return (
-        <Wrapper bodyCls="bg-black2">
-
+        <Wrapper bodyCls='bg-black2'>
             {/* header area start */}
-            <HeaderFour/>
+            <HeaderFour />
             {/* header area end */}
 
-            <main className="main--area">
-
+            <main className='main--area'>
                 {/* hero area start */}
-                <HeroBannerFive/>
+                <HeroBannerFive />
                 {/* hero area end */}
 
                 {/* product category area start */}
-                <ProductCategory/>
+                <ProductCategory />
                 {/* product category area end */}
 
                 {/* shop offer area start */}
-                <ShopOfferArea/>
+                <ShopOfferArea />
                 {/* shop offer area end */}
 
                 {/* shop area start */}
-                <ShopAreaTwo/>
+                <ShopAreaTwo />
                 {/* shop area end */}
 
                 {/* shop deal area start */}
-                <ShopDealArea/>
+                <ShopDealArea />
                 {/* shop deal area end */}
 
                 {/* cta area start */}
-                <CtaArea/>
+                <CtaArea />
                 {/* cta area end */}
-
             </main>
 
             {/* footer start */}
-            <FooterFour/>
+            <FooterFour />
             {/* footer end */}
         </Wrapper>
     )

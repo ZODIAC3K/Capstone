@@ -1,17 +1,16 @@
-const { default: mongoose } = require("mongoose");
-const CustomErrorHandler = require("./CustomErrorHandler");
+const { default: mongoose } = require('mongoose')
+const CustomErrorHandler = require('./CustomErrorHandler')
 
 async function populateAllAttributes(document, schema) {
-	const pathsToPopulate = schema.paths;
-	
-	for (const path in pathsToPopulate) {
-		if (pathsToPopulate[path].options.ref) {
-			await document.populate(path);
-		}
-	}
+    const pathsToPopulate = schema.paths
 
-	return document
+    for (const path in pathsToPopulate) {
+        if (pathsToPopulate[path].options.ref) {
+            await document.populate(path)
+        }
+    }
+
+    return document
 }
 
-
-module.exports = populateAllAttributes;
+module.exports = populateAllAttributes

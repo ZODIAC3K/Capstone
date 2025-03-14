@@ -31,7 +31,7 @@
         margin-bottom: 15px;
         z-index: 1;
         &:after {
-            content: "";
+            content: '';
             position: absolute;
             left: 0;
             top: 0;
@@ -74,7 +74,7 @@
         }
     }
     &::after {
-        content: "";
+        content: '';
         display: block;
         background-image: url(../../img/bg/title_shape.svg);
         width: 65px;
@@ -111,7 +111,7 @@
                 color: var(--tg-theme-primary);
             }
             &::after {
-                content: "";
+                content: '';
                 position: absolute;
                 bottom: 0;
                 right: 0;

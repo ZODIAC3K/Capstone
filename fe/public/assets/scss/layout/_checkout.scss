@@ -31,7 +31,7 @@
             }
             & input {
                 width: 100%;
-                border: 1px solid rgba(76, 76, 76, .2);
+                border: 1px solid rgba(76, 76, 76, 0.2);
                 background: var(--tg-common-color-gray);
                 height: 55px;
                 color: var(--tg-heading-color);
@@ -56,8 +56,8 @@
                 font-size: 1.5rem;
                 font-weight: 700;
                 text-transform: uppercase;
-                padding-bottom: .75rem;
-                margin-bottom: .75rem;
+                padding-bottom: 0.75rem;
+                margin-bottom: 0.75rem;
                 border-bottom: 1px solid #2b3242;
                 color: var(--tg-heading-color);
                 font-family: var(--tg-heading-font-family);
@@ -74,10 +74,10 @@
                 &.select-grp {
                     position: relative;
                     &::after {
-                        content: "\f078";
+                        content: '\f078';
                         position: absolute;
                         bottom: 13px;
-                        font-family: "Font Awesome 5 Free";
+                        font-family: 'Font Awesome 5 Free';
                         font-weight: 700;
                         right: 20px;
                         font-size: 14px;
@@ -95,7 +95,7 @@
                     color: var(--tg-heading-color);
                     height: 53px;
                     padding: 0 20px;
-                    border: 1px solid rgba(76, 76, 76, .2);
+                    border: 1px solid rgba(76, 76, 76, 0.2);
                     background: var(--tg-common-color-gray);
                     border-radius: 2px;
                 }
@@ -105,7 +105,7 @@
                     max-height: 120px;
                 }
                 & select {
-                    border: 1px solid rgba(76, 76, 76, .2);
+                    border: 1px solid rgba(76, 76, 76, 0.2);
                     background: var(--tg-common-color-gray);
                     color: var(--tg-heading-color);
                     font-weight: 400;
@@ -144,8 +144,8 @@
             font-size: 1.5rem;
             font-weight: 700;
             text-transform: uppercase;
-            padding-bottom: .75rem;
-            margin-bottom: .75rem;
+            padding-bottom: 0.75rem;
+            margin-bottom: 0.75rem;
             border-bottom: 1px solid #2b3242;
         }
         & .list-wrap {

@@ -2,15 +2,12 @@
 @use 'typography' as *;
 
 :root {
-
-
     //@Font Family Declaration
     @each $font-family, $shades in $theme-fonts {
         @each $shade, $value in $shades {
             --tg-#{$font-family}-#{$shade}: #{$value};
         }
     }
-
 
     //@Font Size
     @each $body, $shades in $font-size {
@@ -19,14 +16,12 @@
         }
     }
 
-
     //@Line Height
     @each $line-height, $shades in $theme-lh {
         @each $shade, $value in $shades {
             --tg-#{$line-height}-#{$shade}: #{$value};
         }
     }
-
 
     //@Color Declaration
     @each $color, $shades in $colors {
@@ -35,12 +30,10 @@
         }
     }
 
-
     //@Font Weight Declaration
     @each $fw, $shades in $font-weight {
         @each $shade, $value in $shades {
             --tg-#{$fw}-#{$shade}: #{$value};
         }
     }
-
 }

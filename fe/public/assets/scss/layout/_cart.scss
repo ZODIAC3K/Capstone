@@ -121,7 +121,7 @@
                 width: 100%;
                 margin-bottom: 0;
                 height: 52.5px;
-                border: 1px solid rgba(76, 76, 76, .2);
+                border: 1px solid rgba(76, 76, 76, 0.2);
                 background: var(--tg-common-color-gray);
                 color: var(--tg-heading-color);
                 padding: 0 20px;
@@ -149,11 +149,11 @@
             font-weight: 700;
             text-transform: uppercase;
             padding-bottom: 2rem;
-            border-bottom: .9375rem;
+            border-bottom: 0.9375rem;
             border-bottom: 1px solid #2b3242;
         }
         & .list-wrap {
-            padding-bottom: .9375rem;
+            padding-bottom: 0.9375rem;
             & li {
                 @include flexbox();
                 align-items: center;
