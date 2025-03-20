@@ -1,36 +1,36 @@
-const mongoose = require("mongoose");
-const { DB_URL } = require("../config");
+const mongoose = require('mongoose')
+const { DB_URL } = require('../config')
 
 class DatabaseConnection extends mongoose.Connection {
-	constructor() {
-		super();
-	}
+    constructor() {
+        super()
+    }
 
-	connectToDatabase(urlDb = DB_URL) {
-		mongoose.set("strictQuery", true); // Telling mongo to follow schemas strictly. for mongo V7+
-		mongoose.connect(urlDb, {
-			useNewUrlParser: true,
-			useUnifiedTopology: true,
-		});
+    connectToDatabase(urlDb = DB_URL) {
+        mongoose.set('strictQuery', true) // Telling mongo to follow schemas strictly. for mongo V7+
+        mongoose.connect(urlDb, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+        })
 
-		mongoose.connection.on("connected", () => {
-			console.log("Connected to the database");
-		});
+        mongoose.connection.on('connected', () => {
+            console.log('Connected to the database')
+        })
 
-		mongoose.connection.on("error", (err) => {
-			console.error("Database connection error:", err);
-		});
+        mongoose.connection.on('error', (err) => {
+            console.error('Database connection error:', err)
+        })
 
-		mongoose.connection.on("disconnected", () => {
-			console.log("Disconnected from the database");
-		});
-	}
+        mongoose.connection.on('disconnected', () => {
+            console.log('Disconnected from the database')
+        })
+    }
 
-	closeConnection() {
-		mongoose.connection.close(() => {
-			console.log("Connection to the database closed");
-		});
-	}
+    closeConnection() {
+        mongoose.connection.close(() => {
+            console.log('Connection to the database closed')
+        })
+    }
 }
 
 // function dbConnect() {
@@ -46,4 +46,4 @@ class DatabaseConnection extends mongoose.Connection {
 // 	});
 // }
 
-module.exports = DatabaseConnection;
+module.exports = DatabaseConnection

@@ -21,7 +21,7 @@
             z-index: -1;
         }
         &-wrapper {
-            &>* {
+            & > * {
                 &:nth-child(even) {
                     & .match__winner-wrap {
                         flex-direction: row-reverse;
@@ -113,7 +113,7 @@
                 font-family: var(--tg-heading-font-family);
                 font-weight: var(--tg-fw-semi-bold);
                 color: var(--tg-theme-primary);
-                letter-spacing: .5px
+                letter-spacing: 0.5px;
             }
         }
         &-img {

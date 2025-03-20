@@ -4,12 +4,12 @@
 	02. Header
 ===============================*/
 .transparent-header {
-	position: fixed;
-	left: 0;
-	top: 0;
-	width: 100%;
-	z-index: 9;
-	height: auto;
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    z-index: 9;
+    height: auto;
     @media #{$xs} {
         top: 0;
     }
@@ -86,7 +86,7 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: #11131C;
+            background: #11131c;
             clip-path: polygon(0 0, 100% 0, 100% calc(100% - 67px), 50% 100%, 50% 100%, 0% calc(100% - 67px));
             z-index: -1;
             @media #{$xl} {
@@ -130,7 +130,7 @@
                 height: 78px;
                 background: var(--tg-theme-primary);
                 border-radius: 50%;
-                border: 7px solid #11131C;
+                border: 7px solid #11131c;
                 justify-content: center;
                 padding: 0 14px;
                 @media #{$md} {
@@ -140,7 +140,7 @@
                     display: block;
                     height: 3px;
                     background-color: var(--tg-common-color-black-2);
-                    @include transition(.3s);
+                    @include transition(0.3s);
                     &:nth-child(1) {
                         width: 20px;
                     }
@@ -176,7 +176,7 @@
                 width: auto;
                 height: auto;
                 span {
-                    background: var(--tg-common-color-white)
+                    background: var(--tg-common-color-white);
                 }
             }
         }
@@ -225,7 +225,7 @@
     }
     &__navbar-wrap {
         @include flexbox();
-	    flex-grow: 1;
+        flex-grow: 1;
         & ul {
             @include flexbox();
             padding: 0;
@@ -249,7 +249,7 @@
                     display: block;
                     line-height: 1;
                     position: relative;
-                    letter-spacing: .8px;
+                    letter-spacing: 0.8px;
                     z-index: 1;
                 }
                 & .sub-menu {
@@ -287,24 +287,24 @@
                             font-weight: var(--tg-fw-bold);
                             color: var(--tg-heading-color);
                             text-transform: uppercase;
-                            letter-spacing: .8px;
+                            letter-spacing: 0.8px;
                             position: relative;
                             @include flexbox();
                             &::before {
-                                content: "";
+                                content: '';
                                 display: block;
                                 width: 0;
                                 height: 7px;
                                 background-color: var(--tg-theme-primary);
                                 @include border-radius(0 5px 0 0);
                                 margin: 7px 9px 0 0;
-                                @include transition-2(width .2s linear);
+                                @include transition-2(width 0.2s linear);
                             }
                         }
                         &:hover > a,
                         &.active > a {
                             &::before {
-                               width: 7px;
+                                width: 7px;
                             }
                         }
                     }
@@ -320,7 +320,7 @@
             & > li {
                 & > a {
                     &::before {
-                        content: "";
+                        content: '';
                         position: absolute;
                         left: 0;
                         right: 0;
@@ -331,7 +331,7 @@
                         background: var(--tg-theme-primary);
                         margin: 0 auto;
                         opacity: 0;
-                        @include transition(.3s);
+                        @include transition(0.3s);
                     }
                 }
                 &.active,
@@ -407,7 +407,7 @@
                 font-weight: var(--tg-fw-extra-bold);
             }
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0px;
                 top: 50%;
@@ -418,7 +418,7 @@
                 box-shadow: inset 0px 3px 7px 0px rgba(0, 0, 0, 0.61);
                 @media #{$lg} {
                     box-shadow: inset 0px 3px 7px 0px var(--tg-theme-primary);
-                    opacity: .1;
+                    opacity: 0.1;
                 }
             }
         }
@@ -435,7 +435,7 @@
                 display: block;
                 height: 3px;
                 background-color: var(--tg-common-color-white);
-                @include transition(.3s);
+                @include transition(0.3s);
                 &:nth-child(1) {
                     width: 26px;
                 }
@@ -464,17 +464,17 @@
     }
 }
 .tg-sticky-menu {
-	position: fixed;
-	left: 0;
-	margin: auto;
-	top: 0;
-	width: 100%;
+    position: fixed;
+    left: 0;
+    margin: auto;
+    top: 0;
+    width: 100%;
     @include transform(translateY(-100%));
-	z-index: 99;
-	background: var(--tg-common-color-gray);
+    z-index: 99;
+    background: var(--tg-common-color-gray);
     -webkit-transition: all 0.4s ease;
     transition: all 0.4s ease;
-	border-radius: 0;
+    border-radius: 0;
     opacity: 0;
     &.sticky-menu__show {
         @include transform(unset);

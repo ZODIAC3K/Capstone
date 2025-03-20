@@ -22,10 +22,10 @@
         background-image: -webkit-linear-gradient(90deg, #0c0e12 0%, rgba(31, 41, 53, 0.36078) 100%);
         background-image: -ms-linear-gradient(90deg, #0c0e12 0%, rgba(31, 41, 53, 0.36078) 100%);
         @include border-radius(8px);
-        border: 1px solid rgb(76, 76, 76, .2);
+        border: 1px solid rgb(76, 76, 76, 0.2);
         padding: 25px;
         margin: 0 0 30px;
-        @include transition(.3s);
+        @include transition(0.3s);
         @media #{$xs} {
             display: block;
             text-align: center;
@@ -41,7 +41,7 @@
             margin: 0 0 30px;
         }
         &:hover {
-            border-color: rgb(69, 248, 130, .2);
+            border-color: rgb(69, 248, 130, 0.2);
         }
     }
     &__thumb {
@@ -71,7 +71,7 @@
         flex-grow: 1;
         & .title {
             font-size: 20px;
-            letter-spacing: .5px;
+            letter-spacing: 0.5px;
             margin: 0 0 15px;
         }
     }
@@ -108,7 +108,7 @@
                 text-transform: uppercase;
                 color: #9b9b9b;
                 &::before {
-                    content: "|";
+                    content: '|';
                     display: inline-block;
                     font-size: 12px;
                     font-weight: 500;
@@ -126,7 +126,7 @@
         background-image: -webkit-linear-gradient(90deg, rgb(12, 14, 18) 0%, rgb(16, 24, 31) 100%);
         background-image: -ms-linear-gradient(90deg, rgb(12, 14, 18) 0%, rgb(16, 24, 31) 100%);
         @include border-radius(8px);
-        border: 1px solid rgb(76, 76, 76, .5);
+        border: 1px solid rgb(76, 76, 76, 0.5);
         padding: 14px 15px 14px 20px;
         & p {
             margin: 0 0;
@@ -200,7 +200,7 @@
             justify-content: center;
             margin-top: 18px;
         }
-        &>* {
+        & > * {
             @include flexbox();
             align-items: center;
             justify-content: center;
@@ -321,7 +321,7 @@
                 }
             }
             &::before {
-                content: "";
+                content: '';
                 display: block;
                 width: 100%;
                 height: 1px;
@@ -361,12 +361,11 @@
     }
 }
 
-
 /*nft-card **********************/
 .nft-card {
-    border: 10px solid #1F222D;
+    border: 10px solid #1f222d;
     box-shadow: 0px 4px 41px rgba(0, 0, 0, 0.53);
-    background: #12141D;
+    background: #12141d;
     &-thumb {
         overflow: hidden;
         img {
@@ -375,7 +374,7 @@
         }
     }
     &-content {
-        border-top: 10px solid #1F222D;
+        border-top: 10px solid #1f222d;
         text-align: center;
         padding-top: 25px;
         .subtitle {
@@ -394,7 +393,7 @@
         .btn-wrap {
             display: flex;
             justify-content: center;
-            border-top: 1px solid #201F2F;
+            border-top: 1px solid #201f2f;
             padding: 20px 25px;
             gap: 28px;
             position: relative;
@@ -403,7 +402,7 @@
                 position: absolute;
                 height: 100%;
                 width: 1px;
-                background: #201F2F;
+                background: #201f2f;
                 top: 0;
             }
         }

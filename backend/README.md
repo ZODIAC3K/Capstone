@@ -1,28 +1,35 @@
 # Backend-For-Clothing-Store
 
-
 ## Must Run First
+
 ```
     git config --global core.autocrlf true
 ```
+
 - Converts line endings to the native format of the operating system on checkout.
 - Converts them back to the standard format on commit.
 - Useful for cross-platform collaboration to maintain consistent line endings.
+
 ```
     git config --global core.autocrlf input
 ```
+
 - Converts line endings to LF (Unix format) on checkout.
 - Leaves line endings unchanged on commit.
 - Useful when working locally with LF line endings but preserving the original line endings in the repository.
 
 ## Run Server
+
 Use the prewritten scripts **'start'** or **'dev'** to run the server.
 
 For Production ( uses Node )
+
 ```
     npm run start
 ```
+
 For Devlopment ( uses Nodemon )
+
 ```
     npm run dev
 ```
@@ -32,69 +39,74 @@ For Devlopment ( uses Nodemon )
 Requests need to be authenticated such that any third party cannot request resources on our server.
 
 - ### <code>x-api-key</code> Header
-    Added an API key system where every request should contain a token encrypted using the API key which will be decrypted to check if it's valid or not
-        
-        {
-            Headers: {
-                ...
 
-                x-api-key: // API Key....
-            
-                ...
-            }
-        }
+    Added an API key system where every request should contain a token encrypted using the API key which will be decrypted to check if it's valid or not
+
+              {
+                  Headers: {
+                      ...
+
+                      x-api-key: // API Key....
+
+                      ...
+                  }
+              }
 
     ### Error
-        {
-            status: 401,
-            message: "Unauthorized"
-        }
+
+              {
+                  status: 401,
+                  message: "Unauthorized"
+              }
 
 - ### <code>Authorization</code> Header
+
     For requests from logged in user the frontend will pass the jwt into this header such that the server can verify and give access to the user.
 
-        {
-            Headers: {
-                ...
-                Authorization: // JWT returned by the server stored in 'auth-token' cookie
-                ...
-            }
-        }
+              {
+                  Headers: {
+                      ...
+                      Authorization: // JWT returned by the server stored in 'auth-token' cookie
+                      ...
+                  }
+              }
 
 - ### Email Verification
+
     After JWT verification if the user proceeds to order this middleware will check if the email of the user is verified or not, if not it will redirect it will send the following response
 
     #### Status Code 300
 
-        {
-            message: "Email ID not verified",
-            redirectTo: "/email-verification"
-        }
-        
+              {
+                  message: "Email ID not verified",
+                  redirectTo: "/email-verification"
+              }
 
 ## Routes
 
 - ### Register
+
     - **Path** <code>/api/v1/auth/reg</code>
     - **Body:**
+
         ```
             {
                 email: "USERNAME",
                 password: "PASSWORD",
-                fname: // First Name , 
+                fname: // First Name ,
                 lname: // Last Name,
                 mobile: // 10 digit mobile number
             }
         ```
 
     - **Authentication:**
-        Now we check if user is present in our database, if yes we return an error. Else we enter the usernae and password in the database.
+      Now we check if user is present in our database, if yes we return an error. Else we enter the usernae and password in the database.
     - **Success:**
         - #### Status Code 200
-                {
-                    message: "Successfully Registered!",
-                    redirectTo: "/"
-                }
+                      {
+                          message: "Successfully Registered!",
+                          redirectTo: "/"
+                      }
     - **Error:**
         ```
             {
@@ -104,8 +116,10 @@ Requests need to be authenticated such that any third party cannot request resou
         ```
 
 - ### Login
+
     - **Path:** <code>/api/v1/auth/login</code>
     - **Body:**
+
         ```
             {
                 email: "USERNAME",
@@ -114,14 +128,14 @@ Requests need to be authenticated such that any third party cannot request resou
         ```
 
     - **Authentication:**
-        Now we check if user is present in our database, if yes we set and cookie <code>auth-token</code> as jwt token (uid as payload, default expiry - 2h). Else throw an error.
-    
+      Now we check if user is present in our database, if yes we set and cookie <code>auth-token</code> as jwt token (uid as payload, default expiry - 2h). Else throw an error.
     - **Success:**
+
         - #### Status Code 200
-                {
-                    message: "Logged in sucessfully!",
-                    redirectTo: "/"
-                }
+                      {
+                          message: "Logged in sucessfully!",
+                          redirectTo: "/"
+                      }
 
     - **Error:**
         ```
@@ -149,11 +163,10 @@ Requests need to be authenticated such that any third party cannot request resou
 
 - ### Products
 
-
-
 ## Controllers
 
 - ### Image Controller
+
     Made two controllers to handle image uploads: <code>insertImage</code> and <code>insertMultipleImages</code>. These are to be used inside routes where image uploading is needed. It reads the uploaded image and uploads it to the database while returning the id to reference it in the required places.
 
     Make sure to use **ERROR HANDLING** when using this controller as it **directly throws error** without passing it to the next middleware.
@@ -200,54 +213,54 @@ Endpoint to fetch various analytics data related to products, orders, and return
 
     ```json
     {
-    "totalProducts": 1000,
-    "highestSoldProducts": [
-        {
-        "product_id": "123",
-        "totalSold": 500
+        "totalProducts": 1000,
+        "highestSoldProducts": [
+            {
+                "product_id": "123",
+                "totalSold": 500
+            }
+            // Other products...
+        ],
+        "highestRatedProduct": {
+            "product_id": "456",
+            "avgRating": 4.7
         },
-        // Other products...
-    ],
-    "highestRatedProduct": {
-        "product_id": "456",
-        "avgRating": 4.7
-    },
-    "mostSoldCategory": {
-        "category_id": "789",
-        "totalSold": 300
-    },
-    "mostSoldBrand": {
-        "brand_id": "abc",
-        "totalSold": 150
-    },
-    "totalOrders": 500,
-    "ordersPending": [
-        {
-        "order_id": "111",
-        "status": "Pending"
+        "mostSoldCategory": {
+            "category_id": "789",
+            "totalSold": 300
         },
-        // Other "Pending" orders...
-    ],
-    "ordersAccepted": [
-        {
-        "order_id": "222",
-        "status": "Accepted"
+        "mostSoldBrand": {
+            "brand_id": "abc",
+            "totalSold": 150
         },
-        // Other "Accepted" orders...
-    ],
-    "ordersRejected": [
-        {
-        "order_id": "333",
-        "status": "Rejected"
-        },
-        // Other "Rejected" orders...
-    ],
-    "totalReturnedOrders": 50,
-    "totalAmountGainedOnOrders": 10000.0,
-    "totalAmountSpentOnReturns": 500.0
+        "totalOrders": 500,
+        "ordersPending": [
+            {
+                "order_id": "111",
+                "status": "Pending"
+            }
+            // Other "Pending" orders...
+        ],
+        "ordersAccepted": [
+            {
+                "order_id": "222",
+                "status": "Accepted"
+            }
+            // Other "Accepted" orders...
+        ],
+        "ordersRejected": [
+            {
+                "order_id": "333",
+                "status": "Rejected"
+            }
+            // Other "Rejected" orders...
+        ],
+        "totalReturnedOrders": 50,
+        "totalAmountGainedOnOrders": 10000.0,
+        "totalAmountSpentOnReturns": 500.0
     }
     ```
-    
+
 # Get Analysis Data by Time Filter
 
 Endpoint to fetch analysis data based on a specific time filter (day, week, month, or year).
@@ -271,10 +284,10 @@ The response data is an array of (x, y) coordinate objects representing the numb
 
 ```json
 [
-  { "x": 1668175200000, "y": 10 }, // Example timestamp (x) and metric count (y)
-  { "x": 1668186000000, "y": 15 },
-  { "x": 1668196800000, "y": 18 },
-  // ... more data points for the specified time filter
+    { "x": 1668175200000, "y": 10 }, // Example timestamp (x) and metric count (y)
+    { "x": 1668186000000, "y": 15 },
+    { "x": 1668196800000, "y": 18 }
+    // ... more data points for the specified time filter
 ]
 ```
 
@@ -284,10 +297,11 @@ To parse the incoming timestamp and format it as a human-readable date, you can 
 
 ```javascript
 function formatTimestampToHumanReadable(timestamp) {
-  const formattedDate = new Date(timestamp).toLocaleString(); // Customize the format as needed
-  return formattedDate;
+    const formattedDate = new Date(timestamp).toLocaleString() // Customize the format as needed
+    return formattedDate
 }
 ```
+
 You can call this function to format the ‘x’ values (timestamps) in the response data to human-readable dates if needed.
 
 This documentation provides information about the API endpoint, the input parameter, the structure of the response data, and a function to parse incoming timestamps into human-readable dates. It can be shared with the frontend team for reference.

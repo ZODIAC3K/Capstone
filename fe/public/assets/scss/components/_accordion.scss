@@ -58,12 +58,12 @@
             border: none !important;
             box-shadow: none;
             &::after {
-                content: "\f067";
+                content: '\f067';
                 background-image: none !important;
                 font-size: 16px;
                 font-family: var(--tg-icon-font-family);
                 color: var(--tg-body-color);
-                opacity: .76;
+                opacity: 0.76;
                 width: auto;
                 height: auto;
             }
@@ -79,7 +79,7 @@
                 font-weight: var(--tg-fw-extra-bold);
                 @include border-radius(50%);
                 margin-right: 16px;
-                @include transition(.3s);
+                @include transition(0.3s);
             }
             &:hover {
                 color: var(--tg-theme-primary);
@@ -89,7 +89,7 @@
             }
             &:not(.collapsed) {
                 &::after {
-                    content: "\f068";
+                    content: '\f068';
                 }
                 & .count {
                     background: var(--tg-theme-primary);

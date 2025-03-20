@@ -5,7 +5,8 @@ $font-url: 'https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,40
 
 @font-face {
     font-family: 'berlin_sans_fb_demibold';
-    src: url('../../fonts/berlin_sans_fb_demi_bold-webfont.woff2') format('woff2'),
+    src:
+        url('../../fonts/berlin_sans_fb_demi_bold-webfont.woff2') format('woff2'),
         url('../../fonts/berlin_sans_fb_demi_bold-webfont.woff') format('woff');
     font-weight: normal;
     font-style: normal;
@@ -14,38 +15,35 @@ $font-url: 'https://fonts.googleapis.com/css2?family=Barlow:ital,wght@0,300;0,40
 // Font Family
 $theme-fonts: (
     body: (
-        font-family: "'Poppins', sans-serif",
+        font-family: "'Poppins', sans-serif"
     ),
     heading: (
-        font-family: "'Barlow', sans-serif",
+        font-family: "'Barlow', sans-serif"
     ),
     berlin: (
-        font-family: "'berlin_sans_fb_demibold'",
+        font-family: "'berlin_sans_fb_demibold'"
     ),
     icon: (
-        font-family: '"Font Awesome 5 Free"',
+        font-family: '"Font Awesome 5 Free"'
     )
 );
-
 
 // Font Size
 $font-size: (
     body: (
-        font-size: 16px,
-    ),
+        font-size: 16px
+    )
 );
-
 
 // Line Height
 $theme-lh: (
     body: (
-        line-height: 1.75,
+        line-height: 1.75
     ),
     heading: (
-        line-height: 1.2,
-    ),
+        line-height: 1.2
+    )
 );
-
 
 // Font Weight
 $font-weight: (
@@ -55,6 +53,6 @@ $font-weight: (
         semi-bold: 600,
         medium: 500,
         regular: 400,
-        light: 300,
-    ),
+        light: 300
+    )
 );

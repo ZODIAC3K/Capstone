@@ -26,6 +26,6 @@ Default Tab Style
 }
 .tab-pane {
     &.active {
-        animation: tgSlideDown .5s ease-in-out;
+        animation: tgSlideDown 0.5s ease-in-out;
     }
 }

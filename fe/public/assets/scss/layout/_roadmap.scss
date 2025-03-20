@@ -60,7 +60,7 @@
                 margin-left: 0;
             }
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -95,7 +95,7 @@
                 }
             }
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: -39px;
                 top: 50%;
@@ -112,7 +112,7 @@
             }
             &.active {
                 &::before {
-                    opacity: .9;
+                    opacity: 0.9;
                 }
             }
             &:last-child {
@@ -121,7 +121,7 @@
             &:hover,
             &.active {
                 & .roadMap__steps-img {
-                    opacity: .11;
+                    opacity: 0.11;
                 }
             }
         }
@@ -132,7 +132,7 @@
             max-height: 210px;
             opacity: 0;
             pointer-events: none;
-            @include transition(.4s);
+            @include transition(0.4s);
         }
     }
     &__list {
@@ -147,7 +147,7 @@
                 margin: 0 0 0;
             }
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 4px;
@@ -156,7 +156,7 @@
                 background: #10161c;
                 border: 2px solid #262e38;
                 @include border-radius(50%);
-                @include transition(.3s);
+                @include transition(0.3s);
             }
             &.active {
                 &::before {

@@ -57,7 +57,7 @@
                 padding: 15px 20px 15px;
             }
             &::before {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -66,7 +66,7 @@
                 height: 100%;
                 background-repeat: no-repeat;
                 z-index: -1;
-                opacity: .28;
+                opacity: 0.28;
                 @media #{$lg} {
                     background-size: contain;
                 }
@@ -155,7 +155,7 @@
         }
     }
     &__shapes {
-        opacity: .27;
+        opacity: 0.27;
         & img {
             position: absolute;
             animation: shapeBlinker 1.5s linear infinite;
@@ -164,7 +164,7 @@
             &:nth-child(1) {
                 left: 23%;
                 top: 17%;
-                animation-delay: .2s;
+                animation-delay: 0.2s;
                 @media #{$md} {
                     left: 13%;
                     top: 12%;
@@ -177,7 +177,7 @@
             &:nth-child(2) {
                 left: 29%;
                 bottom: 45%;
-                animation-delay: .4s;
+                animation-delay: 0.4s;
                 @media #{$md} {
                     left: 12%;
                 }
@@ -189,7 +189,7 @@
             &:nth-child(3) {
                 right: 47%;
                 top: 20%;
-                animation-delay: .2s;
+                animation-delay: 0.2s;
                 @media #{$md} {
                     right: 23%;
                     top: 15%;
@@ -202,7 +202,7 @@
             &:nth-child(4) {
                 right: 42%;
                 top: 23%;
-                animation-delay: .6s;
+                animation-delay: 0.6s;
                 @media #{$xl} {
                     right: 40%;
                     top: 28%;
@@ -272,7 +272,7 @@
         position: relative;
         &::before,
         &::after {
-            content: "";
+            content: '';
             position: absolute;
             left: 0;
             bottom: 0;
@@ -404,7 +404,7 @@
             padding: 1px 0 1px 32px;
             margin-bottom: 30px;
             &:after {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 0;
@@ -440,7 +440,7 @@
             font-weight: 500;
             text-transform: none;
             letter-spacing: normal;
-            color: #92989E;
+            color: #92989e;
             line-height: 1.75;
             max-width: 90%;
             @media #{$ml} {
@@ -527,7 +527,6 @@
     }
 }
 
-
 /*banner area 3********************/
 .banner__area-three {
     position: relative;
@@ -554,7 +553,7 @@
             padding: 1px 0 1px 32px;
             margin-bottom: 32px;
             &:after {
-                content: "";
+                content: '';
                 position: absolute;
                 left: 0;
                 top: 0;

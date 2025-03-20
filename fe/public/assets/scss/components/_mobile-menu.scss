@@ -48,7 +48,7 @@
         transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
         -moz-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
         -webkit-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
-        -ms-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86)e;
+        -ms-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86) e;
         -o-transition: all 0.3s cubic-bezier(0.785, 0.135, 0.15, 0.86);
         @include transform(translateX(101%));
         & .navbar-collapse {
@@ -108,7 +108,7 @@
                         -o-transition: all 500ms ease;
                         transition: all 500ms ease;
                         &::after {
-                            content: "";
+                            content: '';
                             position: absolute;
                             left: 50%;
                             top: 50%;
@@ -165,7 +165,7 @@
                     }
                     & ul li {
                         & a {
-                           margin-left: 40px;
+                            margin-left: 40px;
                         }
                         & ul li {
                             & a {

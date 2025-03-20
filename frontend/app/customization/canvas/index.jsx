@@ -9,28 +9,27 @@ import Pant from "./Pant";
 import Backdrop from "./Backdrop";
 import CameraRig from "./CameraRig";
 
-const CanvasModel = ({ cloth = "pant" }) => {
-    return (
-        <Canvas
-            shadows
-            camera={{ position: [0, 0, 0], fov: 25 }}
-            gl={{ preserveDrawingBuffer: true }} //to preserve the buffers
-            className='w-full max-w-full h-full transition-all ease-in'
-        >
-            <ambientLight intensity={0.5} />
-            <Environment preset='city' />
+const CanvasModel = () => {
+  return (
+    <Canvas
+      shadows
+      camera={{ position: [0, 0, 0], fov: 25 }}
+      
+      gl={{ preserveDrawingBuffer: true }} //to preserve the buffers
+      className="w-full max-w-full h-full transition-all ease-in"
+    >
+      <ambientLight intensity={0.5} />
+      <Environment preset="city" />
 
-            <CameraRig>
-                <Backdrop />
-                <Center>
-                    {cloth === "shirt" && <Shirt />}
-                    {cloth === "pant" && <Pant />}
-                    {cloth === "shirt2" && <Shirt2 />}
-                    {cloth === "sweater" && <Sweater />}
-                </Center>
-            </CameraRig>
-        </Canvas>
-    );
-};
+      <CameraRig>
+        <Backdrop />
+        <Center>
+          <Shirt />
+        </Center>
+      </CameraRig>
+    </Canvas>
+  )
+}
 
-export default CanvasModel;
+export default CanvasModel
+

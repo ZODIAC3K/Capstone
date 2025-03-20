@@ -104,7 +104,7 @@
                     animation: activeInset 0.8s forwards ease;
                 }
                 & .services__link i {
-                    animation: tg_arrow .8s forwards;
+                    animation: tg_arrow 0.8s forwards;
                 }
             }
         }
@@ -164,7 +164,7 @@
         }
     }
     .service-card-details {
-        border: 10px solid #1F222D;
+        border: 10px solid #1f222d;
         padding: 40px;
         .service-card-meta {
             display: flex;
@@ -198,7 +198,7 @@
             display: flex;
             gap: 10px 25px;
             margin-bottom: -0.3em;
-            border-top: 1px solid #1F222D;
+            border-top: 1px solid #1f222d;
             padding-top: 15px;
             margin-top: 25px;
             flex-wrap: wrap;

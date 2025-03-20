@@ -14,13 +14,13 @@
     display: inline-flex;
     font-size: 15px;
     font-weight: var(--tg-fw-extra-bold);
-    letter-spacing: .8px;
+    letter-spacing: 0.8px;
     margin-bottom: 0;
     padding: 15px 34px;
     text-align: center;
     text-transform: uppercase;
     touch-action: manipulation;
-    @include transition(.3s);
+    @include transition(0.3s);
     vertical-align: middle;
     font-family: var(--tg-heading-font-family);
     white-space: nowrap;
@@ -58,7 +58,7 @@
         fill: var(--tg-theme-primary);
         stroke: var(--tg-common-color-white);
         stroke-width: 1.5px;
-        @include transition(.3s);
+        @include transition(0.3s);
     }
     & .cls-2 {
         stroke: transparent;
@@ -112,7 +112,7 @@
         color: var(--tg-theme-primary);
         & path:last-child {
             fill: transparent;
-            @include transition(.3s);
+            @include transition(0.3s);
         }
     }
     & i {
@@ -144,7 +144,7 @@
     line-height: 1;
     position: relative;
     overflow: hidden;
-    @include transition(.3s);
+    @include transition(0.3s);
     z-index: 1;
     & svg {
         position: absolute;
@@ -191,7 +191,7 @@
     position: relative;
     z-index: 1;
     overflow: hidden;
-    @include transition(.3s);
+    @include transition(0.3s);
     min-width: 188px;
     @media #{$xs} {
         min-width: 166px;
@@ -214,7 +214,7 @@
         z-index: -1;
         & svg {
             display: block;
-            @include transition(.3s);
+            @include transition(0.3s);
         }
     }
 }
@@ -237,7 +237,7 @@
     position: relative;
     z-index: 1;
     overflow: hidden;
-    @include transition(.3s);
+    @include transition(0.3s);
     span {
         padding: 19.5px 35px;
         display: flex;
@@ -249,7 +249,22 @@
             position: absolute;
             inset: 0px;
             background: var(--tg-common-color-white);
-            clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px, 18px 0, 18px 1px, 1px 18px, 1px calc(100% - 1px), calc(100% - 18px) calc(100% - 1px), calc(100% - 1px) calc(100% - 18px), calc(100% - 1px) 1px, 18px 1px);
+            clip-path: polygon(
+                18px 0,
+                100% 0,
+                100% calc(100% - 18px),
+                calc(100% - 18px) 100%,
+                0 100%,
+                0 18px,
+                18px 0,
+                18px 1px,
+                1px 18px,
+                1px calc(100% - 1px),
+                calc(100% - 18px) calc(100% - 1px),
+                calc(100% - 1px) calc(100% - 18px),
+                calc(100% - 1px) 1px,
+                18px 1px
+            );
             z-index: -1;
             transition: 0.4s;
             opacity: 0.15;
@@ -311,7 +326,7 @@
     position: relative;
     z-index: 1;
     overflow: hidden;
-    @include transition(.3s);
+    @include transition(0.3s);
     span {
         padding: 19.5px 35px;
         display: flex;
@@ -323,7 +338,22 @@
             position: absolute;
             inset: 0px;
             background: var(--tg-common-color-white);
-            clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px, 18px 0, 18px 1px, 1px 18px, 1px calc(100% - 1px), calc(100% - 18px) calc(100% - 1px), calc(100% - 1px) calc(100% - 18px), calc(100% - 1px) 1px, 18px 1px);
+            clip-path: polygon(
+                18px 0,
+                100% 0,
+                100% calc(100% - 18px),
+                calc(100% - 18px) 100%,
+                0 100%,
+                0 18px,
+                18px 0,
+                18px 1px,
+                1px 18px,
+                1px calc(100% - 1px),
+                calc(100% - 18px) calc(100% - 1px),
+                calc(100% - 1px) calc(100% - 18px),
+                calc(100% - 1px) 1px,
+                18px 1px
+            );
             z-index: -1;
             transition: 0.4s;
         }
@@ -373,7 +403,7 @@
     text-transform: uppercase;
     position: relative;
     &:after {
-        content: "";
+        content: '';
         position: absolute;
         left: 0;
         bottom: 0;

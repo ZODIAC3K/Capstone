@@ -46,7 +46,7 @@
             & i {
                 font-size: 44px;
                 color: #d8d8d8;
-                @include transition(.3s);
+                @include transition(0.3s);
                 @media #{$lg} {
                     font-size: 40px;
                 }

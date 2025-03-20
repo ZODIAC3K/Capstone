@@ -6,22 +6,22 @@
 .scroll__top {
     width: 45px;
     height: 45px;
-	@include flexbox();
+    @include flexbox();
     align-items: center;
     justify-content: center;
     padding: 0;
-	position: fixed;
-	bottom: -10%;
-	right: 50px;
-	font-size: 20px;
-	border-radius: 3px;
-	z-index: 99;
-	color: var(--tg-common-color-black-2);
-	text-align: center;
-	cursor: pointer;
-	background: var(--tg-theme-primary);
-	transition: .8s ease;
-	border: none;
+    position: fixed;
+    bottom: -10%;
+    right: 50px;
+    font-size: 20px;
+    border-radius: 3px;
+    z-index: 99;
+    color: var(--tg-common-color-black-2);
+    text-align: center;
+    cursor: pointer;
+    background: var(--tg-theme-primary);
+    transition: 0.8s ease;
+    border: none;
     &.open {
         bottom: 30px;
         @media #{$xs} {
