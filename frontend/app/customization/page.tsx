@@ -1,20 +1,16 @@
-"use client"
+"use client";
+import { useState } from "react";
 import Canvas from "./canvas";
 import Customizer from "./pages/Customizer";
-import Home from "./pages/Home";
-
-
 
 function App() {
-
-  return (
-    <main className="app transition-all ease-in">
-      <Home />
-      <Canvas />
-      <Customizer />
-    </main>
-    
-  )
+    const [cloth, setCloth] = useState("sweater");
+    return (
+        <main className='app '>
+            <Canvas cloth={cloth} />
+            <Customizer />
+        </main>
+    );
 }
 
-export default App
+export default App;

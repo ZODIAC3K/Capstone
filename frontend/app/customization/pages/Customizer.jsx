@@ -172,19 +172,7 @@ const handleDecals = (type, result) => {
             </div>
           </motion.div>
 
-          {/* Go Back Button */}
-          <motion.div
-            className="absolute z-10 top-5 right-5"
-            {...fadeAnimation}
-          >
-            <CustomButton
-              type="filled"
-              title="Go Back"
-              handleClick={() => (state.intro = true)}
-              customStyles="w-fit px-4 py-2.5 font-bold text-sm"
-            />
-          </motion.div>
-
+         
           {/* Download Button */}
           <motion.div
             className="absolute z-10 top-5 left-5"
