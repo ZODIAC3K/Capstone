@@ -1,16 +1,34 @@
-# PROJECT OVERVIEW
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-**backend** -> Already has ai and 3d models.
+## Getting Started
 
-**fe** -> is the new frontend which is in next js but doesnt have ai and 3d models.
+First, run the development server:
 
-**frontend** -> is the old frontend which is in next js and has ai and 3d models.
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
 
-# TASKS
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
--   we need to move the ai and 3d models to the new frontend
--   redesign 3d model frontend so we can use any 3d model, right now it is limited to the ones in the frontend
--   add admin panel to the new frontend
--   we need to refactor the backend routes because the routes are based on typical e-commerce clothing store routes but since we introduced 3d models and ai and royalty system and has enabled users to setup their own stores, the routes are not suitable anymore and need to be refactored
--   we need to add a new route for the 3d model viewer (in case user wants to use their own 3d model)
--   I think authentication need to be changed from manually added something in header to cookie based authentication with site origin, secure flag, http only flag, max age 30 days and we need to setup a middleware to check if the user is authenticated and if not, it will redirect to the login page that way frontend doesnt to specifically handle the api call by sending the "x-api-key header".
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
