@@ -60,7 +60,7 @@ const Customizer = () => {
         try {
             setGeneratingImg(true)
 
-            const response = await fetch('http://localhost:6969/api/v1/dalle', {
+            const response = await fetch('/api/genAI', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -157,7 +157,7 @@ const Customizer = () => {
 
                     {/* Download Button */}
                     <motion.div className='download-btn ' {...fadeAnimation}>
-                        <button className='btn btn-primary' style={{ width : 'fit'}}onClick={downloadCanvasToImage}>
+                        <button className='btn btn-primary' style={{ width: 'fit' }} onClick={downloadCanvasToImage}>
                             <img
                                 src={'/assets/download.png'}
                                 alt='download_image'
