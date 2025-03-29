@@ -1,0 +1,429 @@
+/* Add Product Page Specific Styles */
+
+/* Base container styles */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+    background-color: #0f172a;
+}
+
+.formContainer {
+    background-color: #0f172a;
+    backdrop-filter: blur(8px);
+    border-radius: 0.75rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    border: 1px solid #1e293b;
+    overflow: hidden;
+    width: 100%;
+    max-width: 48rem;
+}
+
+.header {
+    background-color: #0f172a;
+    padding: 1.5rem 2rem;
+    border-bottom: none;
+}
+
+.headerTitle {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.formContent {
+    padding: 1.5rem 2rem 2rem;
+}
+
+.formGroup {
+    margin-bottom: 1.25rem;
+}
+
+.formRow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+    .formRow {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.label {
+    display: block;
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.requiredAsterisk {
+    color: #fbbf24;
+    margin-left: 2px;
+}
+
+.input,
+.select,
+.textarea {
+    width: 100%;
+    background-color: white;
+    color: #111827;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    padding: 0.625rem 0.75rem;
+    transition: all 0.2s ease;
+    font-size: 0.875rem;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.5rem;
+}
+
+.priceInputContainer {
+    position: relative;
+}
+
+.currencySymbol {
+    position: absolute;
+    top: 50%;
+    left: 0.75rem;
+    transform: translateY(-50%);
+    color: #4b5563;
+    font-size: 0.875rem;
+    font-weight: 500;
+    pointer-events: none;
+}
+
+.priceInput {
+    padding-left: 1.75rem;
+}
+
+.buttonsContainer {
+    margin-top: 2rem;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.buttonWrapper {
+    width: 100%;
+    max-width: 20rem;
+}
+
+.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.button {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+}
+
+.primaryButton {
+    background-color: #16a34a !important;
+    color: white;
+    border: none;
+    padding: 0.625rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.2s ease;
+    transform: translateY(0);
+}
+
+.primaryButton:hover:not(:disabled) {
+    background-color: #15803d !important;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.primaryButton:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.secondaryButton {
+    background-color: #9ca3af;
+    color: white;
+    border: none;
+}
+
+.secondaryButton:hover:not(:disabled) {
+    background-color: #6b7280;
+}
+
+.errorMessage {
+    color: #f87171;
+    font-size: 0.75rem;
+    text-align: right;
+    margin-top: 0.5rem;
+    position: absolute;
+    bottom: 2rem;
+    right: 2rem;
+}
+
+/* Preview styles */
+.previewContainer {
+    padding: 2rem;
+}
+
+.previewHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.previewTitle {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.modelType {
+    color: #d1d5db;
+    background-color: rgba(31, 41, 55, 0.8);
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid #4b5563;
+}
+
+.previewGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+@media (min-width: 768px) {
+    .previewGrid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.infoCard {
+    background-color: rgba(31, 41, 55, 0.9);
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #4b5563;
+}
+
+.infoTitle {
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 500;
+    margin-bottom: 1rem;
+}
+
+.infoContent {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.infoItem h4 {
+    color: #9ca3af;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.infoValue {
+    color: white;
+    font-weight: 500;
+}
+
+.flexRow {
+    display: flex;
+    gap: 1.5rem;
+}
+
+.tagItem {
+    display: inline-block;
+    background-color: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 0.25rem 0.625rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    margin-top: 0.25rem;
+    max-width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.description {
+    color: #d1d5db;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.productDisplay {
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #4b5563;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+.productImageContainer {
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    width: 100%;
+}
+
+.imageWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.productImage {
+    max-width: 75%;
+    max-height: 75%;
+    object-fit: contain;
+    margin: auto;
+    display: block;
+}
+
+.colorTag {
+    position: absolute;
+    bottom: 0.5rem;
+    right: 0.5rem;
+    background-color: rgba(31, 41, 55, 0.9);
+    color: #e5e7eb;
+    font-size: 0.75rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: 0.375rem;
+    border: 1px solid #4b5563;
+}
+
+.colorSwatch {
+    display: inline-block;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    margin-right: 0.375rem;
+    vertical-align: middle;
+}
+
+.shaderCard {
+    background-color: rgba(31, 41, 55, 0.9);
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid #4b5563;
+    margin-bottom: 2rem;
+}
+
+.shaderContainer {
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid #4b5563;
+    padding: 1rem;
+    width: 240px;
+    height: 240px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.shaderImage {
+    max-width: 85%;
+    max-height: 85%;
+    object-fit: contain;
+    margin: auto;
+    display: block;
+}
+
+.actionButtons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    width: 100%;
+    max-width: 28rem;
+    margin: 0 auto;
+}
+
+.actionButton {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.noImageText {
+    color: #6b7280;
+}
+
+@keyframes gradientAnimation {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.loadingSpinner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.spinner {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: white;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

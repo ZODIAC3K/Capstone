@@ -327,7 +327,11 @@ const CustomizeModal = ({ isOpen, onClose, onSave }) => {
                 modelType: state.modelType,
                 color: state.color,
                 shader: state.isFullTexture ? state.fullDecal : state.logoDecal,
-                productImage: canvas.toDataURL('image/png')
+                productImage: canvas.toDataURL('image/png'),
+                isFullTexture: state.isFullTexture,
+                isLogoTexture: state.isLogoTexture,
+                fullDecal: state.fullDecal,
+                logoDecal: state.logoDecal
             }
 
             // Pass data back to parent component

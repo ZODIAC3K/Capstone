@@ -33,7 +33,7 @@ const BreadcrumbArea = ({ bg = default_bg, brd_img = default_brd_img, title, sub
                                     </ul>
                                 </nav>
                                 <div className='about__content-btns mx-auto my-4'>
-                                    <Link href='/customize' className='tg-btn-3 tg-svg'>
+                                    <Link href='/add-product' className='tg-btn-3 tg-svg'>
                                         <SvgIconCom icon={shape} id='svg-6' />
                                         <span>Add Product</span>
                                     </Link>
