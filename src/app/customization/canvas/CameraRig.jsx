@@ -1,44 +1,66 @@
-import React, { useRef, useEffect } from 'react'
+import React, { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { easing } from 'maath'
 import { useSnapshot } from 'valtio'
 import state from '../store'
 
-const CameraRig = ({ children }) => {
+// Define specific adjustments for each model
+const modelAdjustments = {
+    shirt: {
+        targetPosition: [0, 0, 2.7],
+        mobilePosition: [0, 0, 3.2]
+    },
+    shirt2: {
+        targetPosition: [0, 0, 2.8],
+        mobilePosition: [0, 0, 3.6]
+    },
+    sweater: {
+        targetPosition: [0, 0, 2.9],
+        mobilePosition: [0, 0, 3.8]
+    },
+    pant: {
+        targetPosition: [0, 0, 3.0],
+        mobilePosition: [0, 0, 3.6]
+    }
+}
+
+const CameraRig = ({ children, modelType }) => {
     const group = useRef()
     const snap = useSnapshot(state)
 
     useFrame((state, delta) => {
-        //shirt size on differt screen
-        const isBreakpoint = window.innerWidth <= 1260 //for window
-        const isMobile = window.innerWidth <= 600 //for mobile
+        const adjustments = modelAdjustments[modelType] || modelAdjustments.shirt
+        const isBreakpoint = window.innerWidth <= 1260
+        const isMobile = window.innerWidth <= 600
 
-        // setting the initial position of the model
-        let targetPosition = [-0.4, 0, 2]
+        // set the initial position of the model
+        let targetPosition = [0, 0, 0]
 
-        // if we r on home page then repositioning it
-        if (snap.intro) {
-            if (isBreakpoint) targetPosition = [0, 0, 2]
-            if (isMobile) targetPosition = [0, 0.2, 2.5]
+        if (modelType === 'pant') {
+            group.current.position.y = -0.3 // Slightly lower for pants
+        } else if (snap.intro) {
+            // Default position for intro view
+            targetPosition = [0, 0, 2]
+        } else {
+            // Adjust based on model and screen size
+            if (isBreakpoint) {
+                targetPosition = [0, 0, 2.5]
+            } else {
+                targetPosition = adjustments.targetPosition
+            }
+
+            if (isMobile) {
+                targetPosition = adjustments.mobilePosition
+            }
         }
-        // if on customiser page
-        else {
-            if (isMobile) targetPosition = [0, 0, 2.5]
-            else targetPosition = [0, 0, 1.85]
+
+        // set model camera position
+        easing.damp3(state.camera.position, targetPosition, 0.25, delta)
+
+        // set the model rotation smoothly
+        if (group.current) {
+            easing.dampE(group.current.rotation, [state.pointer.y / 10, -state.pointer.x / 5, 0], 0.25, delta)
         }
-
-        // setting model camera position
-        easing.damp3(state.camera.position, targetPosition, 1.25, delta)
-
-        // setting the model rotation smoothly
-        easing.dampE(
-            group.current.rotation,
-            // [state.pointer.y / 10, -state.pointer.x / 5, 0],
-            // [state.pointer.y / 2, -state.pointer.x / 0.15 , 0], ////rotation front back
-            [state.pointer.y / 2, -state.pointer.x / 2, 0], /////silgth rotation in x
-            0.25, //smooth time
-            delta //from useframe hook
-        )
     })
 
     return <group ref={group}>{children}</group>

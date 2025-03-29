@@ -1,0 +1,316 @@
+/* Define variables with a pure class selector instead of :root */
+.variables {
+    --bg-primary: #1f2937;
+    --bg-secondary: #111827;
+    --bg-canvas: #374151;
+    --text-primary: #f9fafb;
+    --text-secondary: #d1d5db;
+    --border-color: #4b5563;
+    --button-bg: #374151;
+    --button-active: #3b82f6;
+    --shadow-color: rgba(0, 0, 0, 0.5);
+    --button-gradient-from: #14b8a6;
+    /* teal-500 */
+    --button-gradient-to: #22c55e;
+    /* green-500 */
+    --button-hover-from: #0d9488;
+    /* teal-600 */
+    --button-hover-to: #16a34a;
+    /* green-600 */
+}
+
+/* Modal Overlay - Apply the variables class here */
+.modalOverlay {
+    composes: variables;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Modal Container */
+.modalContainer {
+    position: relative;
+    width: 100%;
+    max-width: 1280px;
+    height: 90vh;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Header Controls */
+.headerControls {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 1rem;
+    z-index: 50;
+    display: flex;
+    gap: 0.75rem;
+}
+
+/* Close Button */
+.closeButton {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 1rem;
+    z-index: 50;
+}
+
+.closeButtonInner {
+    background-color: #ef4444;
+    color: white;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    transition: background-color 0.2s;
+    height: 2.5rem;
+    width: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.closeButtonInner:hover {
+    background-color: #dc2626;
+}
+
+/* Modal Content */
+.modalContent {
+    display: flex;
+    height: 100%;
+}
+
+/* Canvas Container */
+.canvasContainer {
+    width: 70%;
+    height: 100%;
+    position: relative;
+    padding: 1rem;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.canvasInner {
+    width: 100%;
+    padding-bottom: 100%;
+    /* Makes it a perfect square */
+    max-height: calc(100% - 2rem);
+    /* Prevents overflow */
+    background-color: var(--bg-canvas);
+    border-radius: 0.5rem;
+    box-shadow: inset 0 2px 4px 0 var(--shadow-color);
+    overflow: hidden;
+    position: relative;
+    touch-action: none;
+}
+
+/* Loading Indicator */
+.loadingIndicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    background-color: var(--bg-canvas);
+}
+
+.spinner {
+    width: 3rem;
+    height: 3rem;
+    border: 4px solid var(--button-active);
+    border-top-color: transparent;
+    border-radius: 9999px;
+    animation: spin 1s linear infinite;
+}
+
+.loadingText {
+    margin-top: 1rem;
+    color: var(--text-secondary);
+}
+
+/* Canvas Wrapper */
+.canvasWrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    transition: opacity 0.3s ease-in-out;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.visible {
+    opacity: 1;
+}
+
+.hidden {
+    opacity: 0;
+}
+
+/* Controls Container */
+.controlsContainer {
+    width: 30%;
+    padding: 1.25rem;
+    height: 100%;
+    background-color: var(--bg-secondary);
+    overflow-y: auto;
+}
+
+/* Headings */
+.heading {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1.25rem;
+    color: var(--text-primary);
+}
+
+.subheading {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-primary);
+}
+
+/* Sections */
+.section {
+    margin-bottom: 1.5rem;
+}
+
+/* Labels */
+.label {
+    display: block;
+    color: var(--text-secondary);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+/* Select */
+.select {
+    display: block;
+    width: 100%;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+}
+
+/* Tools Grid */
+.toolsGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Tool Buttons */
+.toolButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 0.5rem;
+    background-color: var(--button-bg);
+    transition: background-color 0.2s;
+}
+
+.activeToolButton {
+    background-color: var(--button-active);
+    color: white;
+}
+
+.toolIcon {
+    width: 2rem;
+    height: 2rem;
+    object-fit: contain;
+}
+
+/* Tab Content */
+.tabContent {
+    margin-bottom: 1rem;
+}
+
+/* Save Button */
+.saveButtonContainer {
+    margin-top: auto;
+}
+
+.saveButton {
+    width: 100%;
+    padding: 0.75rem 0;
+    background: linear-gradient(to right, #14b8a6, #22c55e);
+    /* teal-500 to green-500 */
+    color: white;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    transition: all 0.2s;
+    border: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.saveButton:hover {
+    background: linear-gradient(to right, #0d9488, #16a34a);
+    /* teal-600 to green-600 */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    transform: translateY(-1px);
+}
+
+.saveButton:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.5);
+    /* teal focus ring */
+}
+
+.saveButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    background: linear-gradient(to right, #94a3b8, #94a3b8);
+    /* disabled state */
+}
+
+/* Canvas specific styles */
+/* Using proper CSS modules global selector syntax */
+.canvasWrapper :global(canvas) {
+    width: 100% !important;
+    height: 100% !important;
+    outline: none;
+}
+
+/* Animations */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Model animation */
+.modelChanging {
+    opacity: 0.7;
+    transform: scale(0.98);
+}
+
+.modelChanging {
+    opacity: 0.7;
+    transform: scale(0.98);
+}
