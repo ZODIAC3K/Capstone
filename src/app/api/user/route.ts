@@ -8,7 +8,13 @@ import { tokenModel } from '@/models/tokenSchema'
 import jwt from 'jsonwebtoken'
 import { sendEmail } from '@/lib/emailService'
 import AuthModel from '@/models/authSchema'
-
+import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
+import productModel from '@/models/productSchema'
+import objectModel from '@/models/objectSchema'
+import { CreatorModel } from '@/models/creatorSchema'
+import CategoryModel from '@/models/categorySchema'
+import ShaderModel from '@/models/shaderSchema'
+import { AddressModel } from '@/models/addressSchema'
 export async function POST(request: NextRequest) {
     try {
         const db = await dbConnect()
@@ -77,13 +83,28 @@ export async function POST(request: NextRequest) {
                 const arrayBuffer = await profilePicture.arrayBuffer()
                 const buffer = Buffer.from(arrayBuffer)
 
-                // Create a new image document within the transaction
+                // Upload to S3 using your utility function
+                const uploadResult = await uploadObjectToS3(
+                    buffer,
+                    `profile-${userId}-${Date.now()}`,
+                    profilePicture.type || 'image/jpeg'
+                )
+
+                // Check if upload was successful
+                if (!uploadResult.success) {
+                    return NextResponse.json(
+                        { error: uploadResult.error || 'Failed to upload profile image' },
+                        { status: 500 }
+                    )
+                }
+
+                // Create a new image document with the URL (not the buffer)
                 const imageDoc = await ImageModel.create(
                     [
                         {
-                            user_id: userId, // Use the _id from the user document instance
-                            data: buffer,
-                            content_type: 'profile_picture'
+                            user_id: userId,
+                            image_url: uploadResult.url, // Store the URL instead of the buffer
+                            content_type: profilePicture.type || 'image/jpeg'
                         }
                     ],
                     { session }
@@ -165,6 +186,17 @@ export async function POST(request: NextRequest) {
 
 export async function GET(request: NextRequest) {
     try {
+        await Promise.all([
+            UserModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ShaderModel.findOne().exec(),
+            CategoryModel.findOne().exec(),
+            productModel.findOne().exec(),
+            objectModel.findOne().exec(),
+            AddressModel.findOne().exec(),
+            tokenModel.findOne().exec()
+        ]).catch(() => {})
         const db = await dbConnect()
         if (!db) {
             return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
@@ -192,10 +224,11 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
             }
 
-            // Find user and populate all references
+            // Find user and populate all references including profile_picture
             let user = await UserModel.findById(auth.userId)
                 .select('-password')
                 .populate('savedAddress')
+                .populate('profile_picture') // Make sure to populate profile picture
                 .session(session)
 
             if (!user) {
@@ -304,22 +337,38 @@ export async function PATCH(request: NextRequest) {
                 const profile_picture = formData.get('profile_picture') as File
 
                 if (profile_picture.size > 0) {
-                    // Add check to ensure valid file
+                    // Convert file to buffer
                     const bytes = await profile_picture.arrayBuffer()
                     const buffer = Buffer.from(bytes)
+
+                    // Upload to S3
+                    const uploadResult = await uploadObjectToS3(
+                        buffer,
+                        `profile-${user._id}-${Date.now()}`,
+                        profile_picture.type || 'image/jpeg'
+                    )
+
+                    // Check if upload was successful
+                    if (!uploadResult.success) {
+                        await session.abortTransaction()
+                        return NextResponse.json(
+                            { error: uploadResult.error || 'Failed to upload profile image' },
+                            { status: 500 }
+                        )
+                    }
 
                     // Delete old profile picture if exists
                     if (user.profile_picture) {
                         await ImageModel.findByIdAndDelete(user.profile_picture).session(session)
                     }
 
-                    // Create new image document
+                    // Create new image document with URL
                     const imageDoc = await ImageModel.create(
                         [
                             {
                                 user_id: user._id,
-                                data: buffer,
-                                content_type: 'profile_picture'
+                                image_url: uploadResult.url, // Store the URL instead of the buffer
+                                content_type: profile_picture.type || 'image/jpeg'
                             }
                         ],
                         { session }
@@ -334,13 +383,15 @@ export async function PATCH(request: NextRequest) {
                 await user.save({ session })
             }
 
+            // Fetch the updated user with populated profile_picture
+            const updatedUserWithPopulated = await UserModel.findById(user._id)
+                .select('-password')
+                .populate('profile_picture')
+                .session(session)
+
             await session.commitTransaction()
 
-            // Return updated user without sensitive information
-            const updatedUser = user.toObject()
-            delete updatedUser.password
-
-            return NextResponse.json(updatedUser, { status: 200 })
+            return NextResponse.json(updatedUserWithPopulated, { status: 200 })
         } catch (error) {
             await session.abortTransaction()
             throw error

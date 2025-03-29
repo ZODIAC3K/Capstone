@@ -7,8 +7,7 @@ import { ImageModel } from '@/models/imageSchema'
 import UserModel from '@/models/userSchema'
 import productModel from '@/models/productSchema'
 import ShaderModel from '@/models/shaderSchema'
-
-// TODO: uncomment the populate fields in the (get) and (patch) routes for the creator profile picture and cover image
+import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
 
 export async function POST(request: NextRequest) {
     try {
@@ -71,11 +70,23 @@ export async function POST(request: NextRequest) {
             let profileImageId = undefined
             if (profileImage) {
                 const imageBuffer = Buffer.from(await profileImage.arrayBuffer())
+                const fileName = `creator-profile-${authUser.userId}-${Date.now()}`
+
+                // Use your existing S3 upload utility
+                const uploadResult = await uploadObjectToS3(imageBuffer, fileName, profileImage.type)
+
+                if (!uploadResult.success) {
+                    return NextResponse.json(
+                        { success: false, error: uploadResult.error || 'Failed to upload profile image' },
+                        { status: 500 }
+                    )
+                }
+
                 const [imageDetail] = await ImageModel.create(
                     [
                         {
                             user_id: authUser.userId,
-                            data: imageBuffer,
+                            image_url: uploadResult.url, // Use the returned URL
                             content_type: profileImage.type
                         }
                     ],
@@ -88,11 +99,23 @@ export async function POST(request: NextRequest) {
             let coverImageId = undefined
             if (coverImage) {
                 const imageBuffer = Buffer.from(await coverImage.arrayBuffer())
+                const fileName = `creator-cover-${authUser.userId}-${Date.now()}`
+
+                // Use your existing S3 upload utility
+                const uploadResult = await uploadObjectToS3(imageBuffer, fileName, coverImage.type)
+
+                if (!uploadResult.success) {
+                    return NextResponse.json(
+                        { success: false, error: uploadResult.error || 'Failed to upload cover image' },
+                        { status: 500 }
+                    )
+                }
+
                 const [imageDetail] = await ImageModel.create(
                     [
                         {
                             user_id: authUser.userId,
-                            data: imageBuffer,
+                            image_url: uploadResult.url, // Use the returned URL
                             content_type: coverImage.type
                         }
                     ],
@@ -320,19 +343,23 @@ export async function GET(request: NextRequest) {
                     path: 'userId',
                     model: 'UserDetail',
                     select: '-password' // Exclude sensitive data
+                },
+                {
+                    path: 'creatorProfilePicture',
+                    model: 'ImageDetail'
+                },
+                {
+                    path: 'creatorCoverImage',
+                    model: 'ImageDetail'
+                },
+                {
+                    path: 'products',
+                    model: 'Product',
+                    populate: {
+                        path: 'image_id',
+                        model: 'ImageDetail'
+                    }
                 }
-                // {
-                // 	path: "creatorProfilePicture",
-                // 	model: "ImageDetail",
-                // },
-                // {
-                // 	path: "creatorCoverImage",
-                // 	model: "ImageDetail",
-                // },
-                // {
-                // 	path: "products",
-                // 	model: "Product",
-                // },
             ])
 
             if (!creator) {
@@ -505,11 +532,25 @@ export async function PATCH(request: NextRequest) {
 
                 // Create new profile image
                 const imageBuffer = Buffer.from(await profileImage.arrayBuffer())
+                const fileName = `creator-profile-${authUser.userId}-${Date.now()}`
+
+                // Use your existing S3 upload utility
+                const uploadResult = await uploadObjectToS3(imageBuffer, fileName, profileImage.type)
+
+                if (!uploadResult.success) {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return NextResponse.json(
+                        { success: false, error: uploadResult.error || 'Failed to upload profile image' },
+                        { status: 500 }
+                    )
+                }
+
                 const [imageDetail] = await ImageModel.create(
                     [
                         {
                             user_id: authUser.userId,
-                            data: imageBuffer,
+                            image_url: uploadResult.url, // Use the returned URL
                             content_type: profileImage.type
                         }
                     ],
@@ -528,11 +569,25 @@ export async function PATCH(request: NextRequest) {
 
                 // Create new cover image
                 const imageBuffer = Buffer.from(await coverImage.arrayBuffer())
+                const fileName = `creator-cover-${authUser.userId}-${Date.now()}`
+
+                // Use your existing S3 upload utility
+                const uploadResult = await uploadObjectToS3(imageBuffer, fileName, coverImage.type)
+
+                if (!uploadResult.success) {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return NextResponse.json(
+                        { success: false, error: uploadResult.error || 'Failed to upload cover image' },
+                        { status: 500 }
+                    )
+                }
+
                 const [imageDetail] = await ImageModel.create(
                     [
                         {
                             user_id: authUser.userId,
-                            data: imageBuffer,
+                            image_url: uploadResult.url, // Use the returned URL
                             content_type: coverImage.type
                         }
                     ],
@@ -560,21 +615,21 @@ export async function PATCH(request: NextRequest) {
                     model: 'UserDetail',
                     select: '-password'
                 },
-                // {
-                // 	path: "creatorProfilePicture",
-                // 	model: "ImageDetail",
-                // },
-                // {
-                // 	path: "creatorCoverImage",
-                // 	model: "ImageDetail",
-                // },
+                {
+                    path: 'creatorProfilePicture',
+                    model: 'ImageDetail'
+                },
+                {
+                    path: 'creatorCoverImage',
+                    model: 'ImageDetail'
+                },
                 {
                     path: 'products',
-                    model: 'Product'
-                    // populate: {
-                    // 	path: "image_id",
-                    // 	model: "ImageDetail",
-                    // },
+                    model: 'Product',
+                    populate: {
+                        path: 'image_id',
+                        model: 'ImageDetail'
+                    }
                 }
             ])
 
