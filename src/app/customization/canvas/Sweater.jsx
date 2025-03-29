@@ -36,12 +36,16 @@ export function Sweater(props) {
         }
     }, [nodes, materials])
 
-    // Load uploaded texture (if any)
+    // Load uploaded textures
+    const logoTexture = snap.logoDecal ? useTexture(snap.logoDecal) : null
     const fullTexture = snap.fullDecal ? useTexture(snap.fullDecal) : null
 
     useEffect(() => {
-        console.log('Texture updated for sweater:', snap.fullDecal)
-    }, [snap.fullDecal])
+        console.log('Textures updated for sweater:', {
+            logo: snap.logoDecal,
+            full: snap.fullDecal
+        })
+    }, [snap.logoDecal, snap.fullDecal])
 
     // If model failed to load, show a fallback
     if (modelError || !nodes || !materials) {
@@ -61,12 +65,6 @@ export function Sweater(props) {
             Object.values(materials).forEach((material) => {
                 if (material) {
                     easing.dampC(material.color, snap.color, 0.25, delta)
-
-                    // Apply texture only in full texture mode
-                    if (snap.isFullTexture && fullTexture) {
-                        material.map = fullTexture
-                    }
-
                     material.needsUpdate = true
                 }
             })
@@ -104,10 +102,25 @@ export function Sweater(props) {
                         <mesh key={index} castShadow receiveShadow geometry={node.geometry} material={material}>
                             {snap.isFullTexture && fullTexture && (
                                 <Decal
-                                    position={[0, 0, 0]}
+                                    position={[0, 0.2, 0.5]}
                                     rotation={[0, 0, 0]}
-                                    scale={1} // Covers full sweater
+                                    scale={1.25} // Larger to ensure coverage
                                     map={fullTexture}
+                                    depthTest={false}
+                                    depthWrite={true}
+                                />
+                            )}
+
+                            {/* Only add logo to the front mesh (typically the first one) */}
+                            {index === 0 && snap.isLogoTexture && logoTexture && (
+                                <Decal
+                                    position={[0, 0.2, 0.5]}
+                                    rotation={[0, 0, 0]}
+                                    scale={0.35}
+                                    map={logoTexture}
+                                    anisotropy={16}
+                                    depthTest={false}
+                                    depthWrite={true}
                                 />
                             )}
                         </mesh>

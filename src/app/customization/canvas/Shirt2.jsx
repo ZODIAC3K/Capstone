@@ -36,12 +36,16 @@ export function Shirt2(props) {
         }
     }, [nodes, materials])
 
-    // Load uploaded texture (if any)
+    // Load uploaded textures (if any)
+    const logoTexture = snap.logoDecal ? useTexture(snap.logoDecal) : null
     const fullTexture = snap.fullDecal ? useTexture(snap.fullDecal) : null
 
     useEffect(() => {
-        console.log('Texture updated:', snap.fullDecal)
-    }, [snap.fullDecal])
+        console.log('Textures updated:', {
+            logo: snap.logoDecal,
+            full: snap.fullDecal
+        })
+    }, [snap.logoDecal, snap.fullDecal])
 
     // If model failed to load, show a fallback
     if (modelError || !nodes || !materials) {
@@ -61,12 +65,6 @@ export function Shirt2(props) {
             Object.values(materials).forEach((material) => {
                 if (material) {
                     easing.dampC(material.color, snap.color, 0.25, delta)
-
-                    // Apply texture only in full texture mode
-                    if (snap.isFullTexture && fullTexture) {
-                        material.map = fullTexture
-                    }
-
                     material.needsUpdate = true
                 }
             })
@@ -98,10 +96,24 @@ export function Shirt2(props) {
             >
                 {snap.isFullTexture && fullTexture && (
                     <Decal
-                        position={[0, 0, 0]}
+                        position={[0, 0.25, 0.5]}
                         rotation={[0, 0, 0]}
-                        scale={1} // Covers full shirt
+                        scale={1.25} // Larger to ensure coverage on formal shirt
                         map={fullTexture}
+                        depthTest={false}
+                        depthWrite={true}
+                    />
+                )}
+
+                {snap.isLogoTexture && logoTexture && (
+                    <Decal
+                        position={[0, 0.25, 0.5]}
+                        rotation={[0, 0, 0]}
+                        scale={0.35}
+                        map={logoTexture}
+                        anisotropy={16}
+                        depthTest={false}
+                        depthWrite={true}
                     />
                 )}
             </mesh>

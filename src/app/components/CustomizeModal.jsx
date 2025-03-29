@@ -39,8 +39,7 @@ const CustomizeModal = ({ isOpen, onClose, onSave }) => {
     const models = [
         { id: 'shirt', name: 'T-Shirt' },
         { id: 'shirt2', name: 'Formal Shirt' },
-        { id: 'sweater', name: 'V-Neck Sweater' },
-        { id: 'pant', name: 'Pants' }
+        { id: 'sweater', name: 'V-Neck Sweater' }
     ]
 
     // Calculate canvas height based on container size

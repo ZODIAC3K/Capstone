@@ -17,10 +17,6 @@ const modelAdjustments = {
     sweater: {
         targetPosition: [0, 0, 2.9],
         mobilePosition: [0, 0, 3.8]
-    },
-    pant: {
-        targetPosition: [0, 0, 3.0],
-        mobilePosition: [0, 0, 3.6]
     }
 }
 
@@ -36,9 +32,7 @@ const CameraRig = ({ children, modelType }) => {
         // set the initial position of the model
         let targetPosition = [0, 0, 0]
 
-        if (modelType === 'pant') {
-            group.current.position.y = -0.3 // Slightly lower for pants
-        } else if (snap.intro) {
+        if (snap.intro) {
             // Default position for intro view
             targetPosition = [0, 0, 2]
         } else {

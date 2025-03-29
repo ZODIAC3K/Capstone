@@ -7,7 +7,6 @@ import state from '../store'
 import Shirt from './Shirt'
 import Shirt2 from './Shirt2'
 import Sweater from './Sweater'
-// import Pant from './Pant'
 import Backdrop from './Backdrop'
 import CameraRig from './CameraRig'
 
