@@ -1,21 +1,28 @@
 import React from 'react'
-import Image, { StaticImageData } from 'next/image'
+import Image from 'next/image'
 import Link from 'next/link'
-import default_bg from '@/assets/img/bg/breadcrumb_bg01.jpg'
-import default_brd_img from '@/assets/img/others/breadcrumb_img01.png'
-import SvgIconCom from '@/app/components/common/svg-icon-anim'
-import shape from '@/assets/img/icons/shape.svg'
+import SvgIconCom from '../common/svg-icon-anim'
 
 // props type
-type IProps = {
-    bg?: StaticImageData
-    brd_img?: StaticImageData
+interface IProps {
     title: string
     subtitle: string
+    bg?: any
+    brd_img?: any
+    customButton?: {
+        text: string
+        link?: string
+        onClick?: () => void
+    }
+    imageClassName?: string
 }
-const BreadcrumbArea = ({ bg = default_bg, brd_img = default_brd_img, title, subtitle }: IProps) => {
+
+const BreadcrumbArea = ({ bg, brd_img, title, subtitle, customButton, imageClassName }: IProps) => {
+    // Default background fallback
+    const bgStyle = bg ? { backgroundImage: `url(${bg.src})` } : { backgroundColor: '#0d0d0d' }
+
     return (
-        <section className='breadcrumb-area' style={{ backgroundImage: `url(${bg.src})` }}>
+        <section className='breadcrumb-area' style={bgStyle}>
             <div className='container'>
                 <div className='breadcrumb__wrapper'>
                     <div className='row'>
@@ -32,18 +39,36 @@ const BreadcrumbArea = ({ bg = default_bg, brd_img = default_brd_img, title, sub
                                         </li>
                                     </ul>
                                 </nav>
-                                <div className='about__content-btns mx-auto my-4'>
-                                    <Link href='/add-product' className='tg-btn-3 tg-svg'>
-                                        <SvgIconCom icon={shape} id='svg-6' />
-                                        <span>Add Product</span>
-                                    </Link>
-                                </div>
+                                {customButton && (
+                                    <div className='about__content-btns mx-auto my-4'>
+                                        {customButton.link ? (
+                                            <Link href={customButton.link} className='tg-btn-3 tg-svg'>
+                                                <SvgIconCom icon='/assets/img/icons/shape.svg' id='svg-6' />
+                                                <span>{customButton.text}</span>
+                                            </Link>
+                                        ) : customButton.onClick ? (
+                                            <button onClick={customButton.onClick} className='tg-btn-3 tg-svg'>
+                                                <SvgIconCom icon='/assets/img/icons/shape.svg' id='svg-6' />
+                                                <span>{customButton.text}</span>
+                                            </button>
+                                        ) : null}
+                                    </div>
+                                )}
                             </div>
                         </div>
                         <div className='col-xl-6 col-lg-5 position-relative d-none d-lg-block'>
-                            <div className='breadcrumb__img'>
-                                <Image src={brd_img} alt='img' style={{ height: 'auto', width: 'auto' }} />
-                            </div>
+                            {brd_img && (
+                                <div className='breadcrumb__img'>
+                                    <Image
+                                        src={brd_img}
+                                        alt='img'
+                                        style={{ height: 'auto', width: 'auto' }}
+                                        width={500}
+                                        height={500}
+                                        className={imageClassName}
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

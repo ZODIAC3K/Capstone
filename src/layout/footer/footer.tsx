@@ -4,7 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import logo from '@/assets/img/logo/logo.png'
 
-const FooterTwo = () => {
+const FooterTwo = ({ className = '' }) => {
     useEffect(() => {
         if (!!window.IntersectionObserver) {
             const observer = new IntersectionObserver(
@@ -31,7 +31,7 @@ const FooterTwo = () => {
         }
     }, [])
     return (
-        <footer className='footer-style-two has-footer-animation'>
+        <footer className={`footer-style-two has-footer-animation ${className}`}>
             <div className='footer__country'>
                 <div className='container custom-container'>
                     <div className='row'>

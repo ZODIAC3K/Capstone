@@ -14,6 +14,9 @@ import TeamDetailsArea from '../components/team/team-details-area'
 import TeamArea from '../components/team/team-area'
 import BrandArea from '../components/brand/brand-area'
 import { mockCreatorData } from './mock-data'
+// Import the CSS module
+import styles from './styles/CreatorProfile.module.css'
+import ProductCustomizeButton from '../components/ProductCustomizeButton'
 
 // We can't use export const metadata with client components
 // So we'll need to handle metadata differently
@@ -30,8 +33,7 @@ const Button = ({
     href?: string
     [key: string]: any
 }) => {
-    const baseClasses = 'px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors'
-    const buttonClasses = `${baseClasses} ${className}`
+    const buttonClasses = `${styles.button} ${className}`
 
     if (href) {
         return (
@@ -48,11 +50,647 @@ const Button = ({
     )
 }
 
+// Define types for creator data
+interface CreatorProfilePicture {
+    image_url?: string
+    data?: string | Buffer
+    content_type?: string
+}
+
+interface CreatorData {
+    _id?: string
+    name: string
+    bio?: string
+    quote?: string
+    products?: any[]
+    totalSales?: number
+    creatorProfilePicture?: CreatorProfilePicture
+    creatorCoverImage?: CreatorProfilePicture
+}
+
+// Create Creator Form Component
+const CreateCreatorForm = ({
+    existingData = null,
+    onSubmitSuccess = () => {}
+}: {
+    existingData?: CreatorData | null
+    onSubmitSuccess?: () => void
+}) => {
+    const [formData, setFormData] = useState({
+        name: existingData?.name || '',
+        bio: existingData?.bio || '',
+        quote: existingData?.quote || ''
+    })
+    const [profileImage, setProfileImage] = useState<File | null>(null)
+    const [coverImage, setCoverImage] = useState<File | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'profile' | 'cover') => {
+        if (e.target.files && e.target.files[0]) {
+            if (type === 'profile') {
+                setProfileImage(e.target.files[0])
+            } else {
+                setCoverImage(e.target.files[0])
+            }
+        }
+    }
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsSubmitting(true)
+        setError(null)
+
+        try {
+            const submitFormData = new FormData()
+
+            // Add text fields
+            submitFormData.append('name', formData.name)
+            if (formData.bio) submitFormData.append('bio', formData.bio)
+            if (formData.quote) submitFormData.append('quote', formData.quote)
+
+            // Add image files if selected
+            if (profileImage) submitFormData.append('creatorProfileImage', profileImage)
+            if (coverImage) submitFormData.append('creatorCoverImage', coverImage)
+
+            // Set method based on whether we're creating or updating
+            const method = existingData ? 'PUT' : 'POST'
+
+            const response = await fetch('http://localhost:3000/api/creator', {
+                method,
+                body: submitFormData,
+                credentials: 'include'
+            })
+
+            if (!response.ok) {
+                const errorData = await response.json()
+                throw new Error(errorData.error || `Failed to ${existingData ? 'update' : 'create'} creator profile`)
+            }
+
+            // Call success callback
+            onSubmitSuccess()
+
+            // Reload the page to show the updated profile
+            window.location.reload()
+        } catch (err) {
+            console.error(`Error ${existingData ? 'updating' : 'creating'} creator profile:`, err)
+            setError(
+                err instanceof Error
+                    ? err.message
+                    : `An error occurred while ${existingData ? 'updating' : 'creating'} your profile`
+            )
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    return (
+        <div className={styles.formContainer}>
+            {error && <div className={styles.errorMessage}>{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+                <div className={styles.formGroup}>
+                    <label htmlFor='name' className={styles.formLabel}>
+                        Name <span className={styles.requiredIndicator}>*</span>
+                    </label>
+                    <input
+                        type='text'
+                        id='name'
+                        name='name'
+                        value={formData.name}
+                        onChange={handleInputChange}
+                        required
+                        className={styles.textInput}
+                        placeholder='Your creator name'
+                    />
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label htmlFor='bio' className={styles.formLabel}>
+                        Bio
+                    </label>
+                    <textarea
+                        id='bio'
+                        name='bio'
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        rows={4}
+                        className={styles.textArea}
+                        placeholder='Tell us about yourself'
+                    />
+                </div>
+
+                <div className={styles.formGroup}>
+                    <label htmlFor='quote' className={styles.formLabel}>
+                        Quote
+                    </label>
+                    <input
+                        type='text'
+                        id='quote'
+                        name='quote'
+                        value={formData.quote}
+                        onChange={handleInputChange}
+                        className={styles.textInput}
+                        placeholder='A memorable quote'
+                    />
+                </div>
+
+                <div className={styles.fileInputWrapper}>
+                    <label htmlFor='profileImage' className={styles.formLabel}>
+                        Profile Image {existingData?.creatorProfilePicture && '(Leave empty to keep current)'}
+                    </label>
+                    <div className='relative'>
+                        <input
+                            type='file'
+                            id='profileImage'
+                            accept='image/*'
+                            onChange={(e) => handleFileChange(e, 'profile')}
+                            className={styles.fileInput}
+                        />
+                        <div className={styles.fileInputDisplay}>
+                            <span>{profileImage ? profileImage.name : 'Choose file'}</span>
+                            <span className={styles.browseButton}>Browse</span>
+                        </div>
+                    </div>
+                    {profileImage && <p className={styles.fileSelected}>File selected</p>}
+                </div>
+
+                <div className={styles.fileInputWrapper}>
+                    <label htmlFor='coverImage' className={styles.formLabel}>
+                        Cover Image {existingData?.creatorCoverImage && '(Leave empty to keep current)'}
+                    </label>
+                    <div className='relative'>
+                        <input
+                            type='file'
+                            id='coverImage'
+                            accept='image/*'
+                            onChange={(e) => handleFileChange(e, 'cover')}
+                            className={styles.fileInput}
+                        />
+                        <div className={styles.fileInputDisplay}>
+                            <span>{coverImage ? coverImage.name : 'Choose file'}</span>
+                            <span className={styles.browseButton}>Browse</span>
+                        </div>
+                    </div>
+                    {coverImage && <p className={styles.fileSelected}>File selected</p>}
+                </div>
+
+                <div className={styles.formActions}>
+                    <button type='submit' disabled={isSubmitting} className={styles.submitButton}>
+                        {isSubmitting ? (
+                            <div className={styles.loadingContainer}>
+                                <div className={styles.loadingSpinner}></div>
+                                {existingData ? 'Updating Profile...' : 'Creating Profile...'}
+                            </div>
+                        ) : existingData ? (
+                            'Update Profile'
+                        ) : (
+                            'Create Profile'
+                        )}
+                    </button>
+
+                    {existingData && (
+                        <button type='button' className={styles.cancelButton} onClick={() => onSubmitSuccess()}>
+                            Cancel
+                        </button>
+                    )}
+                </div>
+            </form>
+        </div>
+    )
+}
+
+// Create AddProduct Component
+const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
+    const [result, setResult] = useState<any>(null)
+    const [categories, setCategories] = useState<any[]>([])
+    const [models, setModels] = useState<any[]>([])
+    const [isLoading, setIsLoading] = useState(false)
+    const [error, setError] = useState<string | null>(null)
+
+    // Form state
+    const [formData, setFormData] = useState({
+        title: '',
+        description: '',
+        category_id: '',
+        price_amount: '',
+        price_currency: 'INR'
+    })
+
+    const [formComplete, setFormComplete] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
+
+    // Fetch categories and models on component mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            setIsLoading(true)
+            try {
+                const response = await fetch('http://localhost:3000/api/category', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    signal: AbortSignal.timeout(5000)
+                })
+
+                if (!response.ok) {
+                    console.warn(`API returned status: ${response.status}`)
+                    throw new Error(`API error: ${response.status}`)
+                }
+
+                const data = await response.json()
+                setCategories(data.categories || [])
+            } catch (err: any) {
+                console.error('Error fetching categories:', err)
+                setError(err.message)
+
+                // Fall back to hardcoded categories for development
+                setCategories([
+                    {
+                        _id: '67e6768061f43a6bd033d39f',
+                        category_name: 'T-Shirt'
+                    },
+                    {
+                        _id: '67e676aa61f43a6bd033d3a5',
+                        category_name: 'Shirt'
+                    },
+                    {
+                        _id: 'dev-sweater-id',
+                        category_name: 'Sweater'
+                    }
+                ])
+            } finally {
+                setIsLoading(false)
+            }
+        }
+
+        const fetchModels = async () => {
+            try {
+                const response = await fetch('http://localhost:3000/api/object', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    signal: AbortSignal.timeout(5000)
+                })
+
+                if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`)
+                }
+
+                const data = await response.json()
+                if (data.success && Array.isArray(data.data)) {
+                    setModels(data.data)
+                }
+            } catch (err) {
+                console.error('Error fetching models:', err)
+                setModels([
+                    {
+                        _id: '67e34283d001c2fc0ec7110c',
+                        name: 'shirt'
+                    },
+                    {
+                        _id: '67e34343d001c2fc0ec71112',
+                        name: 'shirt2'
+                    },
+                    {
+                        _id: '67e34386d001c2fc0ec71114',
+                        name: 'sweater'
+                    }
+                ])
+            }
+        }
+
+        fetchCategories()
+        fetchModels()
+    }, [])
+
+    // Handle form input changes
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, value } = e.target
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    // Validate form and enable customize button
+    useEffect(() => {
+        const { title, description, category_id, price_amount } = formData
+        const isComplete =
+            title.trim() !== '' &&
+            description.trim() !== '' &&
+            category_id !== '' &&
+            price_amount.trim() !== '' &&
+            !isNaN(Number(price_amount))
+
+        setFormComplete(isComplete)
+    }, [formData])
+
+    // Helper functions
+    const getModelIdFromType = (modelType: string) => {
+        const model = models.find((m) => m.name === modelType)
+        return model ? model._id : '67e34283d001c2fc0ec7110c' // Default to shirt if not found
+    }
+
+    const handleCustomization = (data: any) => {
+        // Determine shader type based on customization data
+        let shaderType = 'partial-body' // default
+
+        // Check if both textures are active
+        if (data.isLogoTexture && data.isFullTexture) {
+            shaderType = 'both'
+        } else if (data.isFullTexture === true) {
+            shaderType = 'full-body'
+        } else if (data.shader && data.shader === data.fullDecal) {
+            // If the shader matches the full decal, it's a full-body shader
+            shaderType = 'full-body'
+        }
+
+        // Set result with determined shader type
+        setResult({
+            ...data,
+            shaderType
+        })
+    }
+
+    const CustomizeButtonWrapper = ({ onCustomizationComplete }: { onCustomizationComplete: (data: any) => void }) => {
+        return (
+            <div className={styles.buttonWrapper}>
+                <ProductCustomizeButton
+                    productId='new-product'
+                    onCustomizationComplete={onCustomizationComplete}
+                    customClass={styles.primaryButton}
+                />
+            </div>
+        )
+    }
+
+    const handleSubmitProduct = async () => {
+        try {
+            // Set saving state to true to show loading animation
+            setIsSaving(true)
+
+            // Create FormData object instead of JSON
+            const productFormData = new FormData()
+
+            // Add all the form fields to FormData
+            productFormData.append('title', formData.title)
+            productFormData.append('description', formData.description)
+            productFormData.append('category_id', formData.category_id)
+            productFormData.append('price_amount', formData.price_amount)
+            productFormData.append('price_currency', formData.price_currency)
+            productFormData.append('shaderType', result.shaderType)
+
+            // Get the correct model_id based on the model type from the customization
+            const modelId = getModelIdFromType(result.modelType)
+            productFormData.append('model_id', modelId)
+
+            // Convert the base64 images to Blob objects
+            // For the shader image
+            if (result.shaderImage) {
+                const shaderBlob = await fetch(result.shaderImage).then((r) => r.blob())
+                productFormData.append('shader', shaderBlob, 'shader.png')
+            }
+
+            // For the product image
+            if (result.productImage) {
+                const productBlob = await fetch(result.productImage).then((r) => r.blob())
+                productFormData.append('image', productBlob, 'product.png')
+            }
+
+            // Send data to the API
+            const response = await fetch('http://localhost:3000/api/product', {
+                method: 'POST',
+                body: productFormData,
+                credentials: 'include' // Include cookies for authentication
+            })
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`)
+            }
+
+            const data = await response.json()
+            console.log('Product saved successfully:', data)
+
+            // Close the form and refresh the page to show the new product
+            onClose()
+            window.location.reload()
+        } catch (error: any) {
+            setIsSaving(false)
+            console.error('Error saving product:', error)
+            alert(`Failed to save product: ${error.message}`)
+        }
+    }
+
+    return (
+        <div className={styles.addProductContainer}>
+            <div className={styles.formContainer}>
+                {!result ? (
+                    <div>
+                        <div className={styles.header}>
+                            <h2 className={styles.pageTitle}>ADD NEW PRODUCT</h2>
+                            <p className={styles.pageSubtitle}>Create and customize your product</p>
+                        </div>
+                        <div className={styles.formContent}>
+                            <form onSubmit={(e) => e.preventDefault()}>
+                                <div className={styles.formGroup}>
+                                    <label htmlFor='title' className={styles.formLabel}>
+                                        Product Title <span className={styles.requiredIndicator}>*</span>
+                                    </label>
+                                    <input
+                                        type='text'
+                                        name='title'
+                                        id='title'
+                                        required
+                                        value={formData.title}
+                                        onChange={handleInputChange}
+                                        className={styles.textInput}
+                                        placeholder='Enter product title'
+                                    />
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label htmlFor='category_id' className={styles.formLabel}>
+                                        Category <span className={styles.requiredIndicator}>*</span>
+                                    </label>
+                                    <select
+                                        name='category_id'
+                                        id='category_id'
+                                        required
+                                        value={formData.category_id}
+                                        onChange={handleInputChange}
+                                        className={styles.textInput}
+                                    >
+                                        <option value=''>Select a category</option>
+                                        {isLoading ? (
+                                            <option disabled>Loading categories...</option>
+                                        ) : error ? (
+                                            <option disabled>Error loading categories</option>
+                                        ) : (
+                                            categories.map((category) => (
+                                                <option key={category._id} value={category._id}>
+                                                    {category.category_name}
+                                                </option>
+                                            ))
+                                        )}
+                                    </select>
+                                </div>
+
+                                <div className={styles.formRow}>
+                                    <div className={styles.formGroup}>
+                                        <label htmlFor='price_amount' className={styles.formLabel}>
+                                            Price <span className={styles.requiredIndicator}>*</span>
+                                        </label>
+                                        <div className={styles.priceInputContainer}>
+                                            <input
+                                                type='number'
+                                                name='price_amount'
+                                                id='price_amount'
+                                                required
+                                                min='0'
+                                                step='0.01'
+                                                value={formData.price_amount}
+                                                onChange={handleInputChange}
+                                                className={styles.textInput}
+                                                placeholder='₹ Price'
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className={styles.formGroup}>
+                                        <label htmlFor='price_currency' className={styles.formLabel}>
+                                            Currency
+                                        </label>
+                                        <select
+                                            name='price_currency'
+                                            id='price_currency'
+                                            value={formData.price_currency}
+                                            onChange={handleInputChange}
+                                            className={styles.textInput}
+                                        >
+                                            <option value='INR'>INR</option>
+                                            <option value='USD'>USD</option>
+                                            <option value='EUR'>EUR</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className={styles.formGroup}>
+                                    <label htmlFor='description' className={styles.formLabel}>
+                                        Description <span className={styles.requiredIndicator}>*</span>
+                                    </label>
+                                    <textarea
+                                        name='description'
+                                        id='description'
+                                        required
+                                        rows={4}
+                                        value={formData.description}
+                                        onChange={handleInputChange}
+                                        className={styles.textArea}
+                                        placeholder='Enter product description'
+                                    ></textarea>
+                                </div>
+                            </form>
+
+                            <div className={styles.buttonsContainer}>
+                                {formComplete ? (
+                                    <CustomizeButtonWrapper onCustomizationComplete={handleCustomization} />
+                                ) : (
+                                    <div className={styles.disabled}>
+                                        <button disabled className={styles.cancelButton}>
+                                            Complete Form to Design Product
+                                        </button>
+                                    </div>
+                                )}
+                                <button onClick={onClose} className={styles.cancelButton}>
+                                    Cancel
+                                </button>
+                            </div>
+
+                            {!formComplete && (
+                                <p className={styles.errorMessage}>Please fill in all required fields to continue</p>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div className={styles.previewContainer}>
+                        <div className={styles.previewHeader}>
+                            <h2 className={styles.pageTitle}>Product Preview</h2>
+                            <div className={styles.modelType}>
+                                {result.modelType &&
+                                    result.modelType.charAt(0).toUpperCase() + result.modelType.slice(1)}
+                            </div>
+                        </div>
+
+                        <div className={styles.previewContent}>
+                            <div className={styles.previewInfo}>
+                                <h3>Product Information</h3>
+                                <p>
+                                    <strong>Title:</strong> {formData.title}
+                                </p>
+                                <p>
+                                    <strong>Category:</strong>{' '}
+                                    {categories.find((cat) => cat._id === formData.category_id)?.category_name ||
+                                        'Unknown'}
+                                </p>
+                                <p>
+                                    <strong>Price:</strong> {formData.price_currency} {formData.price_amount}
+                                </p>
+                                <p>
+                                    <strong>Description:</strong> {formData.description}
+                                </p>
+                            </div>
+                            <div className={styles.previewImage}>
+                                {result.productImage && (
+                                    <img
+                                        src={result.productImage}
+                                        alt='Product Preview'
+                                        className={styles.productPreviewImage}
+                                    />
+                                )}
+                            </div>
+                        </div>
+
+                        <div className={styles.formActions}>
+                            <button onClick={handleSubmitProduct} disabled={isSaving} className={styles.submitButton}>
+                                {isSaving ? (
+                                    <div className={styles.loadingContainer}>
+                                        <div className={styles.loadingSpinner}></div>
+                                        Saving Product...
+                                    </div>
+                                ) : (
+                                    'Save Product'
+                                )}
+                            </button>
+                            <button onClick={() => setResult(null)} className={styles.cancelButton}>
+                                Back to Form
+                            </button>
+                            <button onClick={onClose} className={styles.cancelButton}>
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    )
+}
+
 export default function CreatorProfilePage() {
-    const [creator, setCreator] = useState<any>(null)
+    const [creator, setCreator] = useState<CreatorData | null>(null)
     const [loading, setLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
     const [useMockData, setUseMockData] = useState(false)
+    const [showEditForm, setShowEditForm] = useState(false)
+    const [showAddProduct, setShowAddProduct] = useState(false)
 
     useEffect(() => {
         const fetchCreatorProfile = async () => {
@@ -60,13 +698,21 @@ export default function CreatorProfilePage() {
                 setLoading(true)
                 console.log('Fetching creator profile...')
                 // Try with explicit method and full URL
-                const response = await fetch('/api/creator', {
+                const response = await fetch('http://localhost:3000/api/creator', {
                     method: 'GET',
                     credentials: 'include'
                 })
 
                 console.log('Response status:', response.status)
                 console.log('Response ok:', response.ok)
+
+                if (response.status === 404) {
+                    // This is the case when a creator profile doesn't exist yet
+                    console.log('Creator profile not found - user needs to create one')
+                    setCreator(null) // This will trigger the "No Creator Profile Found" UI
+                    setLoading(false)
+                    return
+                }
 
                 if (!response.ok) {
                     console.error('API error:', response.status)
@@ -131,8 +777,8 @@ export default function CreatorProfilePage() {
     if (loading) {
         return (
             <Wrapper>
-                <div className='flex justify-center items-center min-h-screen'>
-                    <div className='animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900'></div>
+                <div className={`${styles.pageBackground} flex justify-center items-center min-h-screen`}>
+                    <div className={styles.loadingSpinner} style={{ width: '3rem', height: '3rem' }}></div>
                 </div>
             </Wrapper>
         )
@@ -141,17 +787,18 @@ export default function CreatorProfilePage() {
     if (error) {
         return (
             <Wrapper>
-                <div className='min-h-screen flex flex-col items-center justify-center p-4'>
-                    <h1 className='text-2xl font-bold text-red-600 mb-4'>Error Loading Creator Profile</h1>
-                    <p className='text-gray-700 mb-6'>{error}</p>
-                    <div className='flex space-x-4'>
-                        <Button href='/'>Go Back Home</Button>
-                        <button
-                            onClick={handleUseMockData}
-                            className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors'
-                        >
-                            Use Demo Data
-                        </button>
+                <div className={`${styles.pageBackground} flex flex-col items-center justify-center p-4 min-h-screen`}>
+                    <div className={styles.formContainer} style={{ maxWidth: '500px', textAlign: 'center' }}>
+                        <h1 className={styles.pageTitle} style={{ fontSize: '1.5rem' }}>
+                            Error Loading Creator Profile
+                        </h1>
+                        <div className={styles.errorMessage}>{error}</div>
+                        <div className='flex space-x-4 justify-center mt-6'>
+                            <Button href='/'>Go Back Home</Button>
+                            <button onClick={handleUseMockData} className={styles.button}>
+                                Use Demo Data
+                            </button>
+                        </div>
                     </div>
                 </div>
             </Wrapper>
@@ -161,10 +808,59 @@ export default function CreatorProfilePage() {
     if (!creator) {
         return (
             <Wrapper>
-                <div className='min-h-screen flex flex-col items-center justify-center p-4'>
-                    <h1 className='text-2xl font-bold mb-4'>No Creator Profile Found</h1>
-                    <p className='text-gray-700 mb-6'>Would you like to create a creator profile?</p>
-                    <Button href='/creator-signup'>Create Creator Profile</Button>
+                <Header />
+                <main className={styles.pageBackground}>
+                    <div className={styles.container}>
+                        <div className='py-12 pt-16'>
+                            <h1 className={styles.pageTitle}>CREATE YOUR CREATOR PROFILE</h1>
+                            <p className={styles.pageSubtitle}>
+                                Set up your profile to start creating and selling products
+                            </p>
+                            <CreateCreatorForm />
+                        </div>
+                    </div>
+                </main>
+                <div className={styles.footerSpacing}>
+                    <Footer className={styles.customFooter} />
+                </div>
+            </Wrapper>
+        )
+    }
+
+    // When in the profile view, show either the edit form, add product form, or the normal profile
+    if (showAddProduct && creator) {
+        return (
+            <Wrapper>
+                <Header />
+                <main className={styles.pageBackground}>
+                    <div className={styles.container}>
+                        <div className='py-12 pt-16'>
+                            <AddProductComponent onClose={() => setShowAddProduct(false)} />
+                        </div>
+                    </div>
+                </main>
+                <div className={styles.footerSpacing}>
+                    <Footer className={styles.customFooter} />
+                </div>
+            </Wrapper>
+        )
+    }
+
+    if (showEditForm && creator) {
+        return (
+            <Wrapper>
+                <Header />
+                <main className={styles.pageBackground}>
+                    <div className={styles.container}>
+                        <div className='py-12 pt-16'>
+                            <h1 className={styles.pageTitle}>EDIT YOUR CREATOR PROFILE</h1>
+                            <p className={styles.pageSubtitle}>Update your profile information</p>
+                            <CreateCreatorForm existingData={creator} onSubmitSuccess={() => setShowEditForm(false)} />
+                        </div>
+                    </div>
+                </main>
+                <div className={styles.footerSpacing}>
+                    <Footer className={styles.customFooter} />
                 </div>
             </Wrapper>
         )
@@ -186,107 +882,89 @@ export default function CreatorProfilePage() {
             {/* main area start */}
             <main className='main--area'>
                 {/* breadcrumb area start */}
-                <BreadcrumbArea
-                    title={creator.name || 'Creator Profile'}
-                    subtitle='CREATOR PROFILE'
-                    bg={brd_bg}
-                    brd_img={brd_img}
-                />
+                <div className={styles.breadcrumbWrapper}>
+                    <BreadcrumbArea
+                        title={creator.name || 'Creator Profile'}
+                        subtitle='CREATOR PROFILE'
+                        brd_img={profileImageUrl}
+                        customButton={{
+                            text: 'Add Product',
+                            onClick: () => setShowAddProduct(true)
+                        }}
+                        imageClassName={styles.profileImageStyle}
+                    />
+                </div>
                 {/* breadcrumb area end */}
 
-                {/* team details area start */}
-                <TeamDetailsArea />
-                {/* team details area end */}
-
-                {/* team area start */}
-                <TeamArea />
-                {/* team area end */}
-
-                {/*  */}
-                <BrandArea />
-
-                {/* Cover Image Section */}
-                <div className='relative h-64 w-full rounded-lg overflow-hidden mb-20'>
-                    <Image src={coverImageUrl} alt='Cover Image' fill className='object-cover' priority />
-
-                    {/* Profile Image (positioned overlapping the cover) */}
-                    <div className='absolute -bottom-16 left-8'>
-                        <div className='h-32 w-32 rounded-full overflow-hidden border-4 border-white shadow-lg'>
-                            <Image
-                                src={profileImageUrl}
-                                alt={creator.name || 'Creator'}
-                                width={128}
-                                height={128}
-                                className='object-cover'
-                            />
-                        </div>
-                    </div>
+                {/* team details area - Biography Section */}
+                <div className={styles.teamDetailsWrapper}>
+                    <TeamDetailsArea
+                        bio={creator.bio || 'I am a rockstar.'}
+                        quote={
+                            creator.quote ||
+                            'Jack of all trades, master of none, but oftentimes better than master of one.'
+                        }
+                        creator={creator.name || 'DXACE'}
+                        contentClassName={styles.teamContent}
+                        quoteClassName={styles.quoteStyle}
+                        citeClassName={styles.citeStyle}
+                    />
                 </div>
 
-                {/* Creator Information */}
-                <div className='mt-20 px-4'>
-                    <h1 className='text-3xl font-bold'>{creator.name}</h1>
-
-                    {creator.quote && <p className='text-gray-600 italic mt-2'>"{creator.quote}"</p>}
-
-                    {creator.bio && (
-                        <div className='mt-4 max-w-3xl'>
-                            <h2 className='text-xl font-semibold mb-2'>About</h2>
-                            <p className='text-gray-700'>{creator.bio}</p>
-                        </div>
-                    )}
-
+                {/* Products Section */}
+                <div className={styles.container}>
                     {/* Creator Stats */}
-                    <div className='mt-6 flex gap-8'>
-                        <div>
-                            <h3 className='text-sm text-gray-500'>Products</h3>
-                            <p className='text-xl font-semibold'>{creator.products?.length || 0}</p>
+                    <div className={styles.statsContainer}>
+                        <div className={styles.statItem}>
+                            <h3 className={styles.statLabel}>Products</h3>
+                            <p className={styles.statValue}>{creator.products?.length || 0}</p>
                         </div>
-                        <div>
-                            <h3 className='text-sm text-gray-500'>Total Sales</h3>
-                            <p className='text-xl font-semibold'>₹{creator.totalSales || 0}</p>
+                        <div className={styles.statItem}>
+                            <h3 className={styles.statLabel}>Total Sales</h3>
+                            <p className={styles.statValue}>₹{creator.totalSales || 0}</p>
                         </div>
-                    </div>
 
-                    {/* Edit Profile Button */}
-                    <div className='mt-6'>
-                        <Button href='/creator-profile/edit'>Edit Profile</Button>
+                        {/* Edit Profile Button */}
+                        <div className='ml-auto'>
+                            <Button onClick={() => setShowEditForm(true)}>Edit Profile</Button>
+                        </div>
                     </div>
 
                     {/* Products Section */}
                     {creator.products && creator.products.length > 0 ? (
-                        <div className='mt-12'>
-                            <h2 className='text-2xl font-bold mb-6'>My Products</h2>
-                            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+                        <div className={styles.productsSection}>
+                            <h2 className={styles.productsTitle}>My Products</h2>
+                            <div className={styles.productsGrid}>
                                 {creator.products.map((product: any) => {
                                     const productImageUrl = product.image_id
                                         ? getImageUrl(product.image_id)
                                         : '/placeholder-product.png'
 
                                     return (
-                                        <div
-                                            key={product._id}
-                                            className='border rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow'
-                                        >
-                                            <div className='h-48 relative'>
+                                        <div key={product._id} className={styles.productCard}>
+                                            <div className={styles.productImageContainer}>
                                                 <Image
                                                     src={productImageUrl}
                                                     alt={product.title}
-                                                    fill
-                                                    className='object-cover'
+                                                    width={400}
+                                                    height={400}
+                                                    className={styles.productImage}
+                                                    priority
                                                 />
                                             </div>
-                                            <div className='p-4'>
-                                                <h3 className='font-semibold text-lg'>{product.title}</h3>
-                                                <p className='text-gray-600 line-clamp-2 mt-1'>{product.description}</p>
-                                                <div className='mt-2 flex justify-between items-center'>
-                                                    <span className='font-bold'>₹{product.price?.amount || 0}</span>
-                                                    <span className='text-sm text-gray-500'>
+                                            <div className={styles.productInfo}>
+                                                <h3 className={styles.productTitle}>{product.title}</h3>
+                                                <p className={styles.productDescription}>{product.description}</p>
+                                                <div className={styles.productMeta}>
+                                                    <span className={styles.productPrice}>
+                                                        ₹{product.price?.amount || 0}
+                                                    </span>
+                                                    <span className={styles.productSales}>
                                                         {product.sales_count || 0} sales
                                                     </span>
                                                 </div>
                                             </div>
-                                            <div className='p-4 pt-0 flex justify-end'>
+                                            <div className={styles.productActions}>
                                                 <Button href={`/product/${product._id}`}>View Details</Button>
                                             </div>
                                         </div>
@@ -295,10 +973,12 @@ export default function CreatorProfilePage() {
                             </div>
                         </div>
                     ) : (
-                        <div className='mt-12 text-center p-8 bg-gray-50 rounded-lg'>
-                            <h2 className='text-xl font-semibold mb-3'>No Products Yet</h2>
-                            <p className='text-gray-600 mb-4'>Start creating and selling your digital assets today!</p>
-                            <Button href='/product/create'>Create Your First Product</Button>
+                        <div className={styles.emptyState}>
+                            <h2 className={styles.emptyStateTitle}>No Products Yet</h2>
+                            <p className={styles.emptyStateText}>
+                                Start creating and selling your digital assets today!
+                            </p>
+                            <Button onClick={() => setShowAddProduct(true)}>Create Your First Product</Button>
                         </div>
                     )}
                 </div>
@@ -306,7 +986,9 @@ export default function CreatorProfilePage() {
             {/* main area end */}
 
             {/* footer start */}
-            <Footer />
+            <div className={styles.footerSpacing}>
+                <Footer className={styles.customFooter} />
+            </div>
             {/* footer end */}
         </Wrapper>
     )
