@@ -1,712 +1,668 @@
-import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import mongoose from "mongoose";
-import AuthModel from "@/models/authSchema";
-import ReviewModel from "@/models/reviewSchema";
-import productModel from "@/models/productSchema";
-import { ImageModel } from "@/models/imageSchema";
-import UserModel from "@/models/userSchema";
+import { NextRequest, NextResponse } from 'next/server'
+import dbConnect from '@/lib/mongodb'
+import mongoose from 'mongoose'
+import AuthModel from '@/models/authSchema'
+import ReviewModel from '@/models/reviewSchema'
+import productModel from '@/models/productSchema'
+import { ImageModel } from '@/models/imageSchema'
+import UserModel from '@/models/userSchema'
+import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
 
 // POST: Create a new review
 export async function POST(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			ReviewModel.findOne().exec(),
-			AuthModel.findOne().exec(),
-			productModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-			UserModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            ReviewModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            UserModel.findOne().exec()
+        ]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Authentication check
-			const accessToken = request.cookies.get("accessToken")?.value;
-			const refreshToken = request.cookies.get("refreshToken")?.value;
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			if (!accessToken || !refreshToken) {
-				return NextResponse.json(
-					{ success: false, error: "No access token provided" },
-					{ status: 401 }
-				);
-			}
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+            }
 
-			const auth = await AuthModel.findOne(
-				{ accessToken, refreshToken },
-				null,
-				{ session }
-			);
+            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			if (!auth) {
-				return NextResponse.json(
-					{ success: false, error: "Invalid access token" },
-					{ status: 401 }
-				);
-			}
+            if (!auth) {
+                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+            }
 
-			const formData = await request.formData();
+            const formData = await request.formData()
 
-			// Get review data
-			const product_id = formData.get("product_id") as string;
-			const message = formData.get("message") as string;
-			const rating = Number(formData.get("rating"));
-			const images = formData.getAll("images") as File[];
+            // Get review data
+            const product_id = formData.get('product_id') as string
+            const message = formData.get('message') as string
+            const rating = Number(formData.get('rating'))
+            const images = formData.getAll('images') as File[]
 
-			// Validate required fields
-			if (!product_id || !rating) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Product ID and rating are required",
-					},
-					{ status: 400 }
-				);
-			}
+            // Validate required fields
+            if (!product_id || !rating) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Product ID and rating are required'
+                    },
+                    { status: 400 }
+                )
+            }
 
-			// Validate rating
-			if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Rating must be an integer between 1 and 5",
-					},
-					{ status: 400 }
-				);
-			}
+            // Validate rating
+            if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Rating must be an integer between 1 and 5'
+                    },
+                    { status: 400 }
+                )
+            }
 
-			// Verify product exists
-			const product = await productModel
-				.findById(product_id)
-				.session(session);
-			if (!product) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Product not found" },
-					{ status: 404 }
-				);
-			}
+            // Verify product exists
+            const product = await productModel.findById(product_id).session(session)
+            if (!product) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
+            }
 
-			// Check if user already reviewed this product
-			const existingReview = await ReviewModel.findOne({
-				product_id,
-				user_id: auth.userId,
-			}).session(session);
+            // Check if user already reviewed this product
+            const existingReview = await ReviewModel.findOne({
+                product_id,
+                user_id: auth.userId
+            }).session(session)
 
-			if (existingReview) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "You have already reviewed this product",
-					},
-					{ status: 400 }
-				);
-			}
+            if (existingReview) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'You have already reviewed this product'
+                    },
+                    { status: 400 }
+                )
+            }
 
-			// Upload images if provided
-			const image_details_id = [];
-			if (images.length > 0) {
-				for (const image of images) {
-					if (image.size > 0) {
-						const imageBuffer = Buffer.from(
-							await image.arrayBuffer()
-						);
-						const [imageDetail] = await ImageModel.create(
-							[
-								{
-									user_id: auth.userId,
-									data: imageBuffer,
-									content_type: image.type,
-								},
-							],
-							{ session }
-						);
-						image_details_id.push(imageDetail._id);
-					}
-				}
-			}
+            // Upload images to S3 if provided
+            const image_details_id = []
+            if (images.length > 0) {
+                for (const image of images) {
+                    if (image.size > 0) {
+                        const imageBuffer = Buffer.from(await image.arrayBuffer())
 
-			// Create review
-			const [review] = await ReviewModel.create(
-				[
-					{
-						product_id,
-						user_id: auth.userId,
-						message: message || "",
-						rating,
-						image_details_id,
-					},
-				],
-				{ session }
-			);
+                        // Upload to S3
+                        const fileName = `review-image-${auth.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+                        const uploadResult = await uploadObjectToS3(imageBuffer, fileName, image.type || 'image/jpeg')
 
-			// Update product rating (calculate average)
-			const allReviews = await ReviewModel.find({ product_id }).session(
-				session
-			);
-			const totalRating = allReviews.reduce(
-				(sum, r) => sum + r.rating,
-				0
-			);
-			const averageRating = totalRating / allReviews.length;
+                        // Check if upload was successful
+                        if (!uploadResult.success) {
+                            await session.abortTransaction()
+                            session.endSession()
+                            return NextResponse.json(
+                                {
+                                    success: false,
+                                    error: uploadResult.error || 'Failed to upload image'
+                                },
+                                { status: 500 }
+                            )
+                        }
 
-			await productModel.findByIdAndUpdate(
-				product_id,
-				{ rating: averageRating.toFixed(1) },
-				{ session }
-			);
+                        // Store the URL in MongoDB
+                        const [imageDetail] = await ImageModel.create(
+                            [
+                                {
+                                    user_id: auth.userId,
+                                    image_url: uploadResult.url,
+                                    content_type: image.type || 'image/jpeg'
+                                }
+                            ],
+                            { session }
+                        )
+                        image_details_id.push(imageDetail._id)
+                    }
+                }
+            }
 
-			// Populate the review with related data
-			const populatedReview = await ReviewModel.findById(review._id)
-				.session(session)
-				.populate([
-					{
-						path: "user_id",
-						model: "UserDetail",
-						select: "fname lname email profile_picture",
-					},
-					{ path: "image_details_id", model: "ImageDetail" },
-				]);
+            // Create review
+            const [review] = await ReviewModel.create(
+                [
+                    {
+                        product_id,
+                        user_id: auth.userId,
+                        message: message || '',
+                        rating,
+                        image_details_id
+                    }
+                ],
+                { session }
+            )
 
-			await session.commitTransaction();
-			session.endSession();
+            // Update product rating (calculate average)
+            const allReviews = await ReviewModel.find({ product_id }).session(session)
+            const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0)
+            const averageRating = totalRating / allReviews.length
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Review submitted successfully",
-					data: populatedReview,
-				},
-				{ status: 201 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error creating review:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to submit review",
-			},
-			{ status: 500 }
-		);
-	}
+            await productModel.findByIdAndUpdate(product_id, { rating: averageRating.toFixed(1) }, { session })
+
+            // Populate the review with related data
+            const populatedReview = await ReviewModel.findById(review._id)
+                .session(session)
+                .populate([
+                    {
+                        path: 'user_id',
+                        model: 'UserDetail',
+                        select: 'fname lname email profile_picture'
+                    },
+                    { path: 'image_details_id', model: 'ImageDetail' }
+                ])
+
+            await session.commitTransaction()
+            session.endSession()
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Review submitted successfully',
+                    data: populatedReview
+                },
+                { status: 201 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error creating review:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to submit review'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // GET: Fetch reviews (by product, by user, or by ID)
 export async function GET(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			ReviewModel.findOne().exec(),
-			UserModel.findOne().exec(),
-			productModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            ReviewModel.findOne().exec(),
+            UserModel.findOne().exec(),
+            productModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {})
 
-		// Get query params
-		const { searchParams } = new URL(request.url);
-		const id = searchParams.get("id");
-		const product_id = searchParams.get("product_id");
-		const user_id = searchParams.get("user_id");
-		const page = parseInt(searchParams.get("page") || "1");
-		const limit = parseInt(searchParams.get("limit") || "10");
+        // Get query params
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get('id')
+        const product_id = searchParams.get('product_id')
+        const user_id = searchParams.get('user_id')
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '10')
 
-		// Populate configuration
-		const populateOptions = [
-			{
-				path: "user_id",
-				model: "UserDetail",
-				select: "fname lname email profile_picture",
-			},
-			{ path: "product_id", model: "Product", select: "title image_id" },
-			{ path: "image_details_id", model: "ImageDetail" },
-		];
+        // Enhanced populate configuration with nested population for images
+        const populateOptions = [
+            {
+                path: 'user_id',
+                model: 'UserDetail',
+                select: 'fname lname email profile_picture',
+                populate: {
+                    path: 'profile_picture',
+                    model: 'ImageDetail'
+                }
+            },
+            {
+                path: 'product_id',
+                model: 'Product',
+                select: 'title image_id',
+                populate: {
+                    path: 'image_id',
+                    model: 'ImageDetail'
+                }
+            },
+            { path: 'image_details_id', model: 'ImageDetail' }
+        ]
 
-		// Case 1: Get review by ID
-		if (id) {
-			const review =
-				await ReviewModel.findById(id).populate(populateOptions);
+        // Case 1: Get review by ID
+        if (id) {
+            const review = await ReviewModel.findById(id).populate(populateOptions)
 
-			if (!review) {
-				return NextResponse.json(
-					{ success: false, error: "Review not found" },
-					{ status: 404 }
-				);
-			}
+            if (!review) {
+                return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 })
+            }
 
-			return NextResponse.json(
-				{ success: true, data: review },
-				{ status: 200 }
-			);
-		}
+            return NextResponse.json({ success: true, data: review }, { status: 200 })
+        }
 
-		// Build query based on parameters
-		const query: any = {};
-		if (product_id) query.product_id = product_id;
-		if (user_id) query.user_id = user_id;
+        // Build query based on parameters
+        const query: any = {}
+        if (product_id) query.product_id = product_id
+        if (user_id) query.user_id = user_id
 
-		// Get total count for pagination
-		const total = await ReviewModel.countDocuments(query);
+        // Get total count for pagination
+        const total = await ReviewModel.countDocuments(query)
 
-		// Get paginated results
-		const reviews = await ReviewModel.find(query)
-			.populate(populateOptions)
-			.sort({ _id: -1 }) // Sort by newest first
-			.skip((page - 1) * limit)
-			.limit(limit);
+        // Get paginated results with proper population
+        const reviews = await ReviewModel.find(query)
+            .populate(populateOptions)
+            .sort({ _id: -1 }) // Sort by newest first
+            .skip((page - 1) * limit)
+            .limit(limit)
 
-		// Case 2: Get reviews for specific product
-		if (product_id) {
-			// Calculate overall stats for the product
-			const allProductReviews = await ReviewModel.find({ product_id });
-			const stats = {
-				averageRating: 0,
-				totalReviews: allProductReviews.length,
-				ratingDistribution: {
-					1: 0,
-					2: 0,
-					3: 0,
-					4: 0,
-					5: 0,
-				},
-			};
+        // Case 2: Get reviews for specific product
+        if (product_id) {
+            // Calculate overall stats for the product
+            const allProductReviews = await ReviewModel.find({ product_id })
+            const stats = {
+                averageRating: 0,
+                totalReviews: allProductReviews.length,
+                ratingDistribution: {
+                    1: 0,
+                    2: 0,
+                    3: 0,
+                    4: 0,
+                    5: 0
+                }
+            }
 
-			if (allProductReviews.length > 0) {
-				let totalRating = 0;
-				allProductReviews.forEach((review) => {
-					totalRating += review.rating;
-					stats.ratingDistribution[
-						review.rating as keyof typeof stats.ratingDistribution
-					]++;
-				});
-				stats.averageRating = parseFloat(
-					(totalRating / allProductReviews.length).toFixed(1)
-				);
-			}
+            if (allProductReviews.length > 0) {
+                let totalRating = 0
+                allProductReviews.forEach((review) => {
+                    totalRating += review.rating
+                    stats.ratingDistribution[review.rating as keyof typeof stats.ratingDistribution]++
+                })
+                stats.averageRating = parseFloat((totalRating / allProductReviews.length).toFixed(1))
+            }
 
-			return NextResponse.json(
-				{
-					success: true,
-					data: {
-						reviews,
-						stats,
-						pagination: {
-							total,
-							page,
-							limit,
-							pages: Math.ceil(total / limit),
-						},
-					},
-				},
-				{ status: 200 }
-			);
-		}
+            return NextResponse.json(
+                {
+                    success: true,
+                    data: {
+                        reviews,
+                        stats,
+                        pagination: {
+                            total,
+                            page,
+                            limit,
+                            pages: Math.ceil(total / limit)
+                        }
+                    }
+                },
+                { status: 200 }
+            )
+        }
 
-		// Case 3: Get all reviews or user reviews
-		return NextResponse.json(
-			{
-				success: true,
-				data: {
-					reviews,
-					pagination: {
-						total,
-						page,
-						limit,
-						pages: Math.ceil(total / limit),
-					},
-				},
-			},
-			{ status: 200 }
-		);
-	} catch (error) {
-		console.error("Error fetching reviews:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to fetch reviews",
-			},
-			{ status: 500 }
-		);
-	}
+        // Case 3: Get all reviews or user reviews
+        return NextResponse.json(
+            {
+                success: true,
+                data: {
+                    reviews,
+                    pagination: {
+                        total,
+                        page,
+                        limit,
+                        pages: Math.ceil(total / limit)
+                    }
+                }
+            },
+            { status: 200 }
+        )
+    } catch (error) {
+        console.error('Error fetching reviews:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch reviews'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // PATCH: Update an existing review
 export async function PATCH(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			ReviewModel.findOne().exec(),
-			AuthModel.findOne().exec(),
-			productModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            ReviewModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Authentication check
-			const accessToken = request.cookies.get("accessToken")?.value;
-			const refreshToken = request.cookies.get("refreshToken")?.value;
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			if (!accessToken || !refreshToken) {
-				return NextResponse.json(
-					{ success: false, error: "No access token provided" },
-					{ status: 401 }
-				);
-			}
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+            }
 
-			const auth = await AuthModel.findOne(
-				{ accessToken, refreshToken },
-				null,
-				{ session }
-			);
+            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			if (!auth) {
-				return NextResponse.json(
-					{ success: false, error: "Invalid access token" },
-					{ status: 401 }
-				);
-			}
+            if (!auth) {
+                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+            }
 
-			const formData = await request.formData();
+            const formData = await request.formData()
 
-			// Get review data
-			const id = formData.get("id") as string;
-			const message = formData.get("message") as string;
-			const rating = formData.get("rating")
-				? Number(formData.get("rating"))
-				: undefined;
-			const images = formData.getAll("images") as File[];
-			const deleteImages = formData.get("deleteImages") as string;
-			const deleteImagesArray = deleteImages
-				? deleteImages.split(",")
-				: [];
+            // Get review data
+            const id = formData.get('id') as string
+            const message = formData.get('message') as string
+            const rating = formData.get('rating') ? Number(formData.get('rating')) : undefined
+            const images = formData.getAll('images') as File[]
+            const deleteImages = formData.get('deleteImages') as string
+            const deleteImagesArray = deleteImages ? deleteImages.split(',') : []
 
-			if (!id) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Review ID is required" },
-					{ status: 400 }
-				);
-			}
+            if (!id) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 })
+            }
 
-			// Find the review
-			const review = await ReviewModel.findById(id).session(session);
+            // Find the review
+            const review = await ReviewModel.findById(id).session(session)
 
-			if (!review) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Review not found" },
-					{ status: 404 }
-				);
-			}
+            if (!review) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 })
+            }
 
-			// Ensure user owns the review
-			if (review.user_id.toString() !== auth.userId.toString()) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to update this review",
-					},
-					{ status: 403 }
-				);
-			}
+            // Ensure user owns the review
+            if (review.user_id.toString() !== auth.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to update this review'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			// Validate rating if provided
-			if (rating !== undefined) {
-				if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-					await session.abortTransaction();
-					session.endSession();
-					return NextResponse.json(
-						{
-							success: false,
-							error: "Rating must be an integer between 1 and 5",
-						},
-						{ status: 400 }
-					);
-				}
-			}
+            // Validate rating if provided
+            if (rating !== undefined) {
+                if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            error: 'Rating must be an integer between 1 and 5'
+                        },
+                        { status: 400 }
+                    )
+                }
+            }
 
-			// Handle image deletions
-			if (deleteImagesArray.length > 0) {
-				// Remove the image IDs from the review
-				await ReviewModel.findByIdAndUpdate(
-					id,
-					{ $pull: { image_details_id: { $in: deleteImagesArray } } },
-					{ session }
-				);
+            // Handle image deletions
+            if (deleteImagesArray.length > 0) {
+                // Remove the image IDs from the review
+                await ReviewModel.findByIdAndUpdate(
+                    id,
+                    { $pull: { image_details_id: { $in: deleteImagesArray } } },
+                    { session }
+                )
 
-				// Delete the images
-				for (const imageId of deleteImagesArray) {
-					await ImageModel.findByIdAndDelete(imageId, { session });
-				}
-			}
+                // Delete the images
+                for (const imageId of deleteImagesArray) {
+                    await ImageModel.findByIdAndDelete(imageId, { session })
+                    // Note: We can't delete from S3 here since we need to keep track of S3 keys
+                    // In a production system, you would want to track S3 keys and delete from S3 as well
+                }
+            }
 
-			// Upload new images if provided
-			const newImageIds = [];
-			if (images.length > 0) {
-				for (const image of images) {
-					if (image.size > 0) {
-						const imageBuffer = Buffer.from(
-							await image.arrayBuffer()
-						);
-						const [imageDetail] = await ImageModel.create(
-							[
-								{
-									user_id: auth.userId,
-									data: imageBuffer,
-									content_type: image.type,
-								},
-							],
-							{ session }
-						);
-						newImageIds.push(imageDetail._id);
-					}
-				}
-			}
+            // Upload new images to S3 if provided
+            const newImageIds = []
+            if (images.length > 0) {
+                for (const image of images) {
+                    if (image.size > 0) {
+                        const imageBuffer = Buffer.from(await image.arrayBuffer())
 
-			// Update the review
-			const updateData: any = {};
-			if (message !== undefined) updateData.message = message;
-			if (rating !== undefined) updateData.rating = rating;
-			if (newImageIds.length > 0) {
-				updateData.$push = { image_details_id: { $each: newImageIds } };
-			}
+                        // Upload to S3
+                        const fileName = `review-image-${auth.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+                        const uploadResult = await uploadObjectToS3(imageBuffer, fileName, image.type || 'image/jpeg')
 
-			const updatedReview = await ReviewModel.findByIdAndUpdate(
-				id,
-				updateData,
-				{ new: true, session }
-			).populate([
-				{
-					path: "user_id",
-					model: "UserDetail",
-					select: "fname lname email profile_picture",
-				},
-				{ path: "image_details_id", model: "ImageDetail" },
-			]);
+                        // Check if upload was successful
+                        if (!uploadResult.success) {
+                            await session.abortTransaction()
+                            session.endSession()
+                            return NextResponse.json(
+                                {
+                                    success: false,
+                                    error: uploadResult.error || 'Failed to upload image'
+                                },
+                                { status: 500 }
+                            )
+                        }
 
-			// Update product rating if rating was changed
-			if (rating !== undefined) {
-				const product_id = review.product_id;
-				const allReviews = await ReviewModel.find({
-					product_id,
-				}).session(session);
-				const totalRating = allReviews.reduce(
-					(sum, r) => sum + r.rating,
-					0
-				);
-				const averageRating = totalRating / allReviews.length;
+                        // Store the URL in MongoDB
+                        const [imageDetail] = await ImageModel.create(
+                            [
+                                {
+                                    user_id: auth.userId,
+                                    image_url: uploadResult.url,
+                                    content_type: image.type || 'image/jpeg'
+                                }
+                            ],
+                            { session }
+                        )
+                        newImageIds.push(imageDetail._id)
+                    }
+                }
+            }
 
-				await productModel.findByIdAndUpdate(
-					product_id,
-					{ rating: averageRating.toFixed(1) },
-					{ session }
-				);
-			}
+            // Update the review
+            const updateData: any = {}
+            if (message !== undefined) updateData.message = message
+            if (rating !== undefined) updateData.rating = rating
+            if (newImageIds.length > 0) {
+                updateData.$push = { image_details_id: { $each: newImageIds } }
+            }
 
-			await session.commitTransaction();
-			session.endSession();
+            const updatedReview = await ReviewModel.findByIdAndUpdate(id, updateData, { new: true, session }).populate([
+                {
+                    path: 'user_id',
+                    model: 'UserDetail',
+                    select: 'fname lname email profile_picture',
+                    populate: {
+                        path: 'profile_picture',
+                        model: 'ImageDetail'
+                    }
+                },
+                { path: 'image_details_id', model: 'ImageDetail' }
+            ])
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Review updated successfully",
-					data: updatedReview,
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error updating review:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to update review",
-			},
-			{ status: 500 }
-		);
-	}
+            // Update product rating if rating was changed
+            if (rating !== undefined) {
+                const product_id = review.product_id
+                const allReviews = await ReviewModel.find({
+                    product_id
+                }).session(session)
+                const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0)
+                const averageRating = totalRating / allReviews.length
+
+                await productModel.findByIdAndUpdate(product_id, { rating: averageRating.toFixed(1) }, { session })
+            }
+
+            await session.commitTransaction()
+            session.endSession()
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Review updated successfully',
+                    data: updatedReview
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error updating review:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to update review'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // DELETE: Remove a review
 export async function DELETE(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			ReviewModel.findOne().exec(),
-			AuthModel.findOne().exec(),
-			productModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            ReviewModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Authentication check
-			const accessToken = request.cookies.get("accessToken")?.value;
-			const refreshToken = request.cookies.get("refreshToken")?.value;
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			if (!accessToken || !refreshToken) {
-				return NextResponse.json(
-					{ success: false, error: "No access token provided" },
-					{ status: 401 }
-				);
-			}
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+            }
 
-			const auth = await AuthModel.findOne(
-				{ accessToken, refreshToken },
-				null,
-				{ session }
-			);
+            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			if (!auth) {
-				return NextResponse.json(
-					{ success: false, error: "Invalid access token" },
-					{ status: 401 }
-				);
-			}
+            if (!auth) {
+                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+            }
 
-			// Get review ID from query params
-			const { searchParams } = new URL(request.url);
-			const id = searchParams.get("id");
+            // Get review ID from query params
+            const { searchParams } = new URL(request.url)
+            const id = searchParams.get('id')
 
-			if (!id) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Review ID is required" },
-					{ status: 400 }
-				);
-			}
+            if (!id) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Review ID is required' }, { status: 400 })
+            }
 
-			// Find the review
-			const review = await ReviewModel.findById(id).session(session);
+            // Find the review
+            const review = await ReviewModel.findById(id).session(session)
 
-			if (!review) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Review not found" },
-					{ status: 404 }
-				);
-			}
+            if (!review) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Review not found' }, { status: 404 })
+            }
 
-			// Ensure user owns the review
-			if (review.user_id.toString() !== auth.userId.toString()) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to delete this review",
-					},
-					{ status: 403 }
-				);
-			}
+            // Ensure user owns the review
+            if (review.user_id.toString() !== auth.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to delete this review'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			// Store product ID for rating update
-			const product_id = review.product_id;
+            // Store product ID for rating update
+            const product_id = review.product_id
 
-			// Delete associated images
-			if (review.image_details_id && review.image_details_id.length > 0) {
-				for (const imageId of review.image_details_id) {
-					await ImageModel.findByIdAndDelete(imageId, { session });
-				}
-			}
+            // Delete associated images
+            if (review.image_details_id && review.image_details_id.length > 0) {
+                for (const imageId of review.image_details_id) {
+                    // Find the image document first to get its details
+                    const imageDoc = await ImageModel.findById(imageId).session(session)
 
-			// Delete the review
-			await ReviewModel.findByIdAndDelete(id, { session });
+                    // Then delete the image document
+                    await ImageModel.findByIdAndDelete(imageId, { session })
 
-			// Update product rating
-			const remainingReviews = await ReviewModel.find({
-				product_id,
-			}).session(session);
+                    // Note: In a production system, you would also delete the image from S3
+                    // This would require keeping track of the S3 key/path
+                    // For example: await deleteFromS3(imageDoc.s3Key)
+                }
+            }
 
-			if (remainingReviews.length > 0) {
-				const totalRating = remainingReviews.reduce(
-					(sum, r) => sum + r.rating,
-					0
-				);
-				const averageRating = totalRating / remainingReviews.length;
+            // Delete the review
+            await ReviewModel.findByIdAndDelete(id, { session })
 
-				await productModel.findByIdAndUpdate(
-					product_id,
-					{ rating: averageRating.toFixed(1) },
-					{ session }
-				);
-			} else {
-				// No reviews left, reset rating to 0
-				await productModel.findByIdAndUpdate(
-					product_id,
-					{ rating: 0 },
-					{ session }
-				);
-			}
+            // Update product rating
+            const remainingReviews = await ReviewModel.find({
+                product_id
+            }).session(session)
 
-			await session.commitTransaction();
-			session.endSession();
+            if (remainingReviews.length > 0) {
+                const totalRating = remainingReviews.reduce((sum, r) => sum + r.rating, 0)
+                const averageRating = totalRating / remainingReviews.length
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Review deleted successfully",
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error deleting review:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to delete review",
-			},
-			{ status: 500 }
-		);
-	}
+                await productModel.findByIdAndUpdate(product_id, { rating: averageRating.toFixed(1) }, { session })
+            } else {
+                // No reviews left, reset rating to 0
+                await productModel.findByIdAndUpdate(product_id, { rating: 0 }, { session })
+            }
+
+            await session.commitTransaction()
+            session.endSession()
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Review deleted successfully'
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error deleting review:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to delete review'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // ===== Example Requests and Responses =====

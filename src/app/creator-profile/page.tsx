@@ -106,14 +106,21 @@ export default function CreatorProfilePage() {
         if (!imageData) return '/placeholder.png'
 
         try {
-            // If imageData is already populated with buffer data
+            // If imageData has an image_url field (from S3), use it directly
+            if (imageData.image_url) {
+                return imageData.image_url
+            }
+
+            // Legacy support for buffer data if it exists
+            // This can be removed once all images are migrated to S3
             if (imageData.data && imageData.content_type) {
                 // Convert buffer data to base64
                 const base64 =
                     typeof imageData.data === 'string' ? imageData.data : Buffer.from(imageData.data).toString('base64')
                 return `data:${imageData.content_type};base64,${base64}`
             }
-            // If imageData is just an ID, we'll use a placeholder
+
+            // Fallback to placeholder
             return '/placeholder.png'
         } catch (err) {
             console.error('Error processing image:', err)

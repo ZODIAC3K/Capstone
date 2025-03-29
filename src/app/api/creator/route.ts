@@ -29,20 +29,20 @@ export async function POST(request: NextRequest) {
             const refreshToken = request.cookies.get('refreshToken')?.value
 
             if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+                return Response.json({ success: false, error: 'No access token provided' }, { status: 401 })
             }
 
             // Find user within transaction
             const authUser = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
             if (!authUser) {
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+                return Response.json({ success: false, error: 'Invalid access token' }, { status: 401 })
             }
 
             // check if creator already exists
             const creator_exists = await CreatorModel.findOne({ userId: authUser.userId }, null, { session })
             if (creator_exists) {
-                return NextResponse.json({ success: false, error: 'Creator already exists' }, { status: 400 })
+                return Response.json({ success: false, error: 'Creator already exists' }, { status: 400 })
             }
 
             const formData = await request.formData()
@@ -58,12 +58,12 @@ export async function POST(request: NextRequest) {
 
             // Validate required fields
             if (!name?.trim()) {
-                return NextResponse.json({ success: false, error: 'Name is required' }, { status: 400 })
+                return Response.json({ success: false, error: 'Name is required' }, { status: 400 })
             }
 
             const unique_name = await CreatorModel.findOne({ name })
             if (unique_name) {
-                return NextResponse.json({ success: false, error: 'Name already exists' }, { status: 400 })
+                return Response.json({ success: false, error: 'Name already exists' }, { status: 400 })
             }
 
             // Handle profile image upload if provided
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
                 const uploadResult = await uploadObjectToS3(imageBuffer, fileName, profileImage.type)
 
                 if (!uploadResult.success) {
-                    return NextResponse.json(
+                    return Response.json(
                         { success: false, error: uploadResult.error || 'Failed to upload profile image' },
                         { status: 500 }
                     )
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
                 const uploadResult = await uploadObjectToS3(imageBuffer, fileName, coverImage.type)
 
                 if (!uploadResult.success) {
-                    return NextResponse.json(
+                    return Response.json(
                         { success: false, error: uploadResult.error || 'Failed to upload cover image' },
                         { status: 500 }
                     )
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
 
             await session.commitTransaction()
 
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: true,
                     message: 'Creator profile created successfully',
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
         }
     } catch (error) {
         console.error('Error creating creator:', error)
-        return NextResponse.json(
+        return Response.json(
             {
                 success: false,
                 error: error instanceof Error ? error.message : 'Internal server error'
@@ -310,13 +310,13 @@ export async function GET(request: NextRequest) {
                 if (!creator) {
                     await session.abortTransaction()
                     session.endSession()
-                    return NextResponse.json({ success: false, error: 'Creator not found' }, { status: 404 })
+                    return Response.json({ success: false, error: 'Creator not found' }, { status: 404 })
                 }
 
                 await session.commitTransaction()
                 session.endSession()
 
-                return NextResponse.json(
+                return Response.json(
                     {
                         success: true,
                         message: 'Creator profile fetched successfully',
@@ -335,7 +335,7 @@ export async function GET(request: NextRequest) {
             if (!authUser) {
                 await session.abortTransaction()
                 session.endSession()
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+                return Response.json({ success: false, error: 'Invalid access token' }, { status: 401 })
             }
 
             const creator = await CreatorModel.findOne({ userId: authUser.userId }, null, { session }).populate([
@@ -365,13 +365,13 @@ export async function GET(request: NextRequest) {
             if (!creator) {
                 await session.abortTransaction()
                 session.endSession()
-                return NextResponse.json({ success: false, error: 'Creator not found' }, { status: 404 })
+                return Response.json({ success: false, error: 'Creator not found' }, { status: 404 })
             }
 
             await session.commitTransaction()
             session.endSession()
 
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: true,
                     message: 'Creator profile fetched successfully',
@@ -387,7 +387,7 @@ export async function GET(request: NextRequest) {
         }
     } catch (error) {
         console.error('Error fetching creator:', error)
-        return NextResponse.json(
+        return Response.json(
             {
                 success: false,
                 error: error instanceof Error ? error.message : 'An unknown error occurred'
@@ -479,7 +479,7 @@ export async function PATCH(request: NextRequest) {
             const refreshToken = request.cookies.get('refreshToken')?.value
 
             if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+                return Response.json({ success: false, error: 'No access token provided' }, { status: 401 })
             }
 
             // First find the auth user to get userId
@@ -488,7 +488,7 @@ export async function PATCH(request: NextRequest) {
             if (!authUser) {
                 await session.abortTransaction()
                 session.endSession()
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+                return Response.json({ success: false, error: 'Invalid access token' }, { status: 401 })
             }
 
             // Find the creator using userId from auth
@@ -497,7 +497,7 @@ export async function PATCH(request: NextRequest) {
             if (!existingCreator) {
                 await session.abortTransaction()
                 session.endSession()
-                return NextResponse.json({ success: false, error: 'Creator profile not found' }, { status: 404 })
+                return Response.json({ success: false, error: 'Creator profile not found' }, { status: 404 })
             }
 
             const formData = await request.formData()
@@ -518,7 +518,7 @@ export async function PATCH(request: NextRequest) {
                 if (nameExists) {
                     await session.abortTransaction()
                     session.endSession()
-                    return NextResponse.json({ success: false, error: 'Name already exists' }, { status: 400 })
+                    return Response.json({ success: false, error: 'Name already exists' }, { status: 400 })
                 }
             }
 
@@ -540,7 +540,7 @@ export async function PATCH(request: NextRequest) {
                 if (!uploadResult.success) {
                     await session.abortTransaction()
                     session.endSession()
-                    return NextResponse.json(
+                    return Response.json(
                         { success: false, error: uploadResult.error || 'Failed to upload profile image' },
                         { status: 500 }
                     )
@@ -577,7 +577,7 @@ export async function PATCH(request: NextRequest) {
                 if (!uploadResult.success) {
                     await session.abortTransaction()
                     session.endSession()
-                    return NextResponse.json(
+                    return Response.json(
                         { success: false, error: uploadResult.error || 'Failed to upload cover image' },
                         { status: 500 }
                     )
@@ -636,7 +636,7 @@ export async function PATCH(request: NextRequest) {
             await session.commitTransaction()
             session.endSession()
 
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: true,
                     message: 'Creator profile updated successfully',
@@ -652,7 +652,7 @@ export async function PATCH(request: NextRequest) {
         }
     } catch (error) {
         console.error('Error updating creator:', error)
-        return NextResponse.json(
+        return Response.json(
             {
                 success: false,
                 error: error instanceof Error ? error.message : 'Internal server error'
@@ -791,27 +791,31 @@ export async function DELETE(request: NextRequest) {
             const refreshToken = request.cookies.get('refreshToken')?.value
 
             if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
+                return Response.json({ error: 'No access token provided' }, { status: 401 })
             }
 
             const authUser = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
             if (!authUser) {
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+                return Response.json({ error: 'Invalid access token' }, { status: 401 })
             }
 
             const creator = await CreatorModel.findOne({ userId: authUser.userId }, null, { session })
 
             if (!creator) {
-                return NextResponse.json({ success: false, error: 'Creator profile not found' }, { status: 404 })
+                return Response.json({ error: 'Creator profile not found' }, { status: 404 })
             }
 
             // Delete profile and cover images if they exist
             if (creator.creatorProfilePicture) {
+                // In a production environment, you should also delete the image from S3
+                // using the URL stored in the image document
                 await ImageModel.findByIdAndDelete(creator.creatorProfilePicture, { session })
             }
 
             if (creator.creatorCoverImage) {
+                // In a production environment, you should also delete the image from S3
+                // using the URL stored in the image document
                 await ImageModel.findByIdAndDelete(creator.creatorCoverImage, {
                     session
                 })
@@ -823,6 +827,7 @@ export async function DELETE(request: NextRequest) {
                 if (product) {
                     // Delete product image
                     if (product.image_id) {
+                        // In a production environment, you should also delete the image from S3
                         await ImageModel.findByIdAndDelete(product.image_id, {
                             session
                         })
@@ -832,6 +837,7 @@ export async function DELETE(request: NextRequest) {
                     if (product.shader_id) {
                         const shader = await ShaderModel.findById(product.shader_id).session(session)
                         if (shader && shader.shaderImage) {
+                            // In a production environment, you should also delete the shader image from S3
                             await ImageModel.findByIdAndDelete(shader.shaderImage, { session })
                         }
                         await ShaderModel.findByIdAndDelete(product.shader_id, {
@@ -852,7 +858,7 @@ export async function DELETE(request: NextRequest) {
             await session.commitTransaction()
             session.endSession()
 
-            return NextResponse.json(
+            return Response.json(
                 {
                     success: true,
                     message: 'Creator profile and all associated data deleted successfully'
@@ -867,7 +873,7 @@ export async function DELETE(request: NextRequest) {
         }
     } catch (error) {
         console.error('Error deleting creator:', error)
-        return NextResponse.json(
+        return Response.json(
             {
                 success: false,
                 error: error instanceof Error ? error.message : 'Internal server error'

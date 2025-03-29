@@ -1,244 +1,267 @@
-import { NextRequest, NextResponse } from "next/server";
-import productModel from "@/models/productSchema";
-import { ImageModel } from "@/models/imageSchema";
-import dbConnect from "@/lib/mongodb";
-import mongoose from "mongoose";
-import AuthModel from "@/models/authSchema";
-import { CreatorModel } from "@/models/creatorSchema";
-import ShaderModel from "@/models/shaderSchema";
-import UserModel from "@/models/userSchema";
-import CategoryModel from "@/models/categorySchema";
-import objectModel from "@/models/objectSchema";
+import { NextRequest, NextResponse } from 'next/server'
+import productModel from '@/models/productSchema'
+import { ImageModel } from '@/models/imageSchema'
+import dbConnect from '@/lib/mongodb'
+import mongoose from 'mongoose'
+import AuthModel from '@/models/authSchema'
+import { CreatorModel } from '@/models/creatorSchema'
+import ShaderModel from '@/models/shaderSchema'
+import UserModel from '@/models/userSchema'
+import CategoryModel from '@/models/categorySchema'
+import objectModel from '@/models/objectSchema'
+import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
 
 export async function POST(request: NextRequest) {
-	try {
-		await dbConnect();
+    try {
+        await dbConnect()
 
-		// Pre-register all required models
-		await Promise.all([
-			UserModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-			CreatorModel.findOne().exec(),
-			ShaderModel.findOne().exec(),
-			CategoryModel.findOne().exec(),
-			productModel.findOne().exec(),
-			objectModel.findOne().exec(),
-		]).catch(() => {});
+        // Pre-register all required models
+        await Promise.all([
+            UserModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ShaderModel.findOne().exec(),
+            CategoryModel.findOne().exec(),
+            productModel.findOne().exec(),
+            objectModel.findOne().exec()
+        ]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Authentication check
-			const accessToken = request.cookies.get("accessToken")?.value;
-			const refreshToken = request.cookies.get("refreshToken")?.value;
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			if (!accessToken || !refreshToken) {
-				return NextResponse.json(
-					{ error: "No access token provided" },
-					{ status: 401 }
-				);
-			}
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json({ error: 'No access token provided' }, { status: 401 })
+            }
 
-			// Find user within transaction
-			const findUser = await AuthModel.findOne(
-				{ accessToken, refreshToken },
-				null,
-				{ session }
-			);
+            // Find user within transaction
+            const findUser = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			if (!findUser) {
-				return NextResponse.json(
-					{ error: "Invalid access token" },
-					{ status: 401 }
-				);
-			}
+            if (!findUser) {
+                return NextResponse.json({ error: 'Invalid access token' }, { status: 401 })
+            }
 
-			// Find creator within transaction
-			const findCreator = await CreatorModel.findOne(
-				{ user_id: findUser.user_id },
-				null,
-				{ session }
-			);
+            // Find creator within transaction
+            const findCreator = await CreatorModel.findOne({ userId: findUser.userId }, null, { session })
 
-			if (!findCreator) {
-				return NextResponse.json(
-					{ error: "Creator not found" },
-				{ status: 404 }
-			);
-		}
+            if (!findCreator) {
+                return NextResponse.json({ error: 'Creator not found' }, { status: 404 })
+            }
 
-			const creator_id = findCreator._id;
+            const creator_id = findCreator._id
 
-			const formData = await request.formData();
+            const formData = await request.formData()
 
-			// Get all form fields
-			const title = formData.get("title") as string;
-			const description = formData.get("description") as string;
-			const category_id = formData.get("category_id") as string;
-			const model_id = formData.get("model_id") as string;
-			const shader = formData.get("shader") as File;
-			const price_amount = Number(formData.get("price_amount"));
-			const price_currency = formData.get("price_currency") as string;
-			const image = formData.get("image") as File;
-			const shaderType = formData.get("shaderType") as string;
+            // Get all form fields
+            const title = formData.get('title') as string
+            const description = formData.get('description') as string
+            const category_id = formData.get('category_id') as string
+            const model_id = formData.get('model_id') as string
+            const shader = formData.get('shader') as File
+            const price_amount = Number(formData.get('price_amount'))
+            const price_currency = formData.get('price_currency') as string
+            const image = formData.get('image') as File
+            const shaderType = formData.get('shaderType') as string
 
-			// Validate required fields
-			if (!title || !model_id || !shader || !price_amount || !image) {
-				console.log("Missing fields check:");
-				console.log("title:", !!title);
-				console.log("model_id:", !!model_id);
-				console.log("shader:", !!shader);
-				console.log("price_amount:", !!price_amount);
-				console.log("image:", !!image);
+            // Validate required fields
+            if (!title || !model_id || !shader || !price_amount || !image) {
+                console.log('Missing fields check:')
+                console.log('title:', !!title)
+                console.log('model_id:', !!model_id)
+                console.log('shader:', !!shader)
+                console.log('price_amount:', !!price_amount)
+                console.log('image:', !!image)
 
-				await session.abortTransaction();
-				session.endSession();
-				return Response.json(
-					{
-						success: false,
-						error: "Missing required fields",
-						missing: {
-							title: !title,
-							model_id: !model_id,
-							shader: !shader,
-							price_amount: !price_amount,
-							image: !image,
-						},
-					},
-					{ status: 400 }
-				);
-			}
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Missing required fields',
+                        missing: {
+                            title: !title,
+                            model_id: !model_id,
+                            shader: !shader,
+                            price_amount: !price_amount,
+                            image: !image
+                        }
+                    },
+                    { status: 400 }
+                )
+            }
 
-			const unique_product = await productModel.findOne({ title });
-			if (unique_product) {
-				await session.abortTransaction();
-				session.endSession();
-				return Response.json(
-					{
-						success: false,
-						error: "Product already exists with this title",
-					},
-					{ status: 400 }
-				);
-			}
+            const unique_product = await productModel.findOne({ title })
+            if (unique_product) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product already exists with this title'
+                    },
+                    { status: 400 }
+                )
+            }
 
-			// Create image detail with binary data
-			const imageBuffer = Buffer.from(await image.arrayBuffer());
-			const [imageDetail] = await ImageModel.create(
-				[
-					{
-						user_id: creator_id,
-						data: imageBuffer,
-						content_type: image.type,
-					},
-				],
-				{ session }
-			);
+            // Upload product image to S3 instead of storing in MongoDB
+            const imageBuffer = Buffer.from(await image.arrayBuffer())
+            // Create a unique filename for S3
+            const imageFileName = `product-image-${creator_id}-${Date.now()}-${Math.random().toString(36).substring(7)}`
 
-			// Create shader image first
-			const shaderImageBuffer = Buffer.from(await shader.arrayBuffer());
-			const [shaderImageDetail] = await ImageModel.create(
-				[
-					{
-						user_id: creator_id,
-						data: shaderImageBuffer,
-						content_type: shader.type,
-					},
-				],
-				{ session }
-			);
+            const imageUploadResult = await uploadObjectToS3(imageBuffer, imageFileName, image.type || 'image/jpeg')
 
-			// Create product first (without shader reference)
-			const [product] = await productModel.create(
-				[
-					{
-			title,
-			description,
-						category_id: category_id ? category_id.split(",") : [],
-			model_id,
-			creator_id,
-						price: {
-							amount: price_amount,
-							currency: price_currency || "INR",
-						},
-						image_id: imageDetail._id,
-					},
-				],
-				{ session }
-			);
+            if (!imageUploadResult.success) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: imageUploadResult.error || 'Failed to upload product image'
+                    },
+                    { status: 500 }
+                )
+            }
 
-			// Now create shader with product reference
-			const [shaderDetail] = await ShaderModel.create(
-				[
-					{
-						user_id: creator_id,
-						shaderImage: shaderImageDetail._id,
-						shaderType: shaderType,
-						product_id: product._id,
-					},
-				],
-				{ session }
-			);
+            // Create image document with URL
+            const [imageDetail] = await ImageModel.create(
+                [
+                    {
+                        user_id: creator_id,
+                        image_url: imageUploadResult.url,
+                        content_type: image.type || 'image/jpeg'
+                    }
+                ],
+                { session }
+            )
 
-			// Update product with shader reference
-			await productModel.findByIdAndUpdate(
-				product._id,
-				{ shader_id: shaderDetail._id },
-				{ session }
-			);
+            // Upload shader image to S3
+            const shaderImageBuffer = Buffer.from(await shader.arrayBuffer())
+            const shaderFileName = `shader-image-${creator_id}-${Date.now()}-${Math.random().toString(36).substring(7)}`
 
-			// Update creator products array
-			const creator = await CreatorModel.findById(creator_id);
-			creator?.products.push(product._id);
-			await creator?.save({ session });
+            const shaderUploadResult = await uploadObjectToS3(
+                shaderImageBuffer,
+                shaderFileName,
+                shader.type || 'image/jpeg'
+            )
 
-			// Populate all references within transaction
-			const populatedProduct = await productModel
-				.findById(product._id)
-				.session(session)
-				.populate([
-					{
-						path: "category_id",
-						model: "categoryschema",
-					},
-					{ path: "model_id", model: "Object" },
-					{ path: "creator_id", model: "Creator" },
-					{ path: "shader_id", model: "shaderSchema" },
-					// { path: "image_id", model: "ImageDetail" },
-				]);
+            if (!shaderUploadResult.success) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: shaderUploadResult.error || 'Failed to upload shader image'
+                    },
+                    { status: 500 }
+                )
+            }
 
-			// Commit the transaction
-			await session.commitTransaction();
-			session.endSession();
+            // Create shader image document with URL
+            const [shaderImageDetail] = await ImageModel.create(
+                [
+                    {
+                        user_id: creator_id,
+                        image_url: shaderUploadResult.url,
+                        content_type: shader.type || 'image/jpeg'
+                    }
+                ],
+                { session }
+            )
 
-		return Response.json(
-			{
-				success: true,
-				message: "Product created successfully",
-					data: populatedProduct,
-			},
-			{ status: 201 }
-		);
-	} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error creating product:", error);
-		return Response.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "An unknown error occurred",
-			},
-			{ status: 500 }
-		);
-	}
+            // Create product first (without shader reference)
+            const [product] = await productModel.create(
+                [
+                    {
+                        title,
+                        description,
+                        category_id: category_id ? category_id.split(',') : [],
+                        model_id,
+                        creator_id,
+                        price: {
+                            amount: price_amount,
+                            currency: price_currency || 'INR'
+                        },
+                        image_id: imageDetail._id
+                    }
+                ],
+                { session }
+            )
+
+            // Now create shader with product reference
+            const [shaderDetail] = await ShaderModel.create(
+                [
+                    {
+                        user_id: creator_id,
+                        shaderImage: shaderImageDetail._id,
+                        shaderType: shaderType,
+                        product_id: product._id
+                    }
+                ],
+                { session }
+            )
+
+            // Update product with shader reference
+            await productModel.findByIdAndUpdate(product._id, { shader_id: shaderDetail._id }, { session })
+
+            // Update creator products array
+            const creator = await CreatorModel.findById(creator_id)
+            creator?.products.push(product._id)
+            await creator?.save({ session })
+
+            // Populate all references within transaction
+            const populatedProduct = await productModel
+                .findById(product._id)
+                .session(session)
+                .populate([
+                    {
+                        path: 'category_id',
+                        model: 'categoryschema'
+                    },
+                    { path: 'model_id', model: 'Object' },
+                    { path: 'creator_id', model: 'Creator' },
+                    {
+                        path: 'shader_id',
+                        model: 'shaderSchema',
+                        populate: {
+                            path: 'shaderImage',
+                            model: 'ImageDetail'
+                        }
+                    },
+                    { path: 'image_id', model: 'ImageDetail' }
+                ])
+
+            // Commit the transaction
+            await session.commitTransaction()
+            session.endSession()
+
+            return Response.json(
+                {
+                    success: true,
+                    message: 'Product created successfully',
+                    data: populatedProduct
+                },
+                { status: 201 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error creating product:', error)
+        return Response.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'An unknown error occurred'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // === Example FormData ===
@@ -314,110 +337,175 @@ export async function POST(request: NextRequest) {
 // }
 
 export async function GET(request: NextRequest) {
-	try {
-		await dbConnect();
-		const { searchParams } = new URL(request.url);
-		const id = searchParams.get("id");
+    try {
+        await dbConnect()
 
-		// Populate configuration
-		const populateOptions = [
-			{
-				path: "category_id",
-				model: "categoryschema",
-			},
-			{
-				path: "model_id",
-				model: "Object",
-			},
-			{
-				path: "creator_id",
-				model: "Creator",
-			},
-			{
-				path: "shader_id",
-				model: "shaderSchema",
-			},
-		];
+        // Pre-register all required models
+        await Promise.all([
+            productModel.findOne().exec(),
+            objectModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ShaderModel.findOne().exec(),
+            CategoryModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            UserModel.findOne().exec()
+        ]).catch(() => {})
 
-		if (id) {
-			// Get single product
-			const product = await productModel
-				.findById(id)
-				.populate(populateOptions);
+        // Parse query parameters
+        const url = new URL(request.url)
+        const id = url.searchParams.get('id')
+        const category = url.searchParams.get('category')
+        const creator = url.searchParams.get('creator')
+        const title = url.searchParams.get('title')
+        const minPrice = url.searchParams.get('minPrice')
+        const maxPrice = url.searchParams.get('maxPrice')
+        const sortBy = url.searchParams.get('sortBy') || 'createdAt'
+        const sortOrder = url.searchParams.get('sortOrder') || 'desc'
+        const page = parseInt(url.searchParams.get('page') || '1')
+        const limit = parseInt(url.searchParams.get('limit') || '10')
+        const skip = (page - 1) * limit
 
-			if (!product) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: "No product found",
-					},
-					{ status: 404 }
-				);
-			}
+        // Build filter query
+        const filter: any = {}
+        if (id) filter._id = id
+        if (category) filter.category_id = { $in: [category] }
+        if (creator) filter.creator_id = creator
+        if (title) filter.title = { $regex: title, $options: 'i' }
 
-			return NextResponse.json(
-				{ success: true, data: product },
-				{ status: 200 }
-			);
-		}
+        // Handle price range filtering
+        if (minPrice || maxPrice) {
+            filter.price = {}
+            if (minPrice) filter.price.amount = { $gte: parseFloat(minPrice) }
+            if (maxPrice) {
+                if (filter.price.amount) {
+                    filter.price.amount.$lte = parseFloat(maxPrice)
+                } else {
+                    filter.price.amount = { $lte: parseFloat(maxPrice) }
+                }
+            }
+        }
 
-		// Get all products with optional filters
-		const page = parseInt(searchParams.get("page") || "1");
-		const limit = parseInt(searchParams.get("limit") || "10");
-		const category = searchParams.get("category");
-		const creator = searchParams.get("creator");
+        // Build sort options
+        const sort: any = {}
+        sort[sortBy] = sortOrder === 'asc' ? 1 : -1
 
-		// Build query
-		const query: any = {};
-		if (category) query.category_id = category;
-		if (creator) query.creator_id = creator;
+        // If we're looking for a specific product by ID
+        if (id) {
+            const product = await productModel.findById(id).populate([
+                {
+                    path: 'category_id',
+                    model: 'categoryschema'
+                },
+                {
+                    path: 'model_id',
+                    model: 'Object'
+                },
+                {
+                    path: 'creator_id',
+                    model: 'Creator',
+                    populate: {
+                        path: 'userId',
+                        model: 'User',
+                        populate: {
+                            path: 'profile_picture',
+                            model: 'ImageDetail'
+                        }
+                    }
+                },
+                {
+                    path: 'shader_id',
+                    model: 'shaderSchema',
+                    populate: {
+                        path: 'shaderImage',
+                        model: 'ImageDetail'
+                    }
+                },
+                { path: 'image_id', model: 'ImageDetail' }
+            ])
 
-		// Get total count for pagination
-		const total = await productModel.countDocuments(query);
+            if (!product) {
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product not found'
+                    },
+                    { status: 404 }
+                )
+            }
 
-		// Get paginated results
-		const products = await productModel
-			.find(query)
-			.populate(populateOptions)
-			.sort({ created_at: -1 })
-			.skip((page - 1) * limit)
-			.limit(limit);
+            return Response.json(
+                {
+                    success: true,
+                    data: product
+                },
+                { status: 200 }
+            )
+        }
 
-		if (products.length === 0) {
-			return NextResponse.json(
-				{ success: false, error: "No products found" },
-				{ status: 404 }
-			);
-		}
+        // Get total count for pagination
+        const totalProducts = await productModel.countDocuments(filter)
 
-		return NextResponse.json(
-			{
-				success: true,
-				data: {
-					products,
-					pagination: {
-						total,
-						page,
-						limit,
-						pages: Math.ceil(total / limit),
-					},
-				},
-			},
-			{ status: 200 }
-		);
-	} catch (error) {
-		console.error("Error fetching products:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to fetch products",
-			},
-			{ status: 500 }
-		);
-	}
+        // Get products with pagination
+        const products = await productModel
+            .find(filter)
+            .sort(sort)
+            .skip(skip)
+            .limit(limit)
+            .populate([
+                {
+                    path: 'category_id',
+                    model: 'categoryschema'
+                },
+                {
+                    path: 'model_id',
+                    model: 'Object'
+                },
+                {
+                    path: 'creator_id',
+                    model: 'Creator',
+                    populate: {
+                        path: 'userId',
+                        model: 'User',
+                        populate: {
+                            path: 'profile_picture',
+                            model: 'ImageDetail'
+                        }
+                    }
+                },
+                {
+                    path: 'shader_id',
+                    model: 'shaderSchema',
+                    populate: {
+                        path: 'shaderImage',
+                        model: 'ImageDetail'
+                    }
+                },
+                { path: 'image_id', model: 'ImageDetail' }
+            ])
+
+        return Response.json(
+            {
+                success: true,
+                data: products,
+                pagination: {
+                    totalProducts,
+                    totalPages: Math.ceil(totalProducts / limit),
+                    currentPage: page,
+                    limit
+                }
+            },
+            { status: 200 }
+        )
+    } catch (error) {
+        console.error('Error fetching products:', error)
+        return Response.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'An unknown error occurred'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // === Example Requests and Responses ===
@@ -497,206 +585,303 @@ export async function GET(request: NextRequest) {
 // }
 
 export async function PATCH(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			UserModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-			CreatorModel.findOne().exec(),
-			ShaderModel.findOne().exec(),
-			CategoryModel.findOne().exec(),
-			productModel.findOne().exec(),
-			objectModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        // Pre-register all required models
+        await Promise.all([
+            UserModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ShaderModel.findOne().exec(),
+            CategoryModel.findOne().exec(),
+            productModel.findOne().exec(),
+            objectModel.findOne().exec()
+        ]).catch(() => {})
 
-		try {
-			const formData = await request.formData();
-			const productId = formData.get("productId") as string;
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-			if (!productId) {
-				return NextResponse.json(
-					{ success: false, error: "Product ID is required" },
-					{ status: 400 }
-				);
-			}
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			// First, find and validate the product
-			const existingProduct = await productModel
-				.findById(productId)
-				.session(session);
-			if (!existingProduct) {
-				return NextResponse.json(
-					{ success: false, error: "Product not found" },
-					{ status: 404 }
-				);
-			}
+            if (!accessToken || !refreshToken) {
+                return NextResponse.json({ error: 'No access token provided' }, { status: 401 })
+            }
 
-			// Get update fields
-			const title = formData.get("title") as string;
-			const description = formData.get("description") as string;
-			const category_id = formData.get("category_id") as string;
-			const model_id = formData.get("model_id") as string;
-			const price_amount = Number(formData.get("price_amount"));
-			const price_currency = formData.get("price_currency") as string;
-			const shader = formData.get("shader") as File;
-			const image = formData.get("image") as File;
-			const shaderType = formData.get("shaderType") as string;
+            // Find user within transaction
+            const findUser = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			// Check title uniqueness if being updated
-			if (title && title !== existingProduct.title) {
-				const titleExists = await productModel
-					.findOne({
-						title,
-						_id: { $ne: productId },
-					})
-					.session(session);
+            if (!findUser) {
+                return NextResponse.json({ error: 'Invalid access token' }, { status: 401 })
+            }
 
-				if (titleExists) {
-					return NextResponse.json(
-						{
-							success: false,
-							error: "Product title already exists",
-						},
-						{ status: 400 }
-					);
-				}
-			}
+            const formData = await request.formData()
 
-			// Prepare update fields
-			const updateFields: any = {};
-			if (title) updateFields.title = title;
-			if (description) updateFields.description = description;
-			if (category_id) updateFields.category_id = category_id.split(",");
-			if (model_id) updateFields.model_id = model_id;
-			if (price_amount)
-				updateFields.price = {
-					...existingProduct.price,
-					amount: price_amount,
-				};
-			if (price_currency)
-				updateFields.price = {
-					...existingProduct.price,
-					currency: price_currency,
-				};
+            // Get all form fields
+            const product_id = formData.get('product_id') as string
 
-			// Handle image update if provided
-			if (image) {
-				// Create new image first
-				const imageBuffer = Buffer.from(await image.arrayBuffer());
-				const [imageDetail] = await ImageModel.create(
-					[
-						{
-							user_id: existingProduct.creator_id,
-							data: imageBuffer,
-							content_type: image.type,
-						},
-					],
-					{ session }
-				);
+            // Validate product_id
+            if (!product_id) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product ID is required'
+                    },
+                    { status: 400 }
+                )
+            }
 
-				// Only after successful creation, delete the old image
-				await ImageModel.findByIdAndDelete(existingProduct.image_id, {
-					session,
-				});
-				updateFields.image_id = imageDetail._id;
-			}
+            // Find the product
+            const product = await productModel.findById(product_id).session(session)
 
-			// Handle shader update if provided
-			if (shader) {
-				// Create new shader image first
-				const shaderImageBuffer = Buffer.from(
-					await shader.arrayBuffer()
-				);
-				const [shaderImageDetail] = await ImageModel.create(
-					[
-						{
-							user_id: existingProduct.creator_id,
-							data: shaderImageBuffer,
-							content_type: shader.type,
-						},
-					],
-					{ session }
-				);
+            if (!product) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product not found'
+                    },
+                    { status: 404 }
+                )
+            }
 
-				// Create new shader
-				const [shaderDetail] = await ShaderModel.create(
-					[
-						{
-							user_id: existingProduct.creator_id,
-							shaderImage: shaderImageDetail._id,
-							shaderType:
-								shaderType ||
-								existingProduct.shader_id.shaderType,
-							product_id: productId,
-						},
-					],
-					{ session }
-				);
+            // Find the creator
+            const creator = await CreatorModel.findById(product.creator_id).session(session)
 
-				// Only after successful creation, delete the old shader and its image
-				const existingShader = await ShaderModel.findById(
-					existingProduct.shader_id
-				).session(session);
-				if (existingShader) {
-					await ImageModel.findByIdAndDelete(
-						existingShader.shaderImage,
-						{ session }
-					);
-					await ShaderModel.findByIdAndDelete(existingShader._id, {
-						session,
-					});
-				}
+            if (!creator) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Creator not found'
+                    },
+                    { status: 404 }
+                )
+            }
 
-				updateFields.shader_id = shaderDetail._id;
-			}
+            // Check if the authenticated user is the creator of the product
+            if (creator.userId.toString() !== findUser.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'You do not have permission to update this product'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			// Update product with all changes
-			const updatedProduct = await productModel.findByIdAndUpdate(
-				productId,
-				{ $set: updateFields },
-				{ new: true, session }
-			);
-			// .populate([
-			// 	{ path: "category_id", model: "categoryschema" },
-			// 	{ path: "model_id", model: "Object" },
-			// 	{ path: "creator_id", model: "Creator" },
-			// 	{ path: "shader_id", model: "shaderSchema" },
-			// 	{ path: "image_id", model: "ImageDetail" },
-			// ]);
+            // Get optional fields
+            const title = formData.get('title') as string
+            const description = formData.get('description') as string
+            const category_id = formData.get('category_id') as string
+            const price_amount = formData.get('price_amount') ? Number(formData.get('price_amount')) : undefined
+            const price_currency = formData.get('price_currency') as string
+            const image = formData.get('image') as File
+            const shader = formData.get('shader') as File
+            const shaderType = formData.get('shaderType') as string
 
-			await session.commitTransaction();
-			session.endSession();
+            // Build update object
+            const updateData: any = {}
+            if (title) updateData.title = title
+            if (description) updateData.description = description
+            if (category_id) updateData.category_id = category_id.split(',')
+            if (price_amount && price_currency) {
+                updateData.price = {
+                    amount: price_amount,
+                    currency: price_currency
+                }
+            } else if (price_amount) {
+                updateData.price = {
+                    amount: price_amount,
+                    currency: product.price.currency
+                }
+            } else if (price_currency) {
+                updateData.price = {
+                    amount: product.price.amount,
+                    currency: price_currency
+                }
+            }
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Product updated successfully",
-					data: updatedProduct,
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error updating product:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to update product",
-			},
-			{ status: 500 }
-		);
-	}
+            // Handle image update
+            if (image && image.size > 0) {
+                // Upload new image to S3
+                const imageBuffer = Buffer.from(await image.arrayBuffer())
+                const imageFileName = `product-image-${creator._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+
+                const imageUploadResult = await uploadObjectToS3(imageBuffer, imageFileName, image.type || 'image/jpeg')
+
+                if (!imageUploadResult.success) {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return Response.json(
+                        {
+                            success: false,
+                            error: imageUploadResult.error || 'Failed to upload product image'
+                        },
+                        { status: 500 }
+                    )
+                }
+
+                // Delete old image
+                if (product.image_id) {
+                    await ImageModel.findByIdAndDelete(product.image_id, {
+                        session
+                    })
+                }
+
+                // Create new image document with URL
+                const [imageDetail] = await ImageModel.create(
+                    [
+                        {
+                            user_id: creator._id,
+                            image_url: imageUploadResult.url,
+                            content_type: image.type || 'image/jpeg'
+                        }
+                    ],
+                    { session }
+                )
+
+                updateData.image_id = imageDetail._id
+            }
+
+            // Handle shader update
+            if (shader && shader.size > 0) {
+                // Upload shader to S3
+                const shaderBuffer = Buffer.from(await shader.arrayBuffer())
+                const shaderFileName = `shader-image-${creator._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+
+                const shaderUploadResult = await uploadObjectToS3(
+                    shaderBuffer,
+                    shaderFileName,
+                    shader.type || 'image/jpeg'
+                )
+
+                if (!shaderUploadResult.success) {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return Response.json(
+                        {
+                            success: false,
+                            error: shaderUploadResult.error || 'Failed to upload shader image'
+                        },
+                        { status: 500 }
+                    )
+                }
+
+                // First, find the existing shader
+                const existingShader = await ShaderModel.findById(product.shader_id).session(session)
+
+                // Delete old shader image
+                if (existingShader && existingShader.shaderImage) {
+                    await ImageModel.findByIdAndDelete(existingShader.shaderImage, { session })
+                }
+
+                // Create new shader image document with URL
+                const [shaderImageDetail] = await ImageModel.create(
+                    [
+                        {
+                            user_id: creator._id,
+                            image_url: shaderUploadResult.url,
+                            content_type: shader.type || 'image/jpeg'
+                        }
+                    ],
+                    { session }
+                )
+
+                // Update shader
+                if (existingShader) {
+                    await ShaderModel.findByIdAndUpdate(
+                        existingShader._id,
+                        {
+                            shaderImage: shaderImageDetail._id,
+                            ...(shaderType && { shaderType })
+                        },
+                        { session }
+                    )
+                } else {
+                    // Create new shader if it doesn't exist
+                    const [newShader] = await ShaderModel.create(
+                        [
+                            {
+                                user_id: creator._id,
+                                shaderImage: shaderImageDetail._id,
+                                shaderType: shaderType || 'basic',
+                                product_id: product._id
+                            }
+                        ],
+                        { session }
+                    )
+                    updateData.shader_id = newShader._id
+                }
+            } else if (shaderType) {
+                // Update just the shader type
+                const existingShader = await ShaderModel.findById(product.shader_id).session(session)
+                if (existingShader) {
+                    await ShaderModel.findByIdAndUpdate(existingShader._id, { shaderType }, { session })
+                }
+            }
+
+            // Update product
+            const updatedProduct = await productModel
+                .findByIdAndUpdate(product_id, updateData, {
+                    new: true,
+                    session
+                })
+                .populate([
+                    {
+                        path: 'category_id',
+                        model: 'categoryschema'
+                    },
+                    { path: 'model_id', model: 'Object' },
+                    { path: 'creator_id', model: 'Creator' },
+                    {
+                        path: 'shader_id',
+                        model: 'shaderSchema',
+                        populate: {
+                            path: 'shaderImage',
+                            model: 'ImageDetail'
+                        }
+                    },
+                    { path: 'image_id', model: 'ImageDetail' }
+                ])
+
+            // Commit the transaction
+            await session.commitTransaction()
+            session.endSession()
+
+            return Response.json(
+                {
+                    success: true,
+                    message: 'Product updated successfully',
+                    data: updatedProduct
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error updating product:', error)
+        return Response.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'An unknown error occurred'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // === Example Requests and Responses ===
@@ -805,147 +990,164 @@ export async function PATCH(request: NextRequest) {
 // }
 
 export async function DELETE(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			UserModel.findOne().exec(),
-			ImageModel.findOne().exec(),
-			CreatorModel.findOne().exec(),
-			ShaderModel.findOne().exec(),
-			productModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        // Pre-register models
+        await Promise.all([
+            AuthModel.findOne().exec(),
+            UserModel.findOne().exec(),
+            ImageModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ShaderModel.findOne().exec(),
+            productModel.findOne().exec()
+        ]).catch(() => {})
 
-		try {
-			// Authentication check
-			const accessToken = request.cookies.get("accessToken")?.value;
-			const refreshToken = request.cookies.get("refreshToken")?.value;
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-			if (!accessToken || !refreshToken) {
-				return NextResponse.json(
-					{ success: false, error: "No access token provided" },
-					{ status: 401 }
-				);
-			}
+        try {
+            // Authentication check
+            const accessToken = request.cookies.get('accessToken')?.value
+            const refreshToken = request.cookies.get('refreshToken')?.value
 
-			const authUser = await AuthModel.findOne(
-				{ accessToken, refreshToken },
-				null,
-				{ session }
-			);
+            if (!accessToken || !refreshToken) {
+                return Response.json({ error: 'No access token provided' }, { status: 401 })
+            }
 
-			if (!authUser) {
-				return NextResponse.json(
-					{ success: false, error: "Invalid access token" },
-					{ status: 401 }
-				);
-			}
+            // Find user within transaction
+            const findUser = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
 
-			// Get product ID from URL params
-			const { searchParams } = new URL(request.url);
-			const productId = searchParams.get("productId");
+            if (!findUser) {
+                return Response.json({ error: 'Invalid access token' }, { status: 401 })
+            }
 
-			if (!productId) {
-				return NextResponse.json(
-					{ success: false, error: "Product ID is required" },
-					{ status: 400 }
-				);
-			}
+            // Get product ID from URL
+            const url = new URL(request.url)
+            const productId = url.searchParams.get('productId')
 
-			// Find the product
-			const product = await productModel
-				.findById(productId)
-				.session(session);
-			if (!product) {
-				return NextResponse.json(
-					{ success: false, error: "Product not found" },
-					{ status: 404 }
-				);
-			}
+            if (!productId) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product ID is required'
+                    },
+                    { status: 400 }
+                )
+            }
 
-			// Find creator to verify ownership
-			const creator = await CreatorModel.findById(
-				product.creator_id
-			).session(session);
-			if (
-				!creator ||
-				creator.userId.toString() !== authUser.userId.toString()
-			) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to delete this product",
-					},
-					{ status: 403 }
-				);
-			}
+            // Find the product
+            const product = await productModel.findById(productId).session(session)
 
-			// Delete associated shader and its image
-			if (product.shader_id) {
-				const shader = await ShaderModel.findById(
-					product.shader_id
-				).session(session);
-				if (shader) {
-					// Delete shader image
-					await ImageModel.findByIdAndDelete(shader.shaderImage, {
-						session,
-					});
-					// Delete shader
-					await ShaderModel.findByIdAndDelete(product.shader_id, {
-						session,
-					});
-				}
-			}
+            if (!product) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Product not found'
+                    },
+                    { status: 404 }
+                )
+            }
 
-			// Delete product image
-			if (product.image_id) {
-				await ImageModel.findByIdAndDelete(product.image_id, {
-					session,
-				});
-			}
+            // Find the creator
+            const creator = await CreatorModel.findById(product.creator_id).session(session)
 
-			// Remove product from creator's products array
-			await CreatorModel.findByIdAndUpdate(
-				product.creator_id,
-				{ $pull: { products: product._id } },
-				{ session }
-			);
+            if (!creator) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'Creator not found'
+                    },
+                    { status: 404 }
+                )
+            }
 
-			// Finally delete the product
-			await productModel.findByIdAndDelete(productId, { session });
+            // Check if the authenticated user is the creator of the product
+            if (creator.userId.toString() !== findUser.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return Response.json(
+                    {
+                        success: false,
+                        error: 'You do not have permission to delete this product'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			await session.commitTransaction();
-			session.endSession();
+            // Delete associated images and shader
+            if (product.image_id) {
+                await ImageModel.findByIdAndDelete(product.image_id, {
+                    session
+                })
+                // Note: In a production environment, you should also delete the image from S3
+                // using the URL stored in the image document
+            }
 
-			return NextResponse.json(
-				{
-					success: true,
-					message:
-						"Product and associated resources deleted successfully",
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error deleting product:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to delete product",
-			},
-			{ status: 500 }
-		);
-	}
+            if (product.shader_id) {
+                // Find the shader to get the associated image
+                const shader = await ShaderModel.findById(product.shader_id).session(session)
+
+                if (shader && shader.shaderImage) {
+                    // Delete shader image
+                    await ImageModel.findByIdAndDelete(shader.shaderImage, {
+                        session
+                    })
+                    // Note: In a production environment, you should also delete the shader image from S3
+                }
+
+                // Delete the shader itself
+                await ShaderModel.findByIdAndDelete(product.shader_id, {
+                    session
+                })
+            }
+
+            // Delete the product
+            await productModel.findByIdAndDelete(productId, { session })
+
+            // Update creator's products array
+            await CreatorModel.findByIdAndUpdate(
+                product.creator_id,
+                {
+                    $pull: { products: productId }
+                },
+                { session }
+            )
+
+            // Commit the transaction
+            await session.commitTransaction()
+            session.endSession()
+
+            return Response.json(
+                {
+                    success: true,
+                    message: 'Product deleted successfully'
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            // Make sure to abort the transaction on error
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error deleting product:', error)
+        return Response.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'An unknown error occurred'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // === Example Requests and Responses ===
