@@ -227,12 +227,36 @@ export default function OrderPage() {
         // Filter by search query
         if (searchQuery) {
             const query = searchQuery.toLowerCase()
-            result = result.filter(
-                (order) =>
+            result = result.filter((order) => {
+                // Search by order ID or status
+                const basicMatch =
                     order._id.toLowerCase().includes(query) ||
                     (typeof order.user_id === 'object' && order.user_id.email.toLowerCase().includes(query)) ||
                     order.status.toLowerCase().includes(query)
-            )
+
+                if (basicMatch) return true
+
+                // Search by product title
+                if (Array.isArray(order.product_ordered)) {
+                    // Check if we have expanded product objects with title properties
+                    return order.product_ordered.some((product) => {
+                        if (typeof product === 'object' && product !== null) {
+                            // Handle OrderItem objects
+                            if (
+                                'product_id' in product &&
+                                typeof product.product_id === 'object' &&
+                                product.product_id !== null
+                            ) {
+                                return product.product_id.title.toLowerCase().includes(query)
+                            }
+                        }
+                        // For non-expanded products, we can't search by title
+                        return false
+                    })
+                }
+
+                return false
+            })
         }
 
         // Filter by order status
@@ -632,7 +656,7 @@ export default function OrderPage() {
                                     <input
                                         type='text'
                                         className='form-control bg-dark text-white border-secondary'
-                                        placeholder='Search orders...'
+                                        placeholder='Search by ID, status, or product title...'
                                         value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
                                     />
