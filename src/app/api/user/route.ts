@@ -293,7 +293,7 @@ export async function PATCH(request: NextRequest) {
             // Handle basic fields
             if (formData.has('fname')) updates.fname = formData.get('fname')
             if (formData.has('lname')) updates.lname = formData.get('lname')
-            if (formData.has('phone')) updates.phone = formData.get('phone')
+            if (formData.has('mobile')) updates.mobile = formData.get('mobile')
 
             // Handle password update
             if (formData.has('currentPassword') && formData.has('newPassword')) {

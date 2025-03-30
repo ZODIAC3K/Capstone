@@ -72,6 +72,12 @@ const Customizer = () => {
 
             if (!response.ok) {
                 const errorData = await response.json()
+                
+                // Handle rate limit errors specifically
+                if (response.status === 429) {
+                    throw new Error('Rate limit exceeded. Please try again in a few minutes.')
+                }
+                
                 throw new Error(errorData.message || 'Failed to generate image')
             }
 

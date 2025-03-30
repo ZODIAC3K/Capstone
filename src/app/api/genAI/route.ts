@@ -56,6 +56,18 @@ export async function POST(request: Request) {
         return NextResponse.json({ photo: image }, { status: 200 })
     } catch (error) {
         console.error('API Error:', error)
+
+        // Check for rate limit error (429)
+        if (axios.isAxiosError(error) && error.response?.status === 429) {
+            return NextResponse.json(
+                {
+                    message: 'Rate limit exceeded. Please try again later.',
+                    error: 'Too many requests'
+                },
+                { status: 429 }
+            )
+        }
+
         return NextResponse.json(
             {
                 message: 'Image generation failed',

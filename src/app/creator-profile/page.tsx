@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Metadata } from 'next'
@@ -269,7 +269,15 @@ const CreateCreatorForm = ({
 }
 
 // Create AddProduct Component
-const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
+const AddProductComponent = ({
+    onClose,
+    product = null,
+    getImageUrlFn
+}: {
+    onClose: () => void
+    product?: any
+    getImageUrlFn: (imageData: any) => string
+}) => {
     const [result, setResult] = useState<any>(null)
     const [categories, setCategories] = useState<any[]>([])
     const [models, setModels] = useState<any[]>([])
@@ -278,15 +286,33 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
 
     // Form state
     const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        category_id: '',
-        price_amount: '',
-        price_currency: 'INR'
+        title: product?.title || '',
+        description: product?.description || '',
+        category_id: product?.category_id ? String(product?.category_id) : '',
+        price_amount: product?.price?.amount ? String(product?.price?.amount) : '',
+        price_currency: product?.price?.currency ? String(product?.price?.currency) : 'INR'
     })
 
-    const [formComplete, setFormComplete] = useState(false)
+    const [formComplete, setFormComplete] = useState(!!product)
     const [isSaving, setIsSaving] = useState(false)
+
+    // Set initial result if editing an existing product
+    useEffect(() => {
+        if (product && product.shader_type && product.model_id && models.length > 0) {
+            // Find model type from model_id
+            const modelType = models.find((m) => m._id === product.model_id)?.name || 'shirt'
+
+            // Set initial result state for existing product
+            setResult({
+                modelType: modelType,
+                shaderType: product.shader_type,
+                // Use existing product image if available
+                productImage: product.image_id ? getImageUrlFn(product.image_id) : null,
+                // Use existing shader image if available
+                shaderImage: product.shader_id ? getImageUrlFn(product.shader_id) : null
+            })
+        }
+    }, [product, models, getImageUrlFn])
 
     // Fetch categories and models on component mount
     useEffect(() => {
@@ -426,7 +452,7 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
         return (
             <div className={styles.buttonWrapper}>
                 <ProductCustomizeButton
-                    productId='new-product'
+                    productId={product?._id || 'new-product'}
                     onCustomizationComplete={onCustomizationComplete}
                     customClass={styles.primaryButton}
                 />
@@ -450,44 +476,67 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
             productFormData.append('price_currency', formData.price_currency)
             productFormData.append('shaderType', result.shaderType)
 
+            // Add product ID to FormData if updating existing product
+            if (product && product._id) {
+                console.log('Adding product ID to FormData:', product._id)
+                productFormData.append('product_id', product._id.toString())
+            }
+
             // Get the correct model_id based on the model type from the customization
             const modelId = getModelIdFromType(result.modelType)
             productFormData.append('model_id', modelId)
 
-            // Convert the base64 images to Blob objects
+            // Convert the base64 images to Blob objects only if they've changed
             // For the shader image
-            if (result.shaderImage) {
+            if (result.shaderImage && (!product || result.shaderImage !== getImageUrlFn(product.shader_id))) {
                 const shaderBlob = await fetch(result.shaderImage).then((r) => r.blob())
                 productFormData.append('shader', shaderBlob, 'shader.png')
             }
 
             // For the product image
-            if (result.productImage) {
+            if (result.productImage && (!product || result.productImage !== getImageUrlFn(product.image_id))) {
                 const productBlob = await fetch(result.productImage).then((r) => r.blob())
                 productFormData.append('image', productBlob, 'product.png')
             }
 
             // Send data to the API
-            const response = await fetch('http://localhost:3000/api/product', {
-                method: 'POST',
+            // Use PATCH for updating, POST for creating new
+            const method = product ? 'PATCH' : 'POST'
+            const url = 'http://localhost:3000/api/product'
+
+            const response = await fetch(url, {
+                method,
                 body: productFormData,
                 credentials: 'include' // Include cookies for authentication
             })
 
+            // Handle non-OK responses
             if (!response.ok) {
-                throw new Error(`API error: ${response.status}`)
+                // Try to get detailed error information from the response
+                let errorMessage = `API error: ${response.status}`
+                try {
+                    const errorData = await response.json()
+                    if (errorData.error || errorData.message) {
+                        errorMessage = errorData.error || errorData.message
+                    }
+                } catch (jsonError) {
+                    // If we can't parse JSON, stick with the default error message
+                    console.error('Error parsing API error response:', jsonError)
+                }
+
+                throw new Error(errorMessage)
             }
 
             const data = await response.json()
-            console.log('Product saved successfully:', data)
+            console.log(`Product ${product ? 'updated' : 'saved'} successfully:`, data)
 
-            // Close the form and refresh the page to show the new product
+            // Close the form and refresh the page to show the updated product
             onClose()
             window.location.reload()
         } catch (error: any) {
             setIsSaving(false)
-            console.error('Error saving product:', error)
-            alert(`Failed to save product: ${error.message}`)
+            console.error(`Error ${product ? 'updating' : 'saving'} product:`, error)
+            alert(`Failed to ${product ? 'update' : 'save'} product: ${error.message}`)
         }
     }
 
@@ -497,8 +546,10 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
                 {!result ? (
                     <div>
                         <div className={styles.header}>
-                            <h2 className={styles.pageTitle}>ADD NEW PRODUCT</h2>
-                            <p className={styles.pageSubtitle}>Create and customize your product</p>
+                            <h2 className={styles.pageTitle}>{product ? 'MODIFY PRODUCT' : 'ADD NEW PRODUCT'}</h2>
+                            <p className={styles.pageSubtitle}>
+                                {product ? 'Update and customize your product' : 'Create and customize your product'}
+                            </p>
                         </div>
                         <div className={styles.formContent}>
                             <form onSubmit={(e) => e.preventDefault()}>
@@ -537,7 +588,7 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
                                             <option disabled>Error loading categories</option>
                                         ) : (
                                             categories.map((category) => (
-                                                <option key={category._id} value={category._id}>
+                                                <option key={category._id} value={String(category._id)}>
                                                     {category.category_name}
                                                 </option>
                                             ))
@@ -664,8 +715,10 @@ const AddProductComponent = ({ onClose }: { onClose: () => void }) => {
                                 {isSaving ? (
                                     <div className={styles.loadingContainer}>
                                         <div className={styles.loadingSpinner}></div>
-                                        Saving Product...
+                                        {product ? 'Updating Product...' : 'Saving Product...'}
                                     </div>
+                                ) : product ? (
+                                    'Update Product'
                                 ) : (
                                     'Save Product'
                                 )}
@@ -691,6 +744,34 @@ export default function CreatorProfilePage() {
     const [useMockData, setUseMockData] = useState(false)
     const [showEditForm, setShowEditForm] = useState(false)
     const [showAddProduct, setShowAddProduct] = useState(false)
+    const [selectedProduct, setSelectedProduct] = useState<any>(null)
+
+    // Memoize the getImageUrl function to avoid re-creation on each render
+    const getImageUrl = useCallback((imageData: any) => {
+        if (!imageData) return '/placeholder.png'
+
+        try {
+            // If imageData has an image_url field (from S3), use it directly
+            if (imageData.image_url) {
+                return imageData.image_url
+            }
+
+            // Legacy support for buffer data if it exists
+            // This can be removed once all images are migrated to S3
+            if (imageData.data && imageData.content_type) {
+                // Convert buffer data to base64
+                const base64 =
+                    typeof imageData.data === 'string' ? imageData.data : Buffer.from(imageData.data).toString('base64')
+                return `data:${imageData.content_type};base64,${base64}`
+            }
+
+            // Fallback to placeholder
+            return '/placeholder.png'
+        } catch (err) {
+            console.error('Error processing image:', err)
+            return '/placeholder.png'
+        }
+    }, [])
 
     useEffect(() => {
         const fetchCreatorProfile = async () => {
@@ -748,37 +829,34 @@ export default function CreatorProfilePage() {
         setUseMockData(true)
     }
 
-    const getImageUrl = (imageData: any) => {
-        if (!imageData) return '/placeholder.png'
-
-        try {
-            // If imageData has an image_url field (from S3), use it directly
-            if (imageData.image_url) {
-                return imageData.image_url
-            }
-
-            // Legacy support for buffer data if it exists
-            // This can be removed once all images are migrated to S3
-            if (imageData.data && imageData.content_type) {
-                // Convert buffer data to base64
-                const base64 =
-                    typeof imageData.data === 'string' ? imageData.data : Buffer.from(imageData.data).toString('base64')
-                return `data:${imageData.content_type};base64,${base64}`
-            }
-
-            // Fallback to placeholder
-            return '/placeholder.png'
-        } catch (err) {
-            console.error('Error processing image:', err)
-            return '/placeholder.png'
-        }
-    }
-
     if (loading) {
         return (
             <Wrapper>
-                <div className={`${styles.pageBackground} flex justify-center items-center min-h-screen`}>
-                    <div className={styles.loadingSpinner} style={{ width: '3rem', height: '3rem' }}></div>
+                <div
+                    style={{
+                        backgroundColor: '#0c0c0c',
+                        minHeight: '100vh',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        position: 'fixed',
+                        width: '100%',
+                        height: '100%',
+                        top: 0,
+                        left: 0,
+                        zIndex: 1000
+                    }}
+                >
+                    <div
+                        className={styles.loadingSpinner}
+                        style={{
+                            width: '4rem',
+                            height: '4rem',
+                            borderColor: 'rgba(34, 197, 94, 0.3)',
+                            borderTopColor: '#22c55e',
+                            margin: 0
+                        }}
+                    ></div>
                 </div>
             </Wrapper>
         )
@@ -835,7 +913,14 @@ export default function CreatorProfilePage() {
                 <main className={styles.pageBackground}>
                     <div className={styles.container}>
                         <div className='py-12 pt-16'>
-                            <AddProductComponent onClose={() => setShowAddProduct(false)} />
+                            <AddProductComponent
+                                onClose={() => {
+                                    setShowAddProduct(false)
+                                    setSelectedProduct(null)
+                                }}
+                                product={selectedProduct}
+                                getImageUrlFn={getImageUrl}
+                            />
                         </div>
                     </div>
                 </main>
@@ -965,7 +1050,14 @@ export default function CreatorProfilePage() {
                                                 </div>
                                             </div>
                                             <div className={styles.productActions}>
-                                                <Button href={`/product/${product._id}`}>View Details</Button>
+                                                <Button
+                                                    onClick={() => {
+                                                        setSelectedProduct(product)
+                                                        setShowAddProduct(true)
+                                                    }}
+                                                >
+                                                    Modify
+                                                </Button>
                                             </div>
                                         </div>
                                     )
