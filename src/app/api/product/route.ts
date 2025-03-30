@@ -374,14 +374,24 @@ export async function GET(request: NextRequest) {
 
         // Handle price range filtering
         if (minPrice || maxPrice) {
-            filter.price = {}
-            if (minPrice) filter.price.amount = { $gte: parseFloat(minPrice) }
-            if (maxPrice) {
-                if (filter.price.amount) {
-                    filter.price.amount.$lte = parseFloat(maxPrice)
-                } else {
-                    filter.price.amount = { $lte: parseFloat(maxPrice) }
+            const priceFilter: any = {}
+
+            if (minPrice) {
+                const minPriceValue = parseFloat(minPrice)
+                if (!isNaN(minPriceValue)) {
+                    priceFilter.$gte = minPriceValue
                 }
+            }
+
+            if (maxPrice) {
+                const maxPriceValue = parseFloat(maxPrice)
+                if (!isNaN(maxPriceValue)) {
+                    priceFilter.$lte = maxPriceValue
+                }
+            }
+
+            if (Object.keys(priceFilter).length > 0) {
+                filter['price.amount'] = priceFilter
             }
         }
 

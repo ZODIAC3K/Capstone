@@ -1,25 +1,49 @@
-import { NextRequest, NextResponse } from "next/server";
-import CategoryModel from "@/models/categorySchema";
-import dbConnect from "@/lib/mongodb";
+import { NextRequest, NextResponse } from 'next/server'
+import CategoryModel from '@/models/categorySchema'
+import productModel from '@/models/productSchema'
+import dbConnect from '@/lib/mongodb'
 
 export async function GET(request: NextRequest) {
-	try {
-		const db = await dbConnect();
-		if (!db) {
-			return NextResponse.json(
-				{ error: "Failed to connect to database" },
-				{ status: 500 }
-			);
-		}
-		const categories = await CategoryModel.find();
-		return NextResponse.json({ categories }, { status: 200 });
-	} catch (error: any) {
-		console.error("Error fetching categories:", error);
-		return NextResponse.json(
-			{ error: error.message || "Failed to fetch categories" },
-			{ status: 400 }
-		);
-	}
+    try {
+        const db = await dbConnect()
+        if (!db) {
+            return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
+        }
+
+        // Get all categories
+        const categories = await CategoryModel.find()
+
+        // Count products for each category
+        const categoriesWithCounts = await Promise.all(
+            categories.map(async (category) => {
+                const count = await productModel.countDocuments({
+                    category_id: { $in: [category._id] }
+                })
+
+                return {
+                    ...category.toObject(),
+                    count
+                }
+            })
+        )
+
+        return NextResponse.json(
+            {
+                success: true,
+                data: categoriesWithCounts
+            },
+            { status: 200 }
+        )
+    } catch (error: any) {
+        console.error('Error fetching categories:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error.message || 'Failed to fetch categories'
+            },
+            { status: 400 }
+        )
+    }
 }
 
 // === Example JSON ===
@@ -38,33 +62,24 @@ export async function GET(request: NextRequest) {
 // }
 
 export async function POST(request: NextRequest) {
-	try {
-		const db = await dbConnect();
-		if (!db) {
-			return NextResponse.json(
-				{ error: "Failed to connect to database" },
-				{ status: 500 }
-			);
-		}
-		const { category_name } = await request.json();
-		const category_exist = await CategoryModel.findOne({
-			category_name,
-		});
-		if (category_exist) {
-			return NextResponse.json(
-				{ error: "Category already exists" },
-				{ status: 400 }
-			);
-		}
-		const category = await CategoryModel.create({ category_name });
-		return NextResponse.json({ category }, { status: 201 });
-	} catch (error: any) {
-		console.error("Error creating category:", error);
-		return NextResponse.json(
-			{ error: error.message || "Failed to create category" },
-			{ status: 400 }
-		);
-	}
+    try {
+        const db = await dbConnect()
+        if (!db) {
+            return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
+        }
+        const { category_name } = await request.json()
+        const category_exist = await CategoryModel.findOne({
+            category_name
+        })
+        if (category_exist) {
+            return NextResponse.json({ error: 'Category already exists' }, { status: 400 })
+        }
+        const category = await CategoryModel.create({ category_name })
+        return NextResponse.json({ category }, { status: 201 })
+    } catch (error: any) {
+        console.error('Error creating category:', error)
+        return NextResponse.json({ error: error.message || 'Failed to create category' }, { status: 400 })
+    }
 }
 
 // === Example JSON ===
@@ -86,40 +101,24 @@ export async function POST(request: NextRequest) {
 // }
 
 export async function PATCH(request: NextRequest) {
-	try {
-		const db = await dbConnect();
-		if (!db) {
-			return NextResponse.json(
-				{ error: "Failed to connect to database" },
-				{ status: 500 }
-			);
-		}
-		const { category_id, category_name } = await request.json();
-		if (!category_id || !category_name) {
-			return NextResponse.json(
-				{ error: "Category ID and category name are required" },
-				{ status: 400 }
-			);
-		}
-		const category = await CategoryModel.findByIdAndUpdate(
-			category_id,
-			{ category_name },
-			{ new: true }
-		);
-		if (!category) {
-			return NextResponse.json(
-				{ error: "Category not found" },
-				{ status: 404 }
-			);
-		}
-		return NextResponse.json({ category }, { status: 200 });
-	} catch (error: any) {
-		console.error("Error updating category:", error);
-		return NextResponse.json(
-			{ error: error.message || "Failed to update category" },
-			{ status: 400 }
-		);
-	}
+    try {
+        const db = await dbConnect()
+        if (!db) {
+            return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
+        }
+        const { category_id, category_name } = await request.json()
+        if (!category_id || !category_name) {
+            return NextResponse.json({ error: 'Category ID and category name are required' }, { status: 400 })
+        }
+        const category = await CategoryModel.findByIdAndUpdate(category_id, { category_name }, { new: true })
+        if (!category) {
+            return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+        }
+        return NextResponse.json({ category }, { status: 200 })
+    } catch (error: any) {
+        console.error('Error updating category:', error)
+        return NextResponse.json({ error: error.message || 'Failed to update category' }, { status: 400 })
+    }
 }
 
 // === Example JSON ===
@@ -142,39 +141,24 @@ export async function PATCH(request: NextRequest) {
 // }
 
 export async function DELETE(request: NextRequest) {
-	try {
-		const db = await dbConnect();
-		if (!db) {
-			return NextResponse.json(
-				{ error: "Failed to connect to database" },
-				{ status: 500 }
-			);
-		}
-		const { category_id } = await request.json();
-		if (!category_id) {
-			return NextResponse.json(
-				{ error: "Category ID is required" },
-				{ status: 400 }
-			);
-		}
-		const category = await CategoryModel.findByIdAndDelete(category_id);
-		if (!category) {
-			return NextResponse.json(
-				{ error: "Category not found" },
-				{ status: 404 }
-			);
-		}
-		return NextResponse.json(
-			{ message: "Category deleted successfully", category },
-			{ status: 200 }
-		);
-	} catch (error: any) {
-		console.error("Error deleting category:", error);
-		return NextResponse.json(
-			{ error: error.message || "Failed to delete category" },
-			{ status: 400 }
-		);
-	}
+    try {
+        const db = await dbConnect()
+        if (!db) {
+            return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
+        }
+        const { category_id } = await request.json()
+        if (!category_id) {
+            return NextResponse.json({ error: 'Category ID is required' }, { status: 400 })
+        }
+        const category = await CategoryModel.findByIdAndDelete(category_id)
+        if (!category) {
+            return NextResponse.json({ error: 'Category not found' }, { status: 404 })
+        }
+        return NextResponse.json({ message: 'Category deleted successfully', category }, { status: 200 })
+    } catch (error: any) {
+        console.error('Error deleting category:', error)
+        return NextResponse.json({ error: error.message || 'Failed to delete category' }, { status: 400 })
+    }
 }
 
 // === Example JSON ===

@@ -18,12 +18,15 @@ interface Product {
         image_url: string
     }
     creator_id: {
+        _id: string
         name: string
     }
     category_id: {
         _id: string
         category_name: string
     }[]
+    sales_count: number
+    rating: number
 }
 
 interface ProductsResponse {
@@ -52,6 +55,8 @@ const ShopArea = () => {
     const categoryId = searchParams.get('category')
     const creatorId = searchParams.get('creator')
     const searchTerm = searchParams.get('search')
+    const minPrice = searchParams.get('minPrice')
+    const maxPrice = searchParams.get('maxPrice')
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -69,6 +74,22 @@ const ShopArea = () => {
                 if (creatorId) params.append('creator', creatorId)
                 if (searchTerm) params.append('title', searchTerm)
 
+                // Handle price range parameters correctly
+                if (minPrice) {
+                    const minPriceValue = parseInt(minPrice, 10)
+                    if (!isNaN(minPriceValue) && minPriceValue >= 0) {
+                        params.append('minPrice', minPriceValue.toString())
+                    }
+                }
+
+                if (maxPrice) {
+                    const maxPriceValue = parseInt(maxPrice, 10)
+                    if (!isNaN(maxPriceValue) && maxPriceValue > 0) {
+                        params.append('maxPrice', maxPriceValue.toString())
+                    }
+                }
+
+                console.log('Fetching products with params:', params.toString()) // Debug log
                 const response = await fetch(`/api/product?${params.toString()}`)
 
                 if (!response.ok) {
@@ -76,11 +97,17 @@ const ShopArea = () => {
                 }
 
                 const data: ProductsResponse = await response.json()
+                console.log('API response:', data) // Debug log
 
                 if (data.success) {
                     setProducts(data.data)
                     setTotalPages(data.pagination.totalPages)
                     setCurrentPage(data.pagination.currentPage)
+
+                    // If no products found but price filters are applied, maybe reset?
+                    if (data.data.length === 0 && (minPrice || maxPrice)) {
+                        console.log('No products found within price range')
+                    }
                 } else {
                     throw new Error(data.data.toString())
                 }
@@ -93,7 +120,7 @@ const ShopArea = () => {
         }
 
         fetchProducts()
-    }, [currentPage, sortBy, sortOrder, categoryId, creatorId, searchTerm])
+    }, [currentPage, sortBy, sortOrder, categoryId, creatorId, searchTerm, minPrice, maxPrice])
 
     const handlePageClick = (event: { selected: number }) => {
         setCurrentPage(event.selected + 1)
@@ -141,7 +168,7 @@ const ShopArea = () => {
                 <div className='row justify-content-center'>
                     <div className='col-xl-3 col-lg-4 col-md-11 order-2 order-lg-0'>
                         {/* sidebar start */}
-                        <ShopSidebar />
+                        <ShopSidebar initialProducts={products} />
                         {/* sidebar end */}
                     </div>
                     <div className='col-xl-9 col-lg-8 col-md-11'>
