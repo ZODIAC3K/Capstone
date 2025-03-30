@@ -1,9 +1,8 @@
-'use Client'
 import './globals.scss'
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { Poppins, Barlow } from 'next/font/google'
-import { ToastContainer } from 'react-toastify'
+import { Providers } from './providers'
 
 const berlin = localFont({
     src: [
@@ -41,12 +40,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang='en'>
+            <head />
             <body
                 suppressHydrationWarning={true}
                 className={`${berlin.variable} ${poppins.variable} ${barlow.variable}`}
             >
-                {children}
-                <ToastContainer />
+                <Providers>{children}</Providers>
             </body>
         </html>
     )

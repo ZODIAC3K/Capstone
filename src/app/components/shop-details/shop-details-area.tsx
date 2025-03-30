@@ -1,7 +1,9 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { toast } from 'react-toastify'
 
 interface Product {
     _id: string
@@ -40,6 +42,7 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
     const [activeTab, setActiveTab] = useState<string>('description')
     const [selectedImage, setSelectedImage] = useState<string>(product.image_id.image_url)
     const [isZoomed, setIsZoomed] = useState<boolean>(false)
+    const [addingToCart, setAddingToCart] = useState(false)
 
     // Handle increment/decrement
     const handleQuantityChange = (action: string) => {
@@ -60,6 +63,45 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
 
     const toggleZoom = () => {
         setIsZoomed(!isZoomed)
+    }
+
+    const handleAddToCart = async () => {
+        try {
+            setAddingToCart(true)
+
+            const response = await fetch('/api/cart', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_id: product._id,
+                    quantity: quantity
+                })
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data.success) {
+                toast.success('Product added to cart!', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            } else {
+                toast.error(data.error || 'Failed to add product to cart', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            }
+        } catch (error) {
+            console.error('Error adding to cart:', error)
+            toast.error('An error occurred while adding to cart', {
+                position: 'top-right',
+                autoClose: 3000
+            })
+        } finally {
+            setAddingToCart(false)
+        }
     }
 
     return (
@@ -257,9 +299,22 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                 <button
                                     className='btn btn-lg flex-grow-1 rounded-pill d-flex align-items-center justify-content-center'
                                     style={{ background: '#22c55e', color: 'white' }}
+                                    onClick={handleAddToCart}
+                                    disabled={addingToCart}
                                 >
-                                    <i className='fas fa-shopping-cart me-2'></i>
-                                    <span>Add to Cart</span>
+                                    {addingToCart ? (
+                                        <>
+                                            <div className='spinner-border spinner-border-sm me-2' role='status'>
+                                                <span className='visually-hidden'>Loading...</span>
+                                            </div>
+                                            Adding...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className='fas fa-shopping-cart me-2'></i>
+                                            <span>Add to Cart</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 
