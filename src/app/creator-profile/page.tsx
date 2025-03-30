@@ -773,7 +773,7 @@ export default function CreatorProfilePage() {
         }
     }, [])
 
-    useEffect(() => {
+	useEffect(() => {
         const fetchCreatorProfile = async () => {
             try {
                 setLoading(true)
@@ -958,17 +958,17 @@ export default function CreatorProfilePage() {
 
     const coverImageUrl = creator.creatorCoverImage ? getImageUrl(creator.creatorCoverImage) : '/placeholder-cover.png'
 
-    return (
-        <Wrapper>
-            {/* header start */}
-            <Header />
-            {/* header end */}
+	return (
+		<Wrapper>
+			{/* header start */}
+			<Header />
+			{/* header end */}
 
-            {/* main area start */}
+			{/* main area start */}
             <main className='main--area'>
-                {/* breadcrumb area start */}
+				{/* breadcrumb area start */}
                 <div className={styles.breadcrumbWrapper}>
-                    <BreadcrumbArea
+				<BreadcrumbArea
                         title={creator.name || 'Creator Profile'}
                         subtitle='CREATOR PROFILE'
                         brd_img={profileImageUrl}
@@ -979,7 +979,7 @@ export default function CreatorProfilePage() {
                         imageClassName={styles.profileImageStyle}
                     />
                 </div>
-                {/* breadcrumb area end */}
+				{/* breadcrumb area end */}
 
                 {/* team details area - Biography Section */}
                 <div className={styles.teamDetailsWrapper}>
@@ -1074,14 +1074,14 @@ export default function CreatorProfilePage() {
                         </div>
                     )}
                 </div>
-            </main>
-            {/* main area end */}
+			</main>
+			{/* main area end */}
 
-            {/* footer start */}
+			{/* footer start */}
             <div className={styles.footerSpacing}>
                 <Footer className={styles.customFooter} />
             </div>
-            {/* footer end */}
-        </Wrapper>
+			{/* footer end */}
+		</Wrapper>
     )
 }

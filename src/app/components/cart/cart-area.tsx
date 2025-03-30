@@ -45,22 +45,37 @@ export default function CartArea() {
     const fetchCart = async () => {
         try {
             setLoading(true)
+            console.log('Fetching cart data...')
             const response = await fetch('/api/cart')
+
+            console.log('Cart API response status:', response.status)
 
             if (!response.ok) {
                 if (response.status === 401) {
+                    console.log('Unauthorized access, redirecting to login')
                     // Redirect to login if unauthorized
                     router.push('/login')
                     return
                 }
-                throw new Error('Failed to fetch cart')
+
+                // Try to get error details from response
+                try {
+                    const errorData = await response.json()
+                    console.error('Cart API error:', errorData)
+                    throw new Error(errorData.error || 'Failed to fetch cart')
+                } catch (parseError) {
+                    console.error('Could not parse error response:', parseError)
+                    throw new Error(`Failed to fetch cart: ${response.status} ${response.statusText}`)
+                }
             }
 
             const data = await response.json()
+            console.log('Cart data received:', data)
 
             if (data.success) {
                 setCart(data.data)
             } else {
+                console.error('Cart API returned success: false:', data.error)
                 setError(data.error || 'Failed to fetch cart')
             }
         } catch (error) {
@@ -220,9 +235,40 @@ export default function CartArea() {
         return `${symbol}${amount.toFixed(2)}`
     }
 
+    // Render debugging helper
+    const getCartDebugInfo = () => {
+        console.log('Cart render state:', {
+            loading,
+            error,
+            cart: cart
+                ? {
+                      _id: cart._id,
+                      itemsLength: cart.items?.length,
+                      total: cart.total,
+                      currency: cart.currency
+                  }
+                : null
+        })
+
+        return null // Don't actually render anything
+    }
+
+    // Check authentication status
+    const checkAuthStatus = () => {
+        const token = localStorage.getItem('accessToken')
+        if (!token) {
+            router.push('/login')
+            return false
+        }
+        return true
+    }
+
     // Load cart data on component mount
     useEffect(() => {
-        fetchCart()
+        const isAuthenticated = checkAuthStatus()
+        if (isAuthenticated) {
+            fetchCart()
+        }
     }, [])
 
     return (
@@ -230,6 +276,9 @@ export default function CartArea() {
             className='cart__area team-bg section-pt-120 section-pb-120'
             style={{ backgroundImage: `url(/assets/img/bg/team_bg.jpg)` }}
         >
+            {/* Debug output */}
+            {getCartDebugInfo()}
+
             <div className='container'>
                 {loading ? (
                     <div className='text-center'>
@@ -240,7 +289,7 @@ export default function CartArea() {
                     </div>
                 ) : error ? (
                     <div className='alert alert-danger text-center'>{error}</div>
-                ) : cart && cart.items && cart.items.length > 0 ? (
+                ) : cart && Array.isArray(cart.items) && cart.items.length > 0 ? (
                     <div className='row'>
                         <div className='col-lg-8'>
                             <table className='table cart__table'>
@@ -274,7 +323,7 @@ export default function CartArea() {
                                                 <Link href={`/shop-details/${item.product_id._id}`}>
                                                     {item.product_id.title}
                                                 </Link>
-                                                <p className='small text-muted'>
+                                                <p className='small' style={{ color: '#a0a0a0' }}>
                                                     By {item.product_id.creator_id?.name || 'Unknown Creator'}
                                                 </p>
                                             </td>
@@ -331,6 +380,7 @@ export default function CartArea() {
                                                     onClick={() => removeItem(item.product_id._id)}
                                                     className='text-danger border-0 bg-transparent'
                                                     disabled={updatingItem === item.product_id._id}
+                                                    style={{ fontSize: '24px', fontWeight: 'bold' }}
                                                 >
                                                     {updatingItem === item.product_id._id ? (
                                                         <span

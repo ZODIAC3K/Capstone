@@ -179,9 +179,15 @@ const Header = ({ style_2 = false }: { style_2?: boolean }) => {
                                                     <i className='flaticon-search-1'></i>
                                                 </a>
                                             </li>
-                                            <li className='header-btn'>
-                                                <Link href='/cart' className='cart-icon-wrap position-relative me-3'>
-                                                    <i className='fas fa-shopping-cart fs-5'></i>
+                                            <li className='cart-icon'>
+                                                <Link
+                                                    href='/cart'
+                                                    className='pointer position-relative d-flex align-items-center'
+                                                >
+                                                    <i
+                                                        className='fas fa-shopping-cart'
+                                                        style={{ fontSize: '18px', color: 'white' }}
+                                                    ></i>
                                                     {cartItemCount > 0 && (
                                                         <span
                                                             className='position-absolute d-flex align-items-center justify-content-center rounded-circle'
@@ -200,6 +206,8 @@ const Header = ({ style_2 = false }: { style_2?: boolean }) => {
                                                         </span>
                                                     )}
                                                 </Link>
+                                            </li>
+                                            <li className='header-btn'>
                                                 {isLoggedIn && userData ? (
                                                     <div className='user-dropdown-container'>
                                                         <a
@@ -350,6 +358,30 @@ const Header = ({ style_2 = false }: { style_2?: boolean }) => {
                 .custom-dropdown .logout-item:hover {
                     background-color: rgba(255, 107, 107, 0.1);
                     color: #ff8f8f;
+                }
+
+                /* Cart icon styling */
+                .tgmenu__action .list-wrap .cart-icon {
+                    display: flex;
+                    align-items: center;
+                    margin-right: 10px;
+                }
+
+                .tgmenu__action .list-wrap .cart-icon a {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    height: 100%;
+                }
+
+                .tgmenu__action .list-wrap .cart-icon i {
+                    font-size: 18px;
+                    color: #fff;
+                    transition: color 0.3s ease;
+                }
+
+                .tgmenu__action .list-wrap .cart-icon:hover i {
+                    color: var(--tg-theme-primary);
                 }
 
                 @keyframes fadeIn {

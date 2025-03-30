@@ -34,7 +34,36 @@ interface Product {
         }
     }
     rating?: number
+    review_count?: number
     sales_count?: number
+}
+
+interface Review {
+    _id: string
+    user_id: {
+        _id: string
+        fname: string
+        lname: string
+        email: string
+        profile_img?: string
+    }
+    product_id: string
+    rating: number
+    title: string
+    comment: string
+    createdAt: string
+    updatedAt: string
+}
+
+interface ReviewsStats {
+    averageRating: number
+    reviewCounts: {
+        1: number
+        2: number
+        3: number
+        4: number
+        5: number
+    }
 }
 
 const ShopDetailsArea = ({ product }: { product: Product }) => {
@@ -43,6 +72,57 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
     const [selectedImage, setSelectedImage] = useState<string>(product.image_id.image_url)
     const [isZoomed, setIsZoomed] = useState<boolean>(false)
     const [addingToCart, setAddingToCart] = useState(false)
+    const [reviews, setReviews] = useState<Review[]>([])
+    const [reviewStats, setReviewStats] = useState<ReviewsStats | null>(null)
+    const [reviewsLoading, setReviewsLoading] = useState(false)
+    const [reviewsPage, setReviewsPage] = useState(1)
+    const [reviewsTotal, setReviewsTotal] = useState(0)
+    const reviewsPerPage = 5
+
+    // Fetch reviews
+    const fetchReviews = async (page = 1) => {
+        try {
+            setReviewsLoading(true)
+            const response = await fetch(`/api/review?productId=${product._id}&page=${page}&limit=${reviewsPerPage}`)
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch reviews')
+            }
+
+            const data = await response.json()
+
+            if (data.success) {
+                setReviews(page === 1 ? data.data.reviews : [...reviews, ...data.data.reviews])
+                setReviewsPage(page)
+                setReviewsTotal(data.data.pagination.total)
+
+                if (data.data.stats) {
+                    setReviewStats(data.data.stats)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error)
+        } finally {
+            setReviewsLoading(false)
+        }
+    }
+
+    // Load more reviews
+    const handleLoadMoreReviews = () => {
+        if (!reviewsLoading && reviews.length < reviewsTotal) {
+            fetchReviews(reviewsPage + 1)
+        }
+    }
+
+    // Format date
+    const formatDate = (dateString: string) => {
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        })
+    }
 
     // Handle increment/decrement
     const handleQuantityChange = (action: string) => {
@@ -103,6 +183,13 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
             setAddingToCart(false)
         }
     }
+
+    // Fetch reviews when tab changes to reviews
+    useEffect(() => {
+        if (activeTab === 'reviews' && reviews.length === 0) {
+            fetchReviews()
+        }
+    }, [activeTab])
 
     return (
         <section
@@ -273,46 +360,66 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                 </div>
                             </div>
 
-                            <div className='quantity-container d-flex align-items-center mb-4'>
-                                <div
-                                    className='quantity-selector d-flex align-items-center rounded-pill overflow-hidden me-3 border'
-                                    style={{ background: '#333333', borderColor: '#444444' }}
-                                >
+                            <div className='quantity-container d-flex align-items-center mt-4 mb-4'>
+                                <div className='d-flex align-items-center'>
                                     <button
-                                        className='btn btn-sm px-3 py-2 border-0 text-white'
+                                        type='button'
                                         onClick={() => handleQuantityChange('dec')}
-                                        disabled={quantity <= 1}
-                                        style={{ background: '#333333' }}
+                                        className='btn btn-sm'
+                                        style={{
+                                            background: '#333333',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            width: '36px',
+                                            height: '36px'
+                                        }}
                                     >
                                         <i className='fas fa-minus'></i>
                                     </button>
-                                    <span className='px-3'>{quantity}</span>
+                                    <input
+                                        type='text'
+                                        value={quantity}
+                                        readOnly
+                                        className='form-control text-center mx-2'
+                                        style={{
+                                            background: '#333333',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            width: '50px',
+                                            height: '36px'
+                                        }}
+                                    />
                                     <button
-                                        className='btn btn-sm px-3 py-2 border-0 text-white'
+                                        type='button'
                                         onClick={() => handleQuantityChange('inc')}
-                                        style={{ background: '#333333' }}
+                                        className='btn btn-sm'
+                                        style={{
+                                            background: '#333333',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            width: '36px',
+                                            height: '36px'
+                                        }}
                                     >
                                         <i className='fas fa-plus'></i>
                                     </button>
                                 </div>
-
                                 <button
-                                    className='btn btn-lg flex-grow-1 rounded-pill d-flex align-items-center justify-content-center'
-                                    style={{ background: '#22c55e', color: 'white' }}
+                                    type='button'
+                                    className='btn btn-success ms-3 ps-4 pe-4'
                                     onClick={handleAddToCart}
                                     disabled={addingToCart}
+                                    style={{ fontWeight: 600 }}
                                 >
                                     {addingToCart ? (
                                         <>
-                                            <div className='spinner-border spinner-border-sm me-2' role='status'>
-                                                <span className='visually-hidden'>Loading...</span>
-                                            </div>
+                                            <i className='fas fa-spinner fa-spin me-2'></i>
                                             Adding...
                                         </>
                                     ) : (
                                         <>
-                                            <i className='fas fa-shopping-cart me-2'></i>
-                                            <span>Add to Cart</span>
+                                            <i className='fas fa-cart-plus me-2'></i>
+                                            Add to Cart
                                         </>
                                     )}
                                 </button>
@@ -403,6 +510,24 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                         }}
                                     >
                                         Additional Info
+                                    </button>
+                                </li>
+                                <li className='nav-item' role='presentation'>
+                                    <button
+                                        className={`nav-link ${activeTab === 'reviews' ? 'active' : ''}`}
+                                        onClick={() => handleTabChange('reviews')}
+                                        type='button'
+                                        role='tab'
+                                        aria-selected={activeTab === 'reviews'}
+                                        style={{
+                                            background: activeTab === 'reviews' ? '#22c55e' : '#1E1E1E',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            padding: '10px 20px',
+                                            borderRadius: '4px 4px 0 0'
+                                        }}
+                                    >
+                                        Reviews {product.review_count ? `(${product.review_count})` : ''}
                                     </button>
                                 </li>
                             </ul>
@@ -524,6 +649,235 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                </div>
+                                <div
+                                    className={`tab-pane fade ${activeTab === 'reviews' ? 'show active' : ''}`}
+                                    role='tabpanel'
+                                    style={{ padding: '20px 10px' }}
+                                >
+                                    <div className='row mb-4'>
+                                        <div className='col-md-4'>
+                                            <div className='reviews-summary text-center p-4 bg-black rounded-4'>
+                                                <h2 className='display-3 fw-bold text-white mb-0'>
+                                                    {reviewStats?.averageRating
+                                                        ? reviewStats.averageRating.toFixed(1)
+                                                        : product.rating
+                                                          ? product.rating.toFixed(1)
+                                                          : '0'}
+                                                </h2>
+                                                <div className='product-rating my-2'>
+                                                    {[...Array(5)].map((_, i) => (
+                                                        <i
+                                                            key={i}
+                                                            className='fas fa-star'
+                                                            style={{
+                                                                color:
+                                                                    i <
+                                                                    Math.round(
+                                                                        reviewStats?.averageRating ||
+                                                                            product.rating ||
+                                                                            0
+                                                                    )
+                                                                        ? '#22c55e'
+                                                                        : '#444444',
+                                                                fontSize: '18px',
+                                                                marginRight: '3px'
+                                                            }}
+                                                        ></i>
+                                                    ))}
+                                                </div>
+                                                <p className='text-light mb-0'>
+                                                    Based on {reviewsTotal || product.review_count || 0} reviews
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className='col-md-8'>
+                                            <div className='rating-bars p-4 bg-black rounded-4 h-100'>
+                                                {reviewStats &&
+                                                    [5, 4, 3, 2, 1].map((star) => {
+                                                        const count =
+                                                            reviewStats.reviewCounts[
+                                                                star as keyof typeof reviewStats.reviewCounts
+                                                            ] || 0
+                                                        const percentage = reviewsTotal
+                                                            ? Math.round((count / reviewsTotal) * 100)
+                                                            : 0
+
+                                                        return (
+                                                            <div
+                                                                key={star}
+                                                                className='rating-bar d-flex align-items-center mb-2'
+                                                            >
+                                                                <div
+                                                                    className='stars-label me-2'
+                                                                    style={{ width: '80px' }}
+                                                                >
+                                                                    <span>
+                                                                        {star} {star === 1 ? 'star' : 'stars'}
+                                                                    </span>
+                                                                </div>
+                                                                <div
+                                                                    className='progress flex-grow-1 bg-dark'
+                                                                    style={{ height: '12px' }}
+                                                                >
+                                                                    <div
+                                                                        className='progress-bar'
+                                                                        role='progressbar'
+                                                                        style={{
+                                                                            width: `${percentage}%`,
+                                                                            backgroundColor: '#22c55e'
+                                                                        }}
+                                                                        aria-valuenow={percentage}
+                                                                        aria-valuemin={0}
+                                                                        aria-valuemax={100}
+                                                                    ></div>
+                                                                </div>
+                                                                <span
+                                                                    className='count-label ms-2'
+                                                                    style={{ width: '40px' }}
+                                                                >
+                                                                    {count}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    })}
+
+                                                {!reviewStats && (
+                                                    <div className='text-center text-muted py-4'>
+                                                        <p>No rating breakdown available</p>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className='reviews-container'>
+                                        <h4 className='mb-4'>Customer Reviews</h4>
+
+                                        {reviewsLoading && reviews.length === 0 ? (
+                                            <div className='text-center py-5'>
+                                                <div className='spinner-border text-success' role='status'>
+                                                    <span className='visually-hidden'>Loading...</span>
+                                                </div>
+                                                <p className='mt-3 text-light'>Loading reviews...</p>
+                                            </div>
+                                        ) : reviews.length > 0 ? (
+                                            <>
+                                                {reviews.map((review) => (
+                                                    <div
+                                                        key={review._id}
+                                                        className='review-item p-4 mb-4 bg-black rounded-4'
+                                                    >
+                                                        <div className='d-flex justify-content-between align-items-start mb-3'>
+                                                            <div className='d-flex align-items-center'>
+                                                                <div
+                                                                    className='review-avatar rounded-circle overflow-hidden me-3'
+                                                                    style={{
+                                                                        width: '48px',
+                                                                        height: '48px',
+                                                                        background: '#333'
+                                                                    }}
+                                                                >
+                                                                    {review.user_id.profile_img ? (
+                                                                        <Image
+                                                                            src={review.user_id.profile_img}
+                                                                            alt={`${review.user_id.fname} ${review.user_id.lname}`}
+                                                                            width={48}
+                                                                            height={48}
+                                                                            style={{
+                                                                                objectFit: 'cover',
+                                                                                width: '100%',
+                                                                                height: '100%'
+                                                                            }}
+                                                                        />
+                                                                    ) : (
+                                                                        <div
+                                                                            className='d-flex align-items-center justify-content-center h-100'
+                                                                            style={{
+                                                                                background: '#22c55e',
+                                                                                color: 'white',
+                                                                                fontSize: '18px'
+                                                                            }}
+                                                                        >
+                                                                            {review.user_id.fname.charAt(0)}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                <div>
+                                                                    <h5 className='review-author mb-0'>
+                                                                        {review.user_id.fname} {review.user_id.lname}
+                                                                    </h5>
+                                                                    <div className='review-date text-muted small'>
+                                                                        {formatDate(review.createdAt)}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div className='review-rating'>
+                                                                {[...Array(5)].map((_, i) => (
+                                                                    <i
+                                                                        key={i}
+                                                                        className='fas fa-star'
+                                                                        style={{
+                                                                            color:
+                                                                                i < review.rating
+                                                                                    ? '#22c55e'
+                                                                                    : '#444444',
+                                                                            fontSize: '14px',
+                                                                            marginLeft: '2px'
+                                                                        }}
+                                                                    ></i>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <h6 className='review-title fw-bold mb-2'>{review.title}</h6>
+
+                                                        <p className='review-content mb-0 text-light'>
+                                                            {review.comment}
+                                                        </p>
+                                                    </div>
+                                                ))}
+
+                                                {reviews.length < reviewsTotal && (
+                                                    <div className='text-center mt-4'>
+                                                        <button
+                                                            className='btn btn-outline-light px-4'
+                                                            onClick={handleLoadMoreReviews}
+                                                            disabled={reviewsLoading}
+                                                        >
+                                                            {reviewsLoading ? (
+                                                                <>
+                                                                    <span
+                                                                        className='spinner-border spinner-border-sm me-2'
+                                                                        role='status'
+                                                                        aria-hidden='true'
+                                                                    ></span>
+                                                                    Loading...
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    Load More Reviews
+                                                                    <i className='fas fa-chevron-down ms-2'></i>
+                                                                </>
+                                                            )}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <div className='text-center py-5 bg-black rounded-4'>
+                                                <div className='mb-3'>
+                                                    <i
+                                                        className='fas fa-comment-alt'
+                                                        style={{ fontSize: '48px', color: '#444' }}
+                                                    ></i>
+                                                </div>
+                                                <h5>No Reviews Yet</h5>
+                                                <p className='text-muted'>Be the first to review this product</p>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>

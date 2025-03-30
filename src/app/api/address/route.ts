@@ -318,6 +318,15 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Failed to connect to database' }, { status: 500 })
         }
 
+        // Ensure all models are registered
+        await Promise.all([
+            UserModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            AddressModel.findOne().exec()
+        ]).catch(() => {
+            console.log('Address API: Model registration initialized')
+        })
+
         const accessToken = request.cookies.get('accessToken')?.value
         const refreshToken = request.cookies.get('refreshToken')?.value
 
@@ -357,7 +366,7 @@ export async function GET(request: NextRequest) {
                     return NextResponse.json({ message: 'No default address found' }, { status: 404 })
                 }
 
-                return NextResponse.json({ address: activeAddress }, { status: 200 })
+                return NextResponse.json({ success: true, address: activeAddress }, { status: 200 })
             } else {
                 // Get all addresses for the user
                 const addresses = await AddressModel.find({
@@ -366,7 +375,7 @@ export async function GET(request: NextRequest) {
 
                 await session.commitTransaction()
 
-                return NextResponse.json({ addresses }, { status: 200 })
+                return NextResponse.json({ success: true, data: addresses }, { status: 200 })
             }
         } catch (error: any) {
             await session.abortTransaction()

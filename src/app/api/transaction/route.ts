@@ -1,420 +1,439 @@
-import { NextRequest, NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import mongoose from "mongoose";
-import AuthModel from "@/models/authSchema";
-import Transaction from "@/models/transactionSchema";
-import orderModel from "@/models/orderSchema";
+import { NextRequest, NextResponse } from 'next/server'
+import dbConnect from '@/lib/mongodb'
+import mongoose from 'mongoose'
+import AuthModel from '@/models/authSchema'
+import Transaction from '@/models/transactionSchema'
+import orderModel from '@/models/orderSchema'
 
 // Helper function to check authentication
-async function authenticateUser(
-	request: NextRequest,
-	session?: mongoose.ClientSession
-) {
-	const accessToken = request.cookies.get("accessToken")?.value;
-	const refreshToken = request.cookies.get("refreshToken")?.value;
+async function authenticateUser(request: NextRequest, session?: mongoose.ClientSession) {
+    const accessToken = request.cookies.get('accessToken')?.value
+    const refreshToken = request.cookies.get('refreshToken')?.value
 
-	if (!accessToken || !refreshToken) {
-		return {
-			success: false,
-			status: 401,
-			error: "No access token provided",
-		};
-	}
+    if (!accessToken || !refreshToken) {
+        return {
+            success: false,
+            status: 401,
+            error: 'No access token provided'
+        }
+    }
 
-	const options = session ? { session } : {};
-	const auth = await AuthModel.findOne(
-		{ accessToken, refreshToken },
-		null,
-		options
-	);
+    const options = session ? { session } : {}
+    const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, options)
 
-	if (!auth) {
-		return { success: false, status: 401, error: "Invalid access token" };
-	}
+    if (!auth) {
+        return { success: false, status: 401, error: 'Invalid access token' }
+    }
 
-	return { success: true, auth };
+    return { success: true, auth }
 }
 
 // GET endpoint - get transaction(s)
 export async function GET(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			Transaction.findOne().exec(),
-			AuthModel.findOne().exec(),
-			orderModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            Transaction.findOne().exec(),
+            AuthModel.findOne().exec(),
+            orderModel.findOne().exec()
+        ]).catch(() => {})
 
-		// Check authentication
-		const authResult = await authenticateUser(request);
-		if (!authResult.success) {
-			return NextResponse.json(
-				{ success: false, error: authResult.error },
-				{ status: authResult.status }
-			);
-		}
+        // Check authentication
+        const authResult = await authenticateUser(request)
+        if (!authResult.success) {
+            return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status })
+        }
 
-		const auth = authResult.auth;
+        const auth = authResult.auth
 
-		// Get the transaction ID from query params
-		const { searchParams } = new URL(request.url);
-		const transactionId = searchParams.get("id");
-		const orderId = searchParams.get("orderId");
+        // Get the transaction ID from query params
+        const { searchParams } = new URL(request.url)
+        const transactionId = searchParams.get('id')
+        const orderId = searchParams.get('orderId')
 
-		// Configure population
-		const populateOptions = [
-			{ path: "user_id", model: "UserDetail", select: "-password" },
-			{
-				path: "order_id",
-				model: "Order",
-				populate: {
-					path: "product_ordered",
-					model: "Product",
-				},
-			},
-		];
+        // Configure population
+        const populateOptions = [
+            { path: 'user_id', model: 'UserDetail', select: '-password' },
+            {
+                path: 'order_id',
+                model: 'Order',
+                populate: {
+                    path: 'product_ordered',
+                    model: 'Product'
+                }
+            }
+        ]
 
-		// If transaction ID is provided, fetch that specific transaction
-		if (transactionId) {
-			const transaction =
-				await Transaction.findById(transactionId).populate(
-					populateOptions
-				);
+        // If transaction ID is provided, fetch that specific transaction
+        if (transactionId) {
+            const transaction = await Transaction.findById(transactionId).populate(populateOptions)
 
-			if (!transaction) {
-				return NextResponse.json(
-					{ success: false, error: "Transaction not found" },
-					{ status: 404 }
-				);
-			}
+            if (!transaction) {
+                return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 })
+            }
 
-			// Check if transaction belongs to authenticated user
-			if (transaction.user_id.toString() !== auth.userId.toString()) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to access this transaction",
-					},
-					{ status: 403 }
-				);
-			}
+            // Check if transaction belongs to authenticated user
+            if (transaction.user_id.toString() !== auth.userId.toString()) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to access this transaction'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			return NextResponse.json(
-				{ success: true, data: transaction },
-				{ status: 200 }
-			);
-		}
+            return NextResponse.json({ success: true, data: transaction }, { status: 200 })
+        }
 
-		// If order ID is provided, fetch transaction for that order
-		if (orderId) {
-			const transaction = await Transaction.findOne({
-				order_id: orderId,
-			}).populate(populateOptions);
+        // If order ID is provided, fetch transaction for that order
+        if (orderId) {
+            const transaction = await Transaction.findOne({
+                order_id: orderId
+            }).populate(populateOptions)
 
-			if (!transaction) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Transaction not found for this order",
-					},
-					{ status: 404 }
-				);
-			}
+            if (!transaction) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Transaction not found for this order'
+                    },
+                    { status: 404 }
+                )
+            }
 
-			// Check if transaction belongs to authenticated user
-			if (transaction.user_id.toString() !== auth.userId.toString()) {
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to access this transaction",
-					},
-					{ status: 403 }
-				);
-			}
+            // Check if transaction belongs to authenticated user
+            if (transaction.user_id.toString() !== auth.userId.toString()) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to access this transaction'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			return NextResponse.json(
-				{ success: true, data: transaction },
-				{ status: 200 }
-			);
-		}
+            return NextResponse.json({ success: true, data: transaction }, { status: 200 })
+        }
 
-		// If no specific ID is provided, fetch all transactions for the user
-		const page = parseInt(searchParams.get("page") || "1");
-		const limit = parseInt(searchParams.get("limit") || "10");
+        // If no specific ID is provided, fetch all transactions for the user
+        const page = parseInt(searchParams.get('page') || '1')
+        const limit = parseInt(searchParams.get('limit') || '10')
 
-		// Get total count for pagination
-		const total = await Transaction.countDocuments({
-			user_id: auth.userId,
-		});
+        // Get total count for pagination
+        const total = await Transaction.countDocuments({
+            user_id: auth.userId
+        })
 
-		// Get paginated results
-		const transactions = await Transaction.find({ user_id: auth.userId })
-			.populate(populateOptions)
-			.sort({ _id: -1 }) // Sort by newest first
-			.skip((page - 1) * limit)
-			.limit(limit);
+        // Get paginated results
+        const transactions = await Transaction.find({ user_id: auth.userId })
+            .populate(populateOptions)
+            .sort({ _id: -1 }) // Sort by newest first
+            .skip((page - 1) * limit)
+            .limit(limit)
 
-		return NextResponse.json(
-			{
-				success: true,
-				data: {
-					transactions,
-					pagination: {
-						total,
-						page,
-						limit,
-						pages: Math.ceil(total / limit),
-					},
-				},
-			},
-			{ status: 200 }
-		);
-	} catch (error) {
-		console.error("Error fetching transaction:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to fetch transaction",
-			},
-			{ status: 500 }
-		);
-	}
+        return NextResponse.json(
+            {
+                success: true,
+                data: {
+                    transactions,
+                    pagination: {
+                        total,
+                        page,
+                        limit,
+                        pages: Math.ceil(total / limit)
+                    }
+                }
+            },
+            { status: 200 }
+        )
+    } catch (error) {
+        console.error('Error fetching transaction:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to fetch transaction'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // PATCH endpoint - update transaction
 export async function PATCH(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			Transaction.findOne().exec(),
-			AuthModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([Transaction.findOne().exec(), AuthModel.findOne().exec()]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Check authentication
-			const authResult = await authenticateUser(request, session);
-			if (!authResult.success) {
-				return NextResponse.json(
-					{ success: false, error: authResult.error },
-					{ status: authResult.status }
-				);
-			}
+        try {
+            // Check authentication
+            const authResult = await authenticateUser(request, session)
+            if (!authResult.success) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status })
+            }
 
-			const auth = authResult.auth;
-			const data = await request.json();
+            const auth = authResult.auth
+            const data = await request.json()
 
-			// Validate required fields
-			if (!data.id) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Transaction ID is required" },
-					{ status: 400 }
-				);
-			}
+            // Validate required fields
+            if (!data.id) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Transaction ID is required' }, { status: 400 })
+            }
 
-			// Find the transaction
-			const transaction = await Transaction.findById(data.id).session(
-				session
-			);
+            // Find the transaction
+            const transaction = await Transaction.findById(data.id).session(session)
 
-			if (!transaction) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Transaction not found" },
-					{ status: 404 }
-				);
-			}
+            if (!transaction) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 })
+            }
 
-			// Verify ownership
-			if (transaction.user_id.toString() !== auth.userId.toString()) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to update this transaction",
-					},
-					{ status: 403 }
-				);
-			}
+            // Verify ownership
+            if (transaction.user_id.toString() !== auth.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to update this transaction'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			// Update fields
-			const updateData: any = {};
-			if (data.razorpay_payment_id)
-				updateData.razorpay_payment_id = data.razorpay_payment_id;
-			if (data.razorpay_order_id)
-				updateData.razorpay_order_id = data.razorpay_order_id;
-			if (data.razorpay_signature)
-				updateData.razorpay_signature = data.razorpay_signature;
+            // Update fields
+            const updateData: any = {}
+            if (data.razorpay_payment_id) updateData.razorpay_payment_id = data.razorpay_payment_id
+            if (data.razorpay_order_id) updateData.razorpay_order_id = data.razorpay_order_id
+            if (data.razorpay_signature) updateData.razorpay_signature = data.razorpay_signature
+            if (data.order_id) updateData.order_id = data.order_id
+            if (data.status && ['pending', 'successful', 'failed'].includes(data.status))
+                updateData.status = data.status
 
-			// Apply updates
-			const updatedTransaction = await Transaction.findByIdAndUpdate(
-				data.id,
-				{ $set: updateData },
-				{ new: true, session }
-			).populate([
-				{ path: "user_id", model: "UserDetail", select: "-password" },
-				{ path: "order_id", model: "Order" },
-			]);
+            // Always update the timestamp when modified
+            updateData.updatedAt = new Date()
 
-			await session.commitTransaction();
-			session.endSession();
+            // Apply updates
+            const updatedTransaction = await Transaction.findByIdAndUpdate(
+                data.id,
+                { $set: updateData },
+                { new: true, session }
+            ).populate([
+                { path: 'user_id', model: 'UserDetail', select: '-password' },
+                { path: 'order_id', model: 'Order' }
+            ])
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Transaction updated successfully",
-					data: updatedTransaction,
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error updating transaction:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to update transaction",
-			},
-			{ status: 500 }
-		);
-	}
+            await session.commitTransaction()
+            session.endSession()
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Transaction updated successfully',
+                    data: updatedTransaction
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error updating transaction:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to update transaction'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // DELETE endpoint - delete transaction
 export async function DELETE(request: NextRequest) {
-	try {
-		await dbConnect();
-		await Promise.all([
-			Transaction.findOne().exec(),
-			AuthModel.findOne().exec(),
-			orderModel.findOne().exec(),
-		]).catch(() => {});
+    try {
+        await dbConnect()
+        await Promise.all([
+            Transaction.findOne().exec(),
+            AuthModel.findOne().exec(),
+            orderModel.findOne().exec()
+        ]).catch(() => {})
 
-		const session = await mongoose.startSession();
-		session.startTransaction();
+        const session = await mongoose.startSession()
+        session.startTransaction()
 
-		try {
-			// Check authentication
-			const authResult = await authenticateUser(request, session);
-			if (!authResult.success) {
-				return NextResponse.json(
-					{ success: false, error: authResult.error },
-					{ status: authResult.status }
-				);
-			}
+        try {
+            // Check authentication
+            const authResult = await authenticateUser(request, session)
+            if (!authResult.success) {
+                return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status })
+            }
 
-			const auth = authResult.auth;
+            const auth = authResult.auth
 
-			// Get transaction ID from query params
-			const { searchParams } = new URL(request.url);
-			const transactionId = searchParams.get("id");
+            // Get transaction ID from query params
+            const { searchParams } = new URL(request.url)
+            const transactionId = searchParams.get('id')
 
-			if (!transactionId) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Transaction ID is required" },
-					{ status: 400 }
-				);
-			}
+            if (!transactionId) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Transaction ID is required' }, { status: 400 })
+            }
 
-			// Find the transaction
-			const transaction =
-				await Transaction.findById(transactionId).session(session);
+            // Find the transaction
+            const transaction = await Transaction.findById(transactionId).session(session)
 
-			if (!transaction) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{ success: false, error: "Transaction not found" },
-					{ status: 404 }
-				);
-			}
+            if (!transaction) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Transaction not found' }, { status: 404 })
+            }
 
-			// Verify ownership
-			if (transaction.user_id.toString() !== auth.userId.toString()) {
-				await session.abortTransaction();
-				session.endSession();
-				return NextResponse.json(
-					{
-						success: false,
-						error: "Unauthorized to delete this transaction",
-					},
-					{ status: 403 }
-				);
-			}
+            // Verify ownership
+            if (transaction.user_id.toString() !== auth.userId.toString()) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Unauthorized to delete this transaction'
+                    },
+                    { status: 403 }
+                )
+            }
 
-			// Update related order if needed
-			const order = await orderModel
-				.findById(transaction.order_id)
-				.session(session);
-			if (order) {
-				// Only allow deletion of transactions for pending orders
-				if (order.status !== "pending") {
-					await session.abortTransaction();
-					session.endSession();
-					return NextResponse.json(
-						{
-							success: false,
-							error: "Cannot delete transaction for non-pending orders",
-						},
-						{ status: 400 }
-					);
-				}
+            // Update related order if needed
+            const order = await orderModel.findById(transaction.order_id).session(session)
+            if (order) {
+                // Only allow deletion of transactions for pending orders
+                if (order.status !== 'pending') {
+                    await session.abortTransaction()
+                    session.endSession()
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            error: 'Cannot delete transaction for non-pending orders'
+                        },
+                        { status: 400 }
+                    )
+                }
 
-				// Update order to remove transaction reference if needed
-				// This depends on your business logic
-			}
+                // Update order to remove transaction reference if needed
+                // This depends on your business logic
+            }
 
-			// Delete the transaction
-			await Transaction.findByIdAndDelete(transactionId, { session });
+            // Delete the transaction
+            await Transaction.findByIdAndDelete(transactionId, { session })
 
-			await session.commitTransaction();
-			session.endSession();
+            await session.commitTransaction()
+            session.endSession()
 
-			return NextResponse.json(
-				{
-					success: true,
-					message: "Transaction deleted successfully",
-				},
-				{ status: 200 }
-			);
-		} catch (error) {
-			await session.abortTransaction();
-			throw error;
-		} finally {
-			session.endSession();
-		}
-	} catch (error) {
-		console.error("Error deleting transaction:", error);
-		return NextResponse.json(
-			{
-				success: false,
-				error:
-					error instanceof Error
-						? error.message
-						: "Failed to delete transaction",
-			},
-			{ status: 500 }
-		);
-	}
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Transaction deleted successfully'
+                },
+                { status: 200 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error deleting transaction:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to delete transaction'
+            },
+            { status: 500 }
+        )
+    }
+}
+
+// POST endpoint - create a transaction
+export async function POST(request: NextRequest) {
+    try {
+        await dbConnect()
+        await Promise.all([Transaction.findOne().exec(), AuthModel.findOne().exec()]).catch(() => {})
+
+        const session = await mongoose.startSession()
+        session.startTransaction()
+
+        try {
+            // Check authentication
+            const authResult = await authenticateUser(request, session)
+            if (!authResult.success) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: authResult.error }, { status: authResult.status })
+            }
+
+            const auth = authResult.auth
+            const { amount, currency = 'INR' } = await request.json()
+
+            // Validate required fields
+            if (amount === undefined || amount <= 0) {
+                await session.abortTransaction()
+                session.endSession()
+                return NextResponse.json({ success: false, error: 'Valid amount is required' }, { status: 400 })
+            }
+
+            // Create a new transaction record (without order_id initially)
+            const transaction = await Transaction.create(
+                [
+                    {
+                        user_id: auth.userId,
+                        amount,
+                        currency,
+                        status: 'pending', // Initial status
+                        createdAt: new Date()
+                    }
+                ],
+                { session }
+            )
+
+            await session.commitTransaction()
+            session.endSession()
+
+            return NextResponse.json(
+                {
+                    success: true,
+                    message: 'Transaction created successfully',
+                    data: transaction[0]
+                },
+                { status: 201 }
+            )
+        } catch (error) {
+            await session.abortTransaction()
+            throw error
+        } finally {
+            session.endSession()
+        }
+    } catch (error) {
+        console.error('Error creating transaction:', error)
+        return NextResponse.json(
+            {
+                success: false,
+                error: error instanceof Error ? error.message : 'Failed to create transaction'
+            },
+            { status: 500 }
+        )
+    }
 }
 
 // === Example Requests and Responses ===

@@ -1,14 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/mongodb'
-import CartModel from '@/models/cartSchema'
+import CartModel, { CartItem } from '@/models/cartSchema'
 import AuthModel from '@/models/authSchema'
 import productModel from '@/models/productSchema'
+import { CreatorModel } from '@/models/creatorSchema'
+import { ImageModel } from '@/models/imageSchema'
 import mongoose from 'mongoose'
 
 // GET cart items for the current user
 export async function GET(request: NextRequest) {
     try {
         await dbConnect()
+
+        // Ensure all models are registered
+        await Promise.all([
+            CartModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {
+            console.log('Model registration initialized')
+        })
 
         // Authentication check
         const accessToken = request.cookies.get('accessToken')?.value
@@ -43,8 +56,10 @@ export async function GET(request: NextRequest) {
                 {
                     success: true,
                     data: {
+                        _id: 'empty-cart',
                         items: [],
-                        total: 0
+                        total: 0,
+                        currency: 'INR'
                     }
                 },
                 { status: 200 }
@@ -54,7 +69,7 @@ export async function GET(request: NextRequest) {
         // Calculate total price
         let total = 0
         if (cart.items && cart.items.length > 0) {
-            total = cart.items.reduce((sum, item) => {
+            total = cart.items.reduce((sum: number, item: any) => {
                 const product = item.product_id as any
                 return sum + (product.price?.amount || 0) * item.quantity
             }, 0)
@@ -88,6 +103,17 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         await dbConnect()
+
+        // Ensure all models are registered
+        await Promise.all([
+            CartModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {
+            console.log('Model registration initialized')
+        })
 
         // Authentication check
         const accessToken = request.cookies.get('accessToken')?.value
@@ -143,7 +169,9 @@ export async function POST(request: NextRequest) {
             }
 
             // Check if product already exists in cart
-            const existingItemIndex = cart.items.findIndex((item) => item.product_id.toString() === product_id)
+            const existingItemIndex = cart.items.findIndex(
+                (item: CartItem) => item.product_id.toString() === product_id
+            )
 
             if (existingItemIndex > -1) {
                 // Update quantity if item exists
@@ -191,6 +219,17 @@ export async function PATCH(request: NextRequest) {
     try {
         await dbConnect()
 
+        // Ensure all models are registered
+        await Promise.all([
+            CartModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {
+            console.log('Model registration initialized')
+        })
+
         // Authentication check
         const accessToken = request.cookies.get('accessToken')?.value
         const refreshToken = request.cookies.get('refreshToken')?.value
@@ -236,10 +275,10 @@ export async function PATCH(request: NextRequest) {
 
             if (quantity <= 0) {
                 // Remove item from cart if quantity is 0 or negative
-                cart.items = cart.items.filter((item) => item.product_id.toString() !== product_id)
+                cart.items = cart.items.filter((item: CartItem) => item.product_id.toString() !== product_id)
             } else {
                 // Update quantity
-                const itemIndex = cart.items.findIndex((item) => item.product_id.toString() === product_id)
+                const itemIndex = cart.items.findIndex((item: CartItem) => item.product_id.toString() === product_id)
 
                 if (itemIndex === -1) {
                     await session.abortTransaction()
@@ -283,6 +322,17 @@ export async function PATCH(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
     try {
         await dbConnect()
+
+        // Ensure all models are registered
+        await Promise.all([
+            CartModel.findOne().exec(),
+            AuthModel.findOne().exec(),
+            productModel.findOne().exec(),
+            CreatorModel.findOne().exec(),
+            ImageModel.findOne().exec()
+        ]).catch(() => {
+            console.log('Model registration initialized')
+        })
 
         // Authentication check
         const accessToken = request.cookies.get('accessToken')?.value

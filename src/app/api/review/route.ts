@@ -7,6 +7,9 @@ import productModel from '@/models/productSchema'
 import { ImageModel } from '@/models/imageSchema'
 import UserModel from '@/models/userSchema'
 import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import OrderModel from '@/app/models/OrderModel'
 
 // POST: Create a new review
 export async function POST(request: NextRequest) {
@@ -17,183 +20,189 @@ export async function POST(request: NextRequest) {
             AuthModel.findOne().exec(),
             productModel.findOne().exec(),
             ImageModel.findOne().exec(),
-            UserModel.findOne().exec()
+            UserModel.findOne().exec(),
+            mongoose.connection.model('Order') ?? OrderModel
         ]).catch(() => {})
 
-        const session = await mongoose.startSession()
-        session.startTransaction()
-
-        try {
-            // Authentication check
-            const accessToken = request.cookies.get('accessToken')?.value
-            const refreshToken = request.cookies.get('refreshToken')?.value
-
-            if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
-            }
-
-            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
-
-            if (!auth) {
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
-            }
-
-            const formData = await request.formData()
-
-            // Get review data
-            const product_id = formData.get('product_id') as string
-            const message = formData.get('message') as string
-            const rating = Number(formData.get('rating'))
-            const images = formData.getAll('images') as File[]
-
-            // Validate required fields
-            if (!product_id || !rating) {
-                await session.abortTransaction()
-                session.endSession()
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: 'Product ID and rating are required'
-                    },
-                    { status: 400 }
-                )
-            }
-
-            // Validate rating
-            if (rating < 1 || rating > 5 || !Number.isInteger(rating)) {
-                await session.abortTransaction()
-                session.endSession()
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: 'Rating must be an integer between 1 and 5'
-                    },
-                    { status: 400 }
-                )
-            }
-
-            // Verify product exists
-            const product = await productModel.findById(product_id).session(session)
-            if (!product) {
-                await session.abortTransaction()
-                session.endSession()
-                return NextResponse.json({ success: false, error: 'Product not found' }, { status: 404 })
-            }
-
-            // Check if user already reviewed this product
-            const existingReview = await ReviewModel.findOne({
-                product_id,
-                user_id: auth.userId
-            }).session(session)
-
-            if (existingReview) {
-                await session.abortTransaction()
-                session.endSession()
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: 'You have already reviewed this product'
-                    },
-                    { status: 400 }
-                )
-            }
-
-            // Upload images to S3 if provided
-            const image_details_id = []
-            if (images.length > 0) {
-                for (const image of images) {
-                    if (image.size > 0) {
-                        const imageBuffer = Buffer.from(await image.arrayBuffer())
-
-                        // Upload to S3
-                        const fileName = `review-image-${auth.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
-                        const uploadResult = await uploadObjectToS3(imageBuffer, fileName, image.type || 'image/jpeg')
-
-                        // Check if upload was successful
-                        if (!uploadResult.success) {
-                            await session.abortTransaction()
-                            session.endSession()
-                            return NextResponse.json(
-                                {
-                                    success: false,
-                                    error: uploadResult.error || 'Failed to upload image'
-                                },
-                                { status: 500 }
-                            )
-                        }
-
-                        // Store the URL in MongoDB
-                        const [imageDetail] = await ImageModel.create(
-                            [
-                                {
-                                    user_id: auth.userId,
-                                    image_url: uploadResult.url,
-                                    content_type: image.type || 'image/jpeg'
-                                }
-                            ],
-                            { session }
-                        )
-                        image_details_id.push(imageDetail._id)
-                    }
-                }
-            }
-
-            // Create review
-            const [review] = await ReviewModel.create(
-                [
-                    {
-                        product_id,
-                        user_id: auth.userId,
-                        message: message || '',
-                        rating,
-                        image_details_id
-                    }
-                ],
-                { session }
-            )
-
-            // Update product rating (calculate average)
-            const allReviews = await ReviewModel.find({ product_id }).session(session)
-            const totalRating = allReviews.reduce((sum, r) => sum + r.rating, 0)
-            const averageRating = totalRating / allReviews.length
-
-            await productModel.findByIdAndUpdate(product_id, { rating: averageRating.toFixed(1) }, { session })
-
-            // Populate the review with related data
-            const populatedReview = await ReviewModel.findById(review._id)
-                .session(session)
-                .populate([
-                    {
-                        path: 'user_id',
-                        model: 'UserDetail',
-                        select: 'fname lname email profile_picture'
-                    },
-                    { path: 'image_details_id', model: 'ImageDetail' }
-                ])
-
-            await session.commitTransaction()
-            session.endSession()
-
+        const session = await getServerSession(authOptions)
+        if (!session || !session.user) {
             return NextResponse.json(
                 {
-                    success: true,
-                    message: 'Review submitted successfully',
-                    data: populatedReview
+                    success: false,
+                    error: 'Please log in to submit a review'
                 },
-                { status: 201 }
+                { status: 401 }
             )
-        } catch (error) {
-            await session.abortTransaction()
-            throw error
-        } finally {
-            session.endSession()
         }
+
+        const user = await UserModel.findOne({ email: session.user.email })
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'User not found'
+                },
+                { status: 404 }
+            )
+        }
+
+        const formData = await request.json()
+
+        // Get review data
+        const product_id = formData.product_id
+        const rating = Number(formData.rating)
+        const title = formData.title
+        const comment = formData.comment
+        const order_id = formData.order_id
+
+        // Validate required fields
+        if (!product_id || !rating || !title || !comment) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Missing required fields: product_id, rating, title, and comment are required'
+                },
+                { status: 400 }
+            )
+        }
+
+        // Validate rating
+        if (rating < 1 || rating > 5) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Rating must be between 1 and 5'
+                },
+                { status: 400 }
+            )
+        }
+
+        // Verify product exists
+        const product = await productModel.findById(product_id)
+        if (!product) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'Product not found'
+                },
+                { status: 404 }
+            )
+        }
+
+        // If order_id is provided, verify that the order belongs to the user and includes this product
+        if (order_id) {
+            const order = await OrderModel.findById(order_id)
+
+            if (!order) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Order not found'
+                    },
+                    { status: 404 }
+                )
+            }
+
+            // Check if the order belongs to the current user
+            if (order.user_id.toString() !== user._id.toString()) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'You can only review products from your own orders'
+                    },
+                    { status: 403 }
+                )
+            }
+
+            // Check if the product is in the order
+            const productInOrder = order.product_ordered.some((item: any) => {
+                // Check if item is an object with product_id property or a string
+                const itemProductId =
+                    typeof item === 'object' && item.product_id
+                        ? typeof item.product_id === 'object'
+                            ? item.product_id._id.toString()
+                            : item.product_id.toString()
+                        : item.toString()
+
+                return itemProductId === product_id
+            })
+
+            if (!productInOrder) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'This product is not in the specified order'
+                    },
+                    { status: 400 }
+                )
+            }
+
+            // Check if the order status is 'delivered'
+            if (order.status !== 'delivered') {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'You can only review products from delivered orders'
+                    },
+                    { status: 400 }
+                )
+            }
+        }
+
+        // Check if user has already reviewed this product
+        const existingReview = await ReviewModel.findOne({
+            user_id: user._id,
+            product_id: product_id
+        })
+
+        if (existingReview) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: 'You have already reviewed this product'
+                },
+                { status: 400 }
+            )
+        }
+
+        // Create the review
+        const review = new ReviewModel({
+            user_id: user._id,
+            product_id: product_id,
+            order_id: order_id || null,
+            rating: rating,
+            title: title,
+            comment: comment
+        })
+
+        // Save the review
+        const savedReview = await review.save()
+
+        // Update product rating
+        const allProductReviews = await ReviewModel.find({ product_id: product_id })
+        const totalRating = allProductReviews.reduce((sum, review) => sum + review.rating, 0)
+        const averageRating = totalRating / allProductReviews.length
+
+        product.rating = averageRating
+        product.review_count = allProductReviews.length
+        await product.save()
+
+        return NextResponse.json(
+            {
+                success: true,
+                message: 'Review submitted successfully',
+                data: {
+                    review: savedReview
+                }
+            },
+            { status: 201 }
+        )
     } catch (error) {
         console.error('Error creating review:', error)
         return NextResponse.json(
             {
                 success: false,
-                error: error instanceof Error ? error.message : 'Failed to submit review'
+                error: 'Failed to submit review'
             },
             { status: 500 }
         )
@@ -208,16 +217,18 @@ export async function GET(request: NextRequest) {
             ReviewModel.findOne().exec(),
             UserModel.findOne().exec(),
             productModel.findOne().exec(),
-            ImageModel.findOne().exec()
+            ImageModel.findOne().exec(),
+            mongoose.connection.model('Order') ?? OrderModel
         ]).catch(() => {})
 
         // Get query params
-        const { searchParams } = new URL(request.url)
+        const searchParams = request.nextUrl.searchParams
         const id = searchParams.get('id')
         const product_id = searchParams.get('product_id')
         const user_id = searchParams.get('user_id')
         const page = parseInt(searchParams.get('page') || '1')
         const limit = parseInt(searchParams.get('limit') || '10')
+        const skip = (page - 1) * limit
 
         // Enhanced populate configuration with nested population for images
         const populateOptions = [
@@ -265,7 +276,7 @@ export async function GET(request: NextRequest) {
         const reviews = await ReviewModel.find(query)
             .populate(populateOptions)
             .sort({ _id: -1 }) // Sort by newest first
-            .skip((page - 1) * limit)
+            .skip(skip)
             .limit(limit)
 
         // Case 2: Get reviews for specific product
