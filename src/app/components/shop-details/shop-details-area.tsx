@@ -1,237 +1,503 @@
 'use client'
 import React, { useState } from 'react'
 import Link from 'next/link'
-import RelatedProducts from './related-products'
-import ShopDetailsImages from './shop-details-images'
-import { IProduct } from '@/types/product-type'
+import Image from 'next/image'
 
-const ShopDetailsArea = ({ product }: { product: IProduct }) => {
-    const [model, setModel] = useState<string>('Gat')
-    const [incValue, setIncValue] = useState<number>(1)
-
-    //hanle increment
-    const handleIncrement = (value: string) => {
-        if (value === 'inc') {
-            setIncValue((prev) => prev + 1)
-        } else {
-            if (incValue > 1) {
-                setIncValue((prev) => prev - 1)
-            }
+interface Product {
+    _id: string
+    title: string
+    description: string
+    price: {
+        amount: number
+        currency: string
+    }
+    image_id: {
+        _id: string
+        image_url: string
+    }
+    creator_id: {
+        name: string
+        _id: string
+    }
+    category_id: {
+        _id: string
+        category_name: string
+    }[]
+    shader_id?: {
+        _id: string
+        shaderType: string
+        shaderImage: {
+            _id: string
+            image_url: string
         }
     }
+    rating?: number
+    sales_count?: number
+}
+
+const ShopDetailsArea = ({ product }: { product: Product }) => {
+    const [quantity, setQuantity] = useState<number>(1)
+    const [activeTab, setActiveTab] = useState<string>('description')
+    const [selectedImage, setSelectedImage] = useState<string>(product.image_id.image_url)
+    const [isZoomed, setIsZoomed] = useState<boolean>(false)
+
+    // Handle increment/decrement
+    const handleQuantityChange = (action: string) => {
+        if (action === 'inc') {
+            setQuantity((prev) => prev + 1)
+        } else if (action === 'dec' && quantity > 1) {
+            setQuantity((prev) => prev - 1)
+        }
+    }
+
+    const handleTabChange = (tab: string) => {
+        setActiveTab(tab)
+    }
+
+    const handleImageClick = (imageUrl: string) => {
+        setSelectedImage(imageUrl)
+    }
+
+    const toggleZoom = () => {
+        setIsZoomed(!isZoomed)
+    }
+
     return (
-        <>
-            <section className='shop-area shop-details-area'>
-                <div className='container'>
-                    <div className='row'>
-                        {/* shop details images  */}
-                        <ShopDetailsImages />
-                        {/* shop details images  */}
-                        <div className='shop__details-content'>
-                            <div className='shop__details-rating'>
-                                <i className='fas fa-star'></i>
-                                <i className='fas fa-star'></i>
-                                <i className='fas fa-star'></i>
-                                <i className='fas fa-star'></i>
-                                <i className='fas fa-star'></i>
-                                <span className='rating-count'>( 3 Customer Review )</span>
+        <section className='product-details-section py-5' style={{ background: '#121212' }}>
+            <div className='container'>
+                <div className='bg-black text-white p-4 mb-4 rounded-3' style={{ borderLeft: '4px solid #22c55e' }}>
+                    <h1 className='product-title fs-2 mb-0'>{product.title}</h1>
+                </div>
+
+                <div className='row g-4'>
+                    {/* Left Column - Images */}
+                    <div className='col-lg-6'>
+                        <div className='product-images-container'>
+                            <div
+                                className='main-image-container position-relative bg-black rounded-4 overflow-hidden mb-3'
+                                style={{ cursor: isZoomed ? 'zoom-out' : 'zoom-in' }}
+                                onClick={toggleZoom}
+                            >
+                                <Image
+                                    src={selectedImage}
+                                    alt={product.title}
+                                    width={800}
+                                    height={800}
+                                    priority
+                                    className={`main-product-image ${isZoomed ? 'zoomed' : ''}`}
+                                    style={{
+                                        width: '100%',
+                                        height: isZoomed ? '600px' : '400px',
+                                        objectFit: isZoomed ? 'contain' : 'cover',
+                                        transition: 'all 0.3s ease'
+                                    }}
+                                />
+                                <div className='image-overlay position-absolute bottom-0 start-0 p-3 text-white bg-black bg-opacity-75 w-100'>
+                                    <small>Click to {isZoomed ? 'shrink' : 'zoom'}</small>
+                                </div>
                             </div>
-                            <h2 className='title'>Anime T-Shirt</h2>
-                            <div className='shop__details-price'>
-                                <span className='amount'>
-                                    <i className='fas fa-rupee-sign'></i> {product.price.toFixed(2)}{' '}
-                                    <span className='stock-status'>- {product.status}</span>
-                                </span>
+
+                            <div className='thumbnails-container d-flex gap-2 justify-content-start'>
+                                <div
+                                    className={`thumbnail-item rounded-3 overflow-hidden ${
+                                        selectedImage === product.image_id.image_url ? 'border border-success' : ''
+                                    }`}
+                                    onClick={() => handleImageClick(product.image_id.image_url)}
+                                    style={{
+                                        width: '80px',
+                                        height: '80px',
+                                        cursor: 'pointer',
+                                        background: '#1E1E1E'
+                                    }}
+                                >
+                                    <Image
+                                        src={product.image_id.image_url}
+                                        alt='Product thumbnail'
+                                        width={80}
+                                        height={80}
+                                        className='w-100 h-100'
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                </div>
+
+                                {product.shader_id && (
+                                    <div
+                                        className={`thumbnail-item rounded-3 overflow-hidden ${
+                                            selectedImage === product.shader_id.shaderImage.image_url
+                                                ? 'border border-success'
+                                                : ''
+                                        }`}
+                                        onClick={() => handleImageClick(product.shader_id!.shaderImage.image_url)}
+                                        style={{
+                                            width: '80px',
+                                            height: '80px',
+                                            cursor: 'pointer',
+                                            background: '#1E1E1E'
+                                        }}
+                                    >
+                                        <Image
+                                            src={product.shader_id.shaderImage.image_url}
+                                            alt='Shader thumbnail'
+                                            width={80}
+                                            height={80}
+                                            className='w-100 h-100'
+                                            style={{ objectFit: 'cover' }}
+                                        />
+                                    </div>
+                                )}
                             </div>
-                            <div className='shop__details-short-description'>
-                                <p>{product.description}</p>
+                        </div>
+                    </div>
+
+                    {/* Right Column - Details */}
+                    <div className='col-lg-6'>
+                        <div
+                            className='product-details-info p-4 rounded-4 h-100'
+                            style={{ background: '#1E1E1E', color: '#f5f5f5' }}
+                        >
+                            <div className='d-flex justify-content-between align-items-center mb-3'>
+                                <div className='product-rating'>
+                                    {[...Array(5)].map((_, i) => (
+                                        <i
+                                            key={i}
+                                            className='fas fa-star'
+                                            style={{
+                                                color: i < Math.round(product.rating || 0) ? '#22c55e' : '#444444',
+                                                fontSize: '18px',
+                                                marginRight: '2px'
+                                            }}
+                                        ></i>
+                                    ))}
+                                    <span style={{ color: '#888888', fontSize: '14px', marginLeft: '6px' }}>
+                                        ({product.rating ? product.rating.toFixed(1) : '0'})
+                                    </span>
+                                </div>
                             </div>
-                            <div className='shop__details-model d-flex align-items-center'>
-                                <p className='model m-0'>Model:</p>
-                                <ul className='list-wrap d-flex align-items-center'>
-                                    <li onClick={() => setModel('Gat')} className={model === 'Gat' ? 'active' : ''}>
-                                        Gat
-                                    </li>
-                                    <li onClick={() => setModel('dat4')} className={model === 'dat4' ? 'active' : ''}>
-                                        dat4
-                                    </li>
-                                    {/* <li
-										onClick={() => setModel("rt30")}
-										className={
-											model === "rt30" ? "active" : ""
-										}
-									>
-										rt30
-									</li> */}
-                                </ul>
+
+                            <div className='price-container mb-4'>
+                                <h2 className='product-price fw-bold' style={{ color: '#22c55e' }}>
+                                    {product.price.currency} {product.price.amount.toFixed(2)}
+                                </h2>
                             </div>
-                            <div className='shop__details-qty'>
-                                <div className='cart-plus-minus d-flex flex-wrap align-items-center'>
-                                    <form className='quantity num-block'>
-                                        <input type='text' className='in-num' value={incValue} readOnly />
-                                        <div className='qtybutton-box'>
-                                            <span onClick={() => handleIncrement('inc')} className='plus'>
-                                                <i className='fas fa-angle-up'></i>
-                                            </span>
-                                            <span onClick={() => handleIncrement('dec')} className='minus dis'>
-                                                <i className='fas fa-angle-down'></i>
-                                            </span>
+
+                            <div className='product-meta mb-4'>
+                                <div className='d-flex flex-column gap-2'>
+                                    <div className='meta-item d-flex'>
+                                        <span style={{ color: '#888888', width: '80px' }}>Creator:</span>
+                                        <Link
+                                            href={`/shop?creator=${product.creator_id._id}`}
+                                            className='text-decoration-none'
+                                            style={{ color: '#22c55e', fontWeight: 500 }}
+                                        >
+                                            {product.creator_id.name}
+                                        </Link>
+                                    </div>
+
+                                    <div className='meta-item d-flex'>
+                                        <span style={{ color: '#888888', width: '80px' }}>Sales:</span>
+                                        <span style={{ color: '#f5f5f5' }}>{product.sales_count || 0}</span>
+                                    </div>
+
+                                    {product.shader_id && (
+                                        <div className='meta-item d-flex'>
+                                            <span style={{ color: '#888888', width: '80px' }}>Shader:</span>
+                                            <span style={{ color: '#f5f5f5' }}>{product.shader_id.shaderType}</span>
                                         </div>
-                                    </form>
-                                    <button className='shop__details-cart-btn'>add to cart</button>
+                                    )}
+
+                                    <div className='meta-item d-flex'>
+                                        <span style={{ color: '#888888', width: '80px', marginTop: '4px' }}>
+                                            Categories:
+                                        </span>
+                                        <div
+                                            className='d-flex gap-2 flex-wrap'
+                                            style={{ flex: 1, marginTop: '2px', marginLeft: '30px' }}
+                                        >
+                                            {product.category_id.map((category) => (
+                                                <Link
+                                                    key={category._id}
+                                                    href={`/shop?category=${category._id}`}
+                                                    className='badge text-decoration-none py-2 px-3 mb-1'
+                                                    style={{ background: '#333333', color: '#f5f5f5' }}
+                                                >
+                                                    {category.category_name}
+                                                </Link>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div className='shop__details-bottom'>
-                                <div className='posted_in'>
-                                    <b>Categories :</b>
-                                    <Link href='/shop'>T-Shirt,</Link>
-                                    <Link href='/shop'>Anime,</Link>
-                                    {/* <Link href="/shop">Manga</Link> */}
+
+                            <div className='quantity-container d-flex align-items-center mb-4'>
+                                <div
+                                    className='quantity-selector d-flex align-items-center rounded-pill overflow-hidden me-3 border'
+                                    style={{ background: '#333333', borderColor: '#444444' }}
+                                >
+                                    <button
+                                        className='btn btn-sm px-3 py-2 border-0 text-white'
+                                        onClick={() => handleQuantityChange('dec')}
+                                        disabled={quantity <= 1}
+                                        style={{ background: '#333333' }}
+                                    >
+                                        <i className='fas fa-minus'></i>
+                                    </button>
+                                    <span className='px-3'>{quantity}</span>
+                                    <button
+                                        className='btn btn-sm px-3 py-2 border-0 text-white'
+                                        onClick={() => handleQuantityChange('inc')}
+                                        style={{ background: '#333333' }}
+                                    >
+                                        <i className='fas fa-plus'></i>
+                                    </button>
                                 </div>
-                                <div className='tagged_as'>
-                                    <b>Tags :</b>
-                                    <Link href='/shop'>Blue,</Link>
-                                    <Link href='/shop'>Anime,</Link>
-                                    <Link href='/shop'>Yellow</Link>
-                                </div>
-                                <div className='product_share'>
-                                    <b>Share :</b>
-                                    <Link href='/shop'>
+
+                                <button
+                                    className='btn btn-lg flex-grow-1 rounded-pill d-flex align-items-center justify-content-center'
+                                    style={{ background: '#22c55e', color: 'white' }}
+                                >
+                                    <i className='fas fa-shopping-cart me-2'></i>
+                                    <span>Add to Cart</span>
+                                </button>
+                            </div>
+
+                            <div className='share-buttons mt-4 pt-4' style={{ borderTop: '1px solid #333333' }}>
+                                <h5 className='fw-bold mb-3' style={{ color: '#f5f5f5' }}>
+                                    Share
+                                </h5>
+                                <div className='d-flex gap-2'>
+                                    <Link
+                                        href='#'
+                                        className='btn btn-sm rounded-circle'
+                                        style={{ background: '#333333', color: '#f5f5f5' }}
+                                    >
                                         <i className='fab fa-facebook-f'></i>
                                     </Link>
-                                    <Link href='/shop'>
+                                    <Link
+                                        href='#'
+                                        className='btn btn-sm rounded-circle'
+                                        style={{ background: '#333333', color: '#f5f5f5' }}
+                                    >
                                         <i className='fab fa-twitter'></i>
                                     </Link>
-                                    <Link href='/shop'>
+                                    <Link
+                                        href='#'
+                                        className='btn btn-sm rounded-circle'
+                                        style={{ background: '#333333', color: '#f5f5f5' }}
+                                    >
                                         <i className='fab fa-instagram'></i>
+                                    </Link>
+                                    <Link
+                                        href='#'
+                                        className='btn btn-sm rounded-circle'
+                                        style={{ background: '#333333', color: '#f5f5f5' }}
+                                    >
+                                        <i className='fas fa-link'></i>
                                     </Link>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className='row'>
-                        <div className='col-12'>
-                            <div className='product__desc-wrap'>
-                                <ul className='nav nav-tabs' id='descriptionTab' role='tablist'>
-                                    <li className='nav-item' role='presentation'>
-                                        <button
-                                            className='nav-link active'
-                                            id='description-tab'
-                                            data-bs-toggle='tab'
-                                            data-bs-target='#description'
-                                            type='button'
-                                            role='tab'
-                                            aria-controls='description'
-                                            aria-selected='true'
-                                            tabIndex={-1}
-                                        >
-                                            Description
-                                        </button>
-                                    </li>
-                                    <li className='nav-item' role='presentation'>
-                                        <button
-                                            className='nav-link'
-                                            id='info-tab'
-                                            data-bs-toggle='tab'
-                                            data-bs-target='#info'
-                                            type='button'
-                                            role='tab'
-                                            aria-controls='info'
-                                            aria-selected='false'
-                                            tabIndex={-1}
-                                        >
-                                            Additional Information
-                                        </button>
-                                    </li>
-                                    {/* <li className="nav-item" role="presentation">
-                                  <button className="nav-link" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab" aria-controls="reviews" aria-selected="false" tabIndex={-1}>Reviews (0)</button>
-                              </li> */}
-                                </ul>
-                                <div className='tab-content' id='descriptionTabContent'>
-                                    <div
-                                        className='tab-pane animation-none fade show active'
-                                        id='description'
-                                        role='tabpanel'
-                                        aria-labelledby='description-tab'
+                </div>
+
+                <div className='row mt-5'>
+                    <div className='col-12'>
+                        <div
+                            className='additional-details p-4 rounded-4'
+                            style={{ background: '#1E1E1E', color: '#f5f5f5' }}
+                        >
+                            <ul
+                                className='nav nav-tabs border-0 mb-4'
+                                role='tablist'
+                                style={{ borderBottom: '1px solid #333333' }}
+                            >
+                                <li className='nav-item' role='presentation'>
+                                    <button
+                                        className={`nav-link ${activeTab === 'description' ? 'active' : ''}`}
+                                        onClick={() => handleTabChange('description')}
+                                        type='button'
+                                        role='tab'
+                                        aria-selected={activeTab === 'description'}
+                                        style={{
+                                            background: activeTab === 'description' ? '#22c55e' : '#1E1E1E',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            padding: '10px 20px',
+                                            borderRadius: '4px 4px 0 0',
+                                            marginRight: '5px'
+                                        }}
                                     >
-                                        <p>
-                                            Lorem ipsum dolor sit amet, consteur adipiscing Duis elementum solliciin is
-                                            yaugue euismods Nulla ullaorper. Lorem Ipsum is simply dummy text of the
-                                            printing and typesetting industry. Lorem Ipsum has been the industries
-                                            standard dummy text ever since the 1500s.
-                                        </p>
-                                        <p>
-                                            Do not look even slightly believable. If you are going to use a passage of
-                                            Lorem Ipsum, you need to be sure there is not anything embarrassing hidden
-                                            in the middle of text. All the Lorem Ipsum generators on the Internet tend
-                                            to repeat predefined chunks as necessary, making this the first true
-                                            generator on the Internet. It uses a dictionary of over 200 Latin words,
-                                            combined with a handful of model sentence structures, to generate Lorem
-                                            Ipsum which looks reasonable. The generated Lorem Ipsum is therefore always
-                                            free from repetition, injected humour.
-                                        </p>
-                                    </div>
-                                    <div
-                                        className='tab-pane animation-none fade'
-                                        id='info'
-                                        role='tabpanel'
-                                        aria-labelledby='info-tab'
+                                        Description
+                                    </button>
+                                </li>
+                                <li className='nav-item' role='presentation'>
+                                    <button
+                                        className={`nav-link ${activeTab === 'info' ? 'active' : ''}`}
+                                        onClick={() => handleTabChange('info')}
+                                        type='button'
+                                        role='tab'
+                                        aria-selected={activeTab === 'info'}
+                                        style={{
+                                            background: activeTab === 'info' ? '#22c55e' : '#1E1E1E',
+                                            color: '#ffffff',
+                                            border: 'none',
+                                            padding: '10px 20px',
+                                            borderRadius: '4px 4px 0 0'
+                                        }}
                                     >
-                                        <table className='table table-sm'>
+                                        Additional Info
+                                    </button>
+                                </li>
+                            </ul>
+
+                            <div className='tab-content'>
+                                <div
+                                    className={`tab-pane fade ${activeTab === 'description' ? 'show active' : ''}`}
+                                    role='tabpanel'
+                                    style={{ padding: '20px 10px', color: '#f0f0f0' }}
+                                >
+                                    <p>{product.description}</p>
+                                </div>
+                                <div
+                                    className={`tab-pane fade ${activeTab === 'info' ? 'show active' : ''}`}
+                                    role='tabpanel'
+                                    style={{ padding: '20px 10px' }}
+                                >
+                                    <div className='table-responsive'>
+                                        <table
+                                            className='table'
+                                            style={{
+                                                backgroundColor: '#ffffff',
+                                                borderRadius: '8px',
+                                                overflow: 'hidden',
+                                                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
+                                            }}
+                                        >
                                             <tbody>
                                                 <tr>
-                                                    <th scope='row'>General</th>
-                                                    <td>PS5 Digital Platform</td>
+                                                    <th
+                                                        scope='row'
+                                                        style={{
+                                                            width: '200px',
+                                                            color: '#666666',
+                                                            padding: '16px',
+                                                            fontWeight: '500',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        Product ID
+                                                    </th>
+                                                    <td
+                                                        style={{
+                                                            color: '#333333',
+                                                            padding: '16px',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        {product._id}
+                                                    </td>
+                                                </tr>
+                                                {product.shader_id && (
+                                                    <tr>
+                                                        <th
+                                                            scope='row'
+                                                            style={{
+                                                                color: '#666666',
+                                                                padding: '16px',
+                                                                fontWeight: '500',
+                                                                borderColor: '#f0f0f0'
+                                                            }}
+                                                        >
+                                                            Shader Type
+                                                        </th>
+                                                        <td
+                                                            style={{
+                                                                color: '#333333',
+                                                                padding: '16px',
+                                                                borderColor: '#f0f0f0'
+                                                            }}
+                                                        >
+                                                            {product.shader_id.shaderType}
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                                <tr>
+                                                    <th
+                                                        scope='row'
+                                                        style={{
+                                                            color: '#666666',
+                                                            padding: '16px',
+                                                            fontWeight: '500',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        Creator
+                                                    </th>
+                                                    <td
+                                                        style={{
+                                                            color: '#333333',
+                                                            padding: '16px',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        {product.creator_id.name}
+                                                    </td>
                                                 </tr>
                                                 <tr>
-                                                    <th scope='row'>Technical Information</th>
-                                                    <td>Qualcomm Snapdragon XR2</td>
-                                                </tr>
-                                                <tr>
-                                                    <th scope='row'>Display</th>
-                                                    <td>3664 x 1920</td>
-                                                </tr>
-                                                <tr>
-                                                    <th scope='row'>RAM & Storage</th>
-                                                    <td>8GB/256GB</td>
-                                                </tr>
-                                                <tr>
-                                                    <th scope='row'>Included</th>
-                                                    <td>PS5 VR Streaming Assistant</td>
+                                                    <th
+                                                        scope='row'
+                                                        style={{
+                                                            color: '#666666',
+                                                            padding: '16px',
+                                                            fontWeight: '500',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        Sales
+                                                    </th>
+                                                    <td
+                                                        style={{
+                                                            color: '#333333',
+                                                            padding: '16px',
+                                                            borderColor: '#f0f0f0'
+                                                        }}
+                                                    >
+                                                        {product.sales_count || 0}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
                                     </div>
-                                    <div
-                                        className='tab-pane animation-none fade'
-                                        id='reviews'
-                                        role='tabpanel'
-                                        aria-labelledby='reviews-tab'
-                                    >
-                                        <div className='product__desc-review'>
-                                            <div className='product__desc-review-title mb-15'>
-                                                <h5 className='title'>Customer Reviews (0)</h5>
-                                            </div>
-                                            <div className='left-rc'>
-                                                <p>No reviews yet</p>
-                                            </div>
-                                            <div className='right-rc'>
-                                                <Link href='#'>Write a review</Link>
-                                            </div>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div className='related__product-area'>
-                        {/* related products start */}
-                        <RelatedProducts />
-                        {/* related products end */}
-                    </div>
                 </div>
-            </section>
-        </>
+            </div>
+
+            <style jsx global>{`
+                .main-product-image.zoomed {
+                    transform: scale(1.05);
+                    transition: transform 0.3s ease;
+                }
+
+                .thumbnail-item {
+                    transition: all 0.2s ease;
+                }
+
+                .thumbnail-item:hover {
+                    transform: translateY(-3px);
+                    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+                }
+
+                .nav-link {
+                    transition: all 0.2s ease;
+                }
+
+                .nav-link:hover:not(.active) {
+                    background: #333333;
+                }
+            `}</style>
+        </section>
     )
 }
 

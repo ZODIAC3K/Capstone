@@ -2,19 +2,41 @@ import { Metadata } from 'next'
 import Wrapper from '@/layout/wrapper'
 import Header from '@/layout/header/header'
 import Footer from '@/layout/footer/footer'
-import BreadcrumbAreaThree from '../../components/breadcrumb/breadcrumb-area-3'
 import ShopDetailsArea from '../../components/shop-details/shop-details-area'
-import { all_products } from '@/data/product-data'
 
 export const metadata: Metadata = {
-    title: 'Shop Details Page'
+    title: 'Product Details'
 }
 
-type IParams = Promise<{ id: string }>
+type IParams = { id: string }
 
-export default async function ShopDetailsPage({ params }: { params: IParams }) {
-    const { id } = await params
-    const product = all_products.find((p) => Number(p.id) === Number(id))
+async function getProduct(id: string) {
+    try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/product?id=${id}`, {
+            cache: 'no-store'
+        })
+
+        if (!res.ok) {
+            throw new Error('Failed to fetch product')
+        }
+
+        const data = await res.json()
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to fetch product')
+        }
+
+        return data.data
+    } catch (error) {
+        console.error('Error fetching product:', error)
+        return null
+    }
+}
+
+export default async function ProductDetailsPage({ params }: { params: IParams }) {
+    const { id } = params
+    const product = await getProduct(id)
+
     return (
         <Wrapper>
             {/* header start */}
@@ -22,13 +44,16 @@ export default async function ShopDetailsPage({ params }: { params: IParams }) {
             {/* header end */}
 
             {/* main area start */}
-            <main className='main--area'>
-                {/* breadcrumb area start */}
-                <BreadcrumbAreaThree title='PRODUCT SINGLE' subtitle='PRODUCT SINGLE' />
-                {/* breadcrumb area end */}
-
+            <main className='main--area' style={{ paddingTop: '80px' }}>
                 {/* shop details area start */}
-                {product && <ShopDetailsArea product={product} />}
+                {product ? (
+                    <ShopDetailsArea product={product} />
+                ) : (
+                    <div className='container py-5 text-center'>
+                        <h2>Product not found</h2>
+                        <p>The product you're looking for doesn't exist or has been removed.</p>
+                    </div>
+                )}
                 {/* shop details area end */}
             </main>
             {/* main area end */}
