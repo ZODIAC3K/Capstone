@@ -405,7 +405,6 @@ export async function GET(request: NextRequest) {
                     model: 'Creator',
                     populate: {
                         path: 'userId',
-                        model: 'User',
                         populate: {
                             path: 'profile_picture',
                             model: 'ImageDetail'
@@ -465,7 +464,7 @@ export async function GET(request: NextRequest) {
                     model: 'Creator',
                     populate: {
                         path: 'userId',
-                        model: 'User',
+                        model: 'UserDetail',
                         populate: {
                             path: 'profile_picture',
                             model: 'ImageDetail'
