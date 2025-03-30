@@ -15,6 +15,7 @@ const userDetailSchema = new Schema({
             message: 'Invalid email address format'
         }
     },
+    isAdmin: { type: Boolean, default: false },
     password: {
         type: String,
         required: true,

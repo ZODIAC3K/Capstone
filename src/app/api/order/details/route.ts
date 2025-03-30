@@ -97,17 +97,28 @@ export async function GET(request: NextRequest) {
                 return NextResponse.json({ success: false, error: 'Order not found' }, { status: 404 })
             }
 
+            // Fetch user details to check admin status
+            const user = await UserModel.findById(auth.userId)
+            if (!user) {
+                return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+            }
+
+            // For college project - determine admin status by email
+            // In production, this would be a proper field in the user record
+            const isAdmin = user.email.includes('admin') || user.email.endsWith('admin.com')
+
             console.log('Order found in /api/order/details GET:', {
                 orderId,
                 orderUserId:
                     typeof order.user_id === 'object' ? order.user_id._id?.toString() : order.user_id?.toString(),
                 authUserId: auth.userId,
-                isAdmin: auth.isAdmin
+                email: user.email,
+                isAdmin: isAdmin
             })
 
             // Users can view their own orders, admins can view any order
             // For security, still check that users can only view their own orders
-            if (!auth.isAdmin) {
+            if (!isAdmin) {
                 const orderUserId =
                     typeof order.user_id === 'object' ? order.user_id._id?.toString() : order.user_id?.toString()
 

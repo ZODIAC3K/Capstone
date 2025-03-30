@@ -125,7 +125,7 @@ const TeamDetailsArea = ({
                                             fontFamily: '"Inter", sans-serif'
                                         }}
                                     >
-                                        — {creator || 'DXACE'}
+                                        {creator || 'DXACE'}
                                     </cite>
                                 </div>
                             )}

@@ -230,7 +230,7 @@ export default function OrderPage() {
             result = result.filter(
                 (order) =>
                     order._id.toLowerCase().includes(query) ||
-                    order.user_id.email.toLowerCase().includes(query) ||
+                    (typeof order.user_id === 'object' && order.user_id.email.toLowerCase().includes(query)) ||
                     order.status.toLowerCase().includes(query)
             )
         }
@@ -243,14 +243,17 @@ export default function OrderPage() {
         // Filter by payment status
         if (selectedPaymentStatus !== 'All Payment Statuses') {
             result = result.filter((order) => {
+                // Check if transaction_id is an object with status
+                const txStatus = typeof order.transaction_id === 'object' ? order.transaction_id.status : null
+
                 if (selectedPaymentStatus === 'Paid') {
-                    return order.transaction_id.status === 'successful'
+                    return txStatus === 'successful'
                 } else if (selectedPaymentStatus === 'Refunded') {
                     return order.status === 'refunded'
                 } else if (selectedPaymentStatus === 'Pending') {
-                    return order.transaction_id.status === 'pending'
+                    return txStatus === 'pending'
                 } else if (selectedPaymentStatus === 'Failed') {
-                    return order.transaction_id.status === 'failed'
+                    return txStatus === 'failed'
                 }
                 return true
             })
@@ -334,7 +337,7 @@ export default function OrderPage() {
                 setRefundLoading(true)
                 toast.info('Processing your refund request...')
 
-                // Send refund request to API
+                // Send refund request to the new API endpoint
                 const response = await fetch(`/api/order/refund`, {
                     method: 'POST',
                     headers: {
@@ -349,7 +352,7 @@ export default function OrderPage() {
                 const data = await response.json()
 
                 if (response.ok && data.success) {
-                    toast.success('Refund request submitted successfully!')
+                    toast.success('Refund processed successfully!')
 
                     // Update the order status locally
                     setOrders((prev) =>
@@ -357,8 +360,11 @@ export default function OrderPage() {
                             order._id === selectedOrder._id ? { ...order, status: 'refunded' } : order
                         )
                     )
+
+                    // Refresh orders to get the updated data
+                    fetchOrders()
                 } else {
-                    toast.error(data.error || 'Failed to submit refund request')
+                    toast.error(data.error || 'Failed to process refund')
                 }
             } catch (err) {
                 toast.error(err instanceof Error ? err.message : 'Error processing refund request')
@@ -452,7 +458,7 @@ export default function OrderPage() {
         // For expanded transaction
         if (isObjectReference(order.transaction_id)) {
             return (
-                order.status === 'delivered' &&
+                order.status.toLowerCase() === 'delivered' &&
                 order.transaction_id.status === 'successful' &&
                 new Date(order.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Within 30 days
             )
@@ -460,7 +466,8 @@ export default function OrderPage() {
 
         // If transaction is just an ID, assume it's successful if order is delivered
         return (
-            order.status === 'delivered' && new Date(order.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+            order.status.toLowerCase() === 'delivered' &&
+            new Date(order.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         )
     }
 
@@ -592,7 +599,7 @@ export default function OrderPage() {
     }
 
     return (
-        <>
+        <div style={{ paddingTop: '60px', minHeight: '100vh' }}>
             <Header />
             <div className='bg-dark text-white min-vh-100 p-4 pt-5 mt-5'>
                 <div className='container-fluid mt-4'>
@@ -1013,6 +1020,6 @@ export default function OrderPage() {
                     )}
                 </div>
             </div>
-        </>
+        </div>
     )
 }

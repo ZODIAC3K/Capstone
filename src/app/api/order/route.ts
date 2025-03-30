@@ -50,6 +50,21 @@ export async function POST(request: NextRequest) {
                 return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
             }
 
+            // Fetch user details to check admin status
+            const user = await UserModel.findById(auth.userId)
+            if (!user) {
+                return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+            }
+
+            // Use the isAdmin field from the user schema
+            const isAdmin = user.isAdmin === true
+
+            console.log('Authorization check:', {
+                userId: auth.userId,
+                email: user.email,
+                isAdmin: isAdmin
+            })
+
             const {
                 product_ordered,
                 size_ordered,
@@ -322,6 +337,21 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
         }
 
+        // Fetch user details to check admin status
+        const user = await UserModel.findById(auth.userId)
+        if (!user) {
+            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+        }
+
+        // Use the isAdmin field from the user schema
+        const isAdmin = user.isAdmin === true
+
+        console.log('Authorization check:', {
+            userId: auth.userId,
+            email: user.email,
+            isAdmin: isAdmin
+        })
+
         // Check if an order ID is provided in the URL params
         const url = new URL(request.url)
         const orderId = url.searchParams.get('id')
@@ -384,7 +414,8 @@ export async function GET(request: NextRequest) {
                         typeof order.user_id === 'object' ? order.user_id._id?.toString() : order.user_id?.toString(),
                     authUserId: auth.userId,
                     authUserIdType: typeof auth.userId,
-                    isAdmin: auth.isAdmin
+                    email: user.email,
+                    isAdmin: isAdmin
                 })
 
                 // Just print the raw user IDs to debug string comparison
@@ -433,8 +464,9 @@ export async function GET(request: NextRequest) {
 
         // If no ID is provided, return all orders for the user (or all orders for admin)
         try {
+            // Use the isAdmin variable we created earlier
             // Build query - admins can see all orders, regular users only see their own
-            const query = auth.isAdmin ? {} : { user_id: auth.userId }
+            const query = isAdmin ? {} : { user_id: auth.userId }
 
             // Count total orders for pagination
             const total = await orderModel.countDocuments(query)
@@ -545,8 +577,23 @@ export async function DELETE(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
         }
 
+        // Fetch user details to check admin status
+        const user = await UserModel.findById(auth.userId)
+        if (!user) {
+            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+        }
+
+        // Use the isAdmin field from the user schema
+        const isAdmin = user.isAdmin === true
+
+        console.log('Authorization check:', {
+            userId: auth.userId,
+            email: user.email,
+            isAdmin: isAdmin
+        })
+
         // Admin check - only admins can delete orders
-        if (!auth.isAdmin) {
+        if (!isAdmin) {
             return NextResponse.json({ success: false, error: 'Only admins can delete orders' }, { status: 403 })
         }
 
@@ -645,6 +692,21 @@ export async function PATCH(request: NextRequest) {
             return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
         }
 
+        // Fetch user details to check admin status
+        const user = await UserModel.findById(auth.userId)
+        if (!user) {
+            return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 })
+        }
+
+        // Use the isAdmin field from the user schema
+        const isAdmin = user.isAdmin === true
+
+        console.log('Authorization check:', {
+            userId: auth.userId,
+            email: user.email,
+            isAdmin: isAdmin
+        })
+
         // Get request body
         const { id, status, tracking_info } = await request.json()
 
@@ -666,7 +728,7 @@ export async function PATCH(request: NextRequest) {
 
         // Authorization check - only allow admins to update orders
         // Or users to update their own orders in specific limited cases
-        if (!auth.isAdmin) {
+        if (!isAdmin) {
             // Handle all possible representations of user_id
             const orderUserId =
                 typeof order.user_id === 'object' ? order.user_id._id?.toString() : order.user_id?.toString()
