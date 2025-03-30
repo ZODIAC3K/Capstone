@@ -63,7 +63,10 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
     }
 
     return (
-        <section className='product-details-section py-5' style={{ background: '#121212' }}>
+        <section
+            className='product-details-section py-16'
+            style={{ background: '#121212', marginTop: '40px', padding: '0px 0px 40px 40px' }}
+        >
             <div className='container'>
                 <div className='bg-black text-white p-4 mb-4 rounded-3' style={{ borderLeft: '4px solid #22c55e' }}>
                     <h1 className='product-title fs-2 mb-0'>{product.title}</h1>
