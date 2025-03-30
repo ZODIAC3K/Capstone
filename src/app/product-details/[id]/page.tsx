@@ -34,8 +34,7 @@ async function getProduct(id: string) {
 }
 
 export default async function ProductDetailsPage({ params }: { params: IParams }) {
-    const { id } = params
-    const product = await getProduct(id)
+    const product = await getProduct(params.id)
 
     return (
         <Wrapper>

@@ -7,9 +7,8 @@ import productModel from '@/models/productSchema'
 import { ImageModel } from '@/models/imageSchema'
 import UserModel from '@/models/userSchema'
 import { uploadObjectToS3 } from '@/utils/uploadObjectS3'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import OrderModel from '@/app/models/OrderModel'
+import OrderModel from '@/models/orderSchema'
+import { getUserFromToken } from '@/utils/auth'
 
 // POST: Create a new review
 export async function POST(request: NextRequest) {
@@ -24,25 +23,15 @@ export async function POST(request: NextRequest) {
             mongoose.connection.model('Order') ?? OrderModel
         ]).catch(() => {})
 
-        const session = await getServerSession(authOptions)
-        if (!session || !session.user) {
+        // Use custom JWT authentication
+        const user = await getUserFromToken(request)
+        if (!user) {
             return NextResponse.json(
                 {
                     success: false,
                     error: 'Please log in to submit a review'
                 },
                 { status: 401 }
-            )
-        }
-
-        const user = await UserModel.findOne({ email: session.user.email })
-        if (!user) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: 'User not found'
-                },
-                { status: 404 }
             )
         }
 
@@ -356,34 +345,34 @@ export async function PATCH(request: NextRequest) {
         await dbConnect()
         await Promise.all([
             ReviewModel.findOne().exec(),
-            AuthModel.findOne().exec(),
             productModel.findOne().exec(),
-            ImageModel.findOne().exec()
+            ImageModel.findOne().exec(),
+            UserModel.findOne().exec(),
+            mongoose.connection.model('Order') ?? OrderModel
         ]).catch(() => {})
 
         const session = await mongoose.startSession()
         session.startTransaction()
 
         try {
-            // Authentication check
-            const accessToken = request.cookies.get('accessToken')?.value
-            const refreshToken = request.cookies.get('refreshToken')?.value
-
-            if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
-            }
-
-            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
-
-            if (!auth) {
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+            // Use custom JWT authentication
+            const user = await getUserFromToken(request)
+            if (!user) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Please log in to update a review'
+                    },
+                    { status: 401 }
+                )
             }
 
             const formData = await request.formData()
 
             // Get review data
             const id = formData.get('id') as string
-            const message = formData.get('message') as string
+            const comment = formData.get('message') as string // Still accept 'message' for backward compatibility
+            const title = formData.get('title') as string
             const rating = formData.get('rating') ? Number(formData.get('rating')) : undefined
             const images = formData.getAll('images') as File[]
             const deleteImages = formData.get('deleteImages') as string
@@ -405,7 +394,7 @@ export async function PATCH(request: NextRequest) {
             }
 
             // Ensure user owns the review
-            if (review.user_id.toString() !== auth.userId.toString()) {
+            if (review.user_id.toString() !== user._id.toString()) {
                 await session.abortTransaction()
                 session.endSession()
                 return NextResponse.json(
@@ -457,7 +446,7 @@ export async function PATCH(request: NextRequest) {
                         const imageBuffer = Buffer.from(await image.arrayBuffer())
 
                         // Upload to S3
-                        const fileName = `review-image-${auth.userId}-${Date.now()}-${Math.random().toString(36).substring(7)}`
+                        const fileName = `review-image-${user._id}-${Date.now()}-${Math.random().toString(36).substring(7)}`
                         const uploadResult = await uploadObjectToS3(imageBuffer, fileName, image.type || 'image/jpeg')
 
                         // Check if upload was successful
@@ -477,7 +466,7 @@ export async function PATCH(request: NextRequest) {
                         const [imageDetail] = await ImageModel.create(
                             [
                                 {
-                                    user_id: auth.userId,
+                                    user_id: user._id,
                                     image_url: uploadResult.url,
                                     content_type: image.type || 'image/jpeg'
                                 }
@@ -491,7 +480,8 @@ export async function PATCH(request: NextRequest) {
 
             // Update the review
             const updateData: any = {}
-            if (message !== undefined) updateData.message = message
+            if (comment !== undefined) updateData.comment = comment
+            if (title !== undefined) updateData.title = title
             if (rating !== undefined) updateData.rating = rating
             if (newImageIds.length > 0) {
                 updateData.$push = { image_details_id: { $each: newImageIds } }
@@ -557,27 +547,26 @@ export async function DELETE(request: NextRequest) {
         await dbConnect()
         await Promise.all([
             ReviewModel.findOne().exec(),
-            AuthModel.findOne().exec(),
             productModel.findOne().exec(),
-            ImageModel.findOne().exec()
+            ImageModel.findOne().exec(),
+            UserModel.findOne().exec(),
+            mongoose.connection.model('Order') ?? OrderModel
         ]).catch(() => {})
 
         const session = await mongoose.startSession()
         session.startTransaction()
 
         try {
-            // Authentication check
-            const accessToken = request.cookies.get('accessToken')?.value
-            const refreshToken = request.cookies.get('refreshToken')?.value
-
-            if (!accessToken || !refreshToken) {
-                return NextResponse.json({ success: false, error: 'No access token provided' }, { status: 401 })
-            }
-
-            const auth = await AuthModel.findOne({ accessToken, refreshToken }, null, { session })
-
-            if (!auth) {
-                return NextResponse.json({ success: false, error: 'Invalid access token' }, { status: 401 })
+            // Use custom JWT authentication
+            const user = await getUserFromToken(request)
+            if (!user) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: 'Please log in to delete a review'
+                    },
+                    { status: 401 }
+                )
             }
 
             // Get review ID from query params
@@ -600,7 +589,7 @@ export async function DELETE(request: NextRequest) {
             }
 
             // Ensure user owns the review
-            if (review.user_id.toString() !== auth.userId.toString()) {
+            if (review.user_id.toString() !== user._id.toString()) {
                 await session.abortTransaction()
                 session.endSession()
                 return NextResponse.json(

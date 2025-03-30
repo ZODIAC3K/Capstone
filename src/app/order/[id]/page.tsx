@@ -63,7 +63,7 @@ interface Order {
     amount_paid: number
     address: string | Address
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
-    transcation_id: string | Transaction
+    transaction_id: string | Transaction
     createdAt: string
     updatedAt: string
 }
@@ -196,8 +196,8 @@ export default function OrderDetailPage() {
 
     // Get transaction status
     const getTransactionStatus = (order: Order) => {
-        if (isObjectReference(order.transcation_id)) {
-            return order.transcation_id.status
+        if (isObjectReference(order.transaction_id)) {
+            return order.transaction_id.status
         }
 
         // Default status based on order status if transaction is not expanded
@@ -505,12 +505,12 @@ export default function OrderDetailPage() {
                                     <div>Online Payment</div>
                                 </div>
 
-                                {isObjectReference(order.transcation_id) &&
-                                    order.transcation_id.razorpay_payment_id && (
+                                {isObjectReference(order.transaction_id) &&
+                                    order.transaction_id.razorpay_payment_id && (
                                         <div className='mb-3'>
                                             <div className='fw-bold mb-1'>Transaction ID</div>
                                             <div className='text-truncate'>
-                                                {order.transcation_id.razorpay_payment_id}
+                                                {order.transaction_id.razorpay_payment_id}
                                             </div>
                                         </div>
                                     )}

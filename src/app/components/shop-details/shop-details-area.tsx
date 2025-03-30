@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { toast } from 'react-toastify'
+import styles from './shop-details-area.module.css'
 
 interface Product {
     _id: string
@@ -78,6 +79,21 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
     const [reviewsPage, setReviewsPage] = useState(1)
     const [reviewsTotal, setReviewsTotal] = useState(0)
     const reviewsPerPage = 5
+
+    // Review form state
+    const [reviewTitle, setReviewTitle] = useState('')
+    const [reviewComment, setReviewComment] = useState('')
+    const [reviewRating, setReviewRating] = useState(0)
+    const [submittingReview, setSubmittingReview] = useState(false)
+    const [userCanReview, setUserCanReview] = useState(true)
+    const [reviewError, setReviewError] = useState('')
+    const [showReviewForm, setShowReviewForm] = useState(false)
+
+    // Additional state
+    const [currentUser, setCurrentUser] = useState<any>(null)
+    const [editingReview, setEditingReview] = useState<string | null>(null)
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null)
+    const [deletingReview, setDeletingReview] = useState(false)
 
     // Fetch reviews
     const fetchReviews = async (page = 1) => {
@@ -184,12 +200,221 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
         }
     }
 
+    // Submit review
+    const handleSubmitReview = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setReviewError('')
+
+        if (!reviewTitle.trim() || !reviewComment.trim()) {
+            setReviewError('Please fill in all required fields')
+            return
+        }
+
+        try {
+            setSubmittingReview(true)
+
+            const response = await fetch('/api/review', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    product_id: product._id,
+                    rating: reviewRating,
+                    title: reviewTitle,
+                    comment: reviewComment
+                })
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data.success) {
+                // Reset form
+                setReviewTitle('')
+                setReviewComment('')
+                setReviewRating(0)
+                setShowReviewForm(false)
+
+                // Refresh reviews
+                fetchReviews(1)
+
+                toast.success('Review submitted successfully!', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            } else {
+                setReviewError(data.error || 'Failed to submit review. Please try again.')
+
+                if (data.error === 'You have already reviewed this product') {
+                    setUserCanReview(false)
+                }
+            }
+        } catch (error) {
+            console.error('Error submitting review:', error)
+            setReviewError('An error occurred while submitting your review')
+        } finally {
+            setSubmittingReview(false)
+        }
+    }
+
+    // Check if user can review
+    const checkUserCanReview = async () => {
+        try {
+            const response = await fetch(`/api/review/check?productId=${product._id}`)
+
+            if (response.ok) {
+                const data = await response.json()
+                setUserCanReview(data.canReview)
+            } else {
+                setUserCanReview(false)
+            }
+        } catch (error) {
+            console.error('Error checking if user can review:', error)
+            setUserCanReview(false)
+        }
+    }
+
+    // Get current user
+    const fetchCurrentUser = async () => {
+        try {
+            const response = await fetch('/api/users/me')
+            if (response.ok) {
+                const data = await response.json()
+                if (data.success) {
+                    setCurrentUser(data.user)
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching current user:', error)
+        }
+    }
+
+    // Edit review - set form state with existing review data
+    const handleEditReview = (review: Review) => {
+        setEditingReview(review._id)
+        setReviewTitle(review.title)
+        setReviewComment(review.comment)
+        setReviewRating(review.rating)
+        setShowReviewForm(true)
+    }
+
+    // Cancel editing
+    const handleCancelEdit = () => {
+        setEditingReview(null)
+        setReviewTitle('')
+        setReviewComment('')
+        setReviewRating(0)
+        setShowReviewForm(false)
+    }
+
+    // Update review
+    const handleUpdateReview = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setReviewError('')
+
+        if (!reviewTitle.trim() || !reviewComment.trim()) {
+            setReviewError('Please fill in all required fields')
+            return
+        }
+
+        try {
+            setSubmittingReview(true)
+
+            // Use FormData for PATCH request
+            const formData = new FormData()
+            formData.append('id', editingReview as string)
+            formData.append('comment', reviewComment)
+            formData.append('title', reviewTitle)
+            formData.append('rating', reviewRating.toString())
+
+            const response = await fetch('/api/review', {
+                method: 'PATCH',
+                body: formData
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data.success) {
+                // Reset form
+                setReviewTitle('')
+                setReviewComment('')
+                setReviewRating(0)
+                setShowReviewForm(false)
+                setEditingReview(null)
+
+                // Refresh reviews
+                fetchReviews(1)
+
+                toast.success('Review updated successfully!', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            } else {
+                setReviewError(data.error || 'Failed to update review. Please try again.')
+            }
+        } catch (error) {
+            console.error('Error updating review:', error)
+            setReviewError('An error occurred while updating your review')
+        } finally {
+            setSubmittingReview(false)
+        }
+    }
+
+    // Delete review
+    const handleDeleteReview = async (reviewId: string) => {
+        try {
+            setDeletingReview(true)
+
+            const response = await fetch(`/api/review?id=${reviewId}`, {
+                method: 'DELETE'
+            })
+
+            const data = await response.json()
+
+            if (response.ok && data.success) {
+                setDeleteConfirmId(null)
+                // Refresh reviews
+                fetchReviews(1)
+
+                toast.success('Review deleted successfully!', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            } else {
+                toast.error(data.error || 'Failed to delete review', {
+                    position: 'top-right',
+                    autoClose: 3000
+                })
+            }
+        } catch (error) {
+            console.error('Error deleting review:', error)
+            toast.error('An error occurred while deleting your review', {
+                position: 'top-right',
+                autoClose: 3000
+            })
+        } finally {
+            setDeletingReview(false)
+        }
+    }
+
+    // Check if user can review when reviews tab is active
+    useEffect(() => {
+        if (activeTab === 'reviews') {
+            checkUserCanReview()
+        }
+    }, [activeTab])
+
     // Fetch reviews when tab changes to reviews
     useEffect(() => {
         if (activeTab === 'reviews' && reviews.length === 0) {
             fetchReviews()
         }
     }, [activeTab])
+
+    // Fetch current user on mount
+    useEffect(() => {
+        fetchCurrentUser()
+    }, [])
 
     return (
         <section
@@ -361,47 +586,26 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                             </div>
 
                             <div className='quantity-container d-flex align-items-center mt-4 mb-4'>
-                                <div className='d-flex align-items-center'>
+                                <div className={styles.quantityContainer}>
                                     <button
                                         type='button'
                                         onClick={() => handleQuantityChange('dec')}
-                                        className='btn btn-sm'
-                                        style={{
-                                            background: '#333333',
-                                            color: '#ffffff',
-                                            border: 'none',
-                                            width: '36px',
-                                            height: '36px'
-                                        }}
+                                        className={`btn btn-sm ${styles.quantityBtn}`}
                                     >
-                                        <i className='fas fa-minus'></i>
+                                        <i className={`fas fa-minus ${styles.minusIcon}`}></i>
                                     </button>
                                     <input
                                         type='text'
                                         value={quantity}
                                         readOnly
-                                        className='form-control text-center mx-2'
-                                        style={{
-                                            background: '#333333',
-                                            color: '#ffffff',
-                                            border: 'none',
-                                            width: '50px',
-                                            height: '36px'
-                                        }}
+                                        className={`form-control ${styles.quantityInput}`}
                                     />
                                     <button
                                         type='button'
                                         onClick={() => handleQuantityChange('inc')}
-                                        className='btn btn-sm'
-                                        style={{
-                                            background: '#333333',
-                                            color: '#ffffff',
-                                            border: 'none',
-                                            width: '36px',
-                                            height: '36px'
-                                        }}
+                                        className={`btn btn-sm ${styles.quantityBtn}`}
                                     >
-                                        <i className='fas fa-plus'></i>
+                                        <i className={`fas fa-plus ${styles.plusIcon}`}></i>
                                     </button>
                                 </div>
                                 <button
@@ -753,6 +957,132 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                         </div>
                                     </div>
 
+                                    {userCanReview && (
+                                        <div className='add-review-container mb-5'>
+                                            {!showReviewForm ? (
+                                                <div className='text-center'>
+                                                    <button
+                                                        className='btn btn-success btn-lg px-4 py-2'
+                                                        onClick={() => setShowReviewForm(true)}
+                                                    >
+                                                        <i className='fas fa-pencil-alt me-2'></i>
+                                                        Write a Review
+                                                    </button>
+                                                </div>
+                                            ) : (
+                                                <div className='review-form-container p-4 bg-black rounded-4'>
+                                                    <h4 className='mb-3'>
+                                                        {editingReview ? 'Edit Your Review' : 'Write Your Review'}
+                                                    </h4>
+
+                                                    {reviewError && (
+                                                        <div className='alert alert-danger' role='alert'>
+                                                            {reviewError}
+                                                        </div>
+                                                    )}
+
+                                                    <form
+                                                        onSubmit={
+                                                            editingReview ? handleUpdateReview : handleSubmitReview
+                                                        }
+                                                    >
+                                                        <div className='mb-3'>
+                                                            <label htmlFor='reviewRating' className='form-label'>
+                                                                Rating
+                                                            </label>
+                                                            <div className='rating-system'>
+                                                                {[5, 4, 3, 2, 1].map((star) => (
+                                                                    <span
+                                                                        key={star}
+                                                                        className={`star ${reviewRating >= star ? 'active' : ''}`}
+                                                                        onClick={() => setReviewRating(star)}
+                                                                    >
+                                                                        <i className='fas fa-star'></i>
+                                                                    </span>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className='mb-3'>
+                                                            <label htmlFor='reviewTitle' className='form-label'>
+                                                                Title*
+                                                            </label>
+                                                            <input
+                                                                type='text'
+                                                                className='form-control'
+                                                                id='reviewTitle'
+                                                                placeholder='Sum up your review in a short title'
+                                                                value={reviewTitle}
+                                                                onChange={(e) => setReviewTitle(e.target.value)}
+                                                                required
+                                                                style={{
+                                                                    background: '#333',
+                                                                    color: '#fff',
+                                                                    border: 'none'
+                                                                }}
+                                                            />
+                                                        </div>
+
+                                                        <div className='mb-3'>
+                                                            <label htmlFor='reviewComment' className='form-label'>
+                                                                Review*
+                                                            </label>
+                                                            <textarea
+                                                                className='form-control'
+                                                                id='reviewComment'
+                                                                rows={5}
+                                                                placeholder='What did you like or dislike about this product?'
+                                                                value={reviewComment}
+                                                                onChange={(e) => setReviewComment(e.target.value)}
+                                                                required
+                                                                style={{
+                                                                    background: '#333',
+                                                                    color: '#fff',
+                                                                    border: 'none'
+                                                                }}
+                                                            ></textarea>
+                                                        </div>
+
+                                                        <div className='d-flex justify-content-between'>
+                                                            <button
+                                                                type='button'
+                                                                className='btn btn-outline-light'
+                                                                onClick={
+                                                                    editingReview
+                                                                        ? handleCancelEdit
+                                                                        : () => setShowReviewForm(false)
+                                                                }
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                type='submit'
+                                                                className='btn btn-success'
+                                                                disabled={submittingReview}
+                                                            >
+                                                                {submittingReview ? (
+                                                                    <>
+                                                                        <i className='fas fa-spinner fa-spin me-2'></i>
+                                                                        {editingReview
+                                                                            ? 'Updating...'
+                                                                            : 'Submitting...'}
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <i className='fas fa-paper-plane me-2'></i>
+                                                                        {editingReview
+                                                                            ? 'Update Review'
+                                                                            : 'Submit Review'}
+                                                                    </>
+                                                                )}
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
                                     <div className='reviews-container'>
                                         <h4 className='mb-4'>Customer Reviews</h4>
 
@@ -814,21 +1144,81 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <div className='review-rating'>
-                                                                {[...Array(5)].map((_, i) => (
-                                                                    <i
-                                                                        key={i}
-                                                                        className='fas fa-star'
-                                                                        style={{
-                                                                            color:
-                                                                                i < review.rating
-                                                                                    ? '#22c55e'
-                                                                                    : '#444444',
-                                                                            fontSize: '14px',
-                                                                            marginLeft: '2px'
-                                                                        }}
-                                                                    ></i>
-                                                                ))}
+                                                            <div className='d-flex align-items-center'>
+                                                                <div className='review-rating me-3'>
+                                                                    {[...Array(5)].map((_, i) => (
+                                                                        <i
+                                                                            key={i}
+                                                                            className='fas fa-star'
+                                                                            style={{
+                                                                                color:
+                                                                                    i < review.rating
+                                                                                        ? '#22c55e'
+                                                                                        : '#444444',
+                                                                                fontSize: '14px',
+                                                                                marginLeft: '2px'
+                                                                            }}
+                                                                        ></i>
+                                                                    ))}
+                                                                </div>
+
+                                                                {/* Show edit/delete options for user's own reviews */}
+                                                                {currentUser &&
+                                                                    currentUser._id === review.user_id._id && (
+                                                                        <div className='review-actions'>
+                                                                            {deleteConfirmId === review._id ? (
+                                                                                <div className='delete-confirm d-flex'>
+                                                                                    <button
+                                                                                        className='btn btn-sm btn-danger me-2'
+                                                                                        onClick={() =>
+                                                                                            handleDeleteReview(
+                                                                                                review._id
+                                                                                            )
+                                                                                        }
+                                                                                        disabled={deletingReview}
+                                                                                    >
+                                                                                        {deletingReview ? (
+                                                                                            <i className='fas fa-spinner fa-spin'></i>
+                                                                                        ) : (
+                                                                                            'Confirm'
+                                                                                        )}
+                                                                                    </button>
+                                                                                    <button
+                                                                                        className='btn btn-sm btn-outline-light'
+                                                                                        onClick={() =>
+                                                                                            setDeleteConfirmId(null)
+                                                                                        }
+                                                                                        disabled={deletingReview}
+                                                                                    >
+                                                                                        Cancel
+                                                                                    </button>
+                                                                                </div>
+                                                                            ) : (
+                                                                                <div className='action-buttons'>
+                                                                                    <button
+                                                                                        className='btn btn-sm btn-outline-success me-2'
+                                                                                        onClick={() =>
+                                                                                            handleEditReview(review)
+                                                                                        }
+                                                                                        title='Edit review'
+                                                                                    >
+                                                                                        <i className='fas fa-edit'></i>
+                                                                                    </button>
+                                                                                    <button
+                                                                                        className='btn btn-sm btn-outline-danger'
+                                                                                        onClick={() =>
+                                                                                            setDeleteConfirmId(
+                                                                                                review._id
+                                                                                            )
+                                                                                        }
+                                                                                        title='Delete review'
+                                                                                    >
+                                                                                        <i className='fas fa-trash-alt'></i>
+                                                                                    </button>
+                                                                                </div>
+                                                                            )}
+                                                                        </div>
+                                                                    )}
                                                             </div>
                                                         </div>
 
@@ -907,6 +1297,60 @@ const ShopDetailsArea = ({ product }: { product: Product }) => {
 
                 .nav-link:hover:not(.active) {
                     background: #333333;
+                }
+
+                /* Simple reversed star rating system */
+                .rating-system {
+                    unicode-bidi: bidi-override;
+                    direction: rtl;
+                    text-align: left;
+                    display: inline-block;
+                }
+
+                .rating-system .star {
+                    display: inline-block;
+                    position: relative;
+                    font-size: 30px;
+                    padding: 0 5px;
+                    cursor: pointer;
+                    color: #444444;
+                }
+
+                .rating-system .star.active {
+                    color: #22c55e;
+                }
+
+                .rating-system .star:hover,
+                .rating-system .star:hover ~ .star {
+                    color: #22c55e;
+                }
+
+                .form-control::placeholder {
+                    color: #999999 !important;
+                    opacity: 0.8;
+                }
+
+                .review-actions .btn-outline-success:hover {
+                    background-color: #22c55e;
+                    color: white;
+                }
+
+                .review-actions .btn-outline-danger:hover {
+                    background-color: #dc3545;
+                    color: white;
+                }
+
+                .delete-confirm {
+                    animation: fadeIn 0.3s;
+                }
+
+                @keyframes fadeIn {
+                    from {
+                        opacity: 0;
+                    }
+                    to {
+                        opacity: 1;
+                    }
                 }
             `}</style>
         </section>

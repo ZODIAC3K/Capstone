@@ -1,35 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/app/lib/mongodb'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/app/api/auth/[...nextauth]/route'
+import dbConnect from '@/lib/mongodb'
 import mongoose from 'mongoose'
+import ReviewModel from '@/models/reviewSchema'
+import OrderModel from '@/models/orderSchema'
+import productModel from '@/models/productSchema'
+import { getUserFromToken } from '@/utils/auth'
 
-// Import or define models
-import UserModel from '@/app/models/UserModel'
-import ReviewModel from '@/app/models/ReviewModel'
-
+// GET: Check if a user can review a product
 export async function GET(request: NextRequest) {
     try {
-        // Connect to the database
-        await connectDB()
+        await dbConnect()
         await Promise.all([
-            mongoose.connection.model('User') ?? UserModel,
-            mongoose.connection.model('Review') ?? ReviewModel
-        ])
+            ReviewModel.findOne().exec(),
+            productModel.findOne().exec(),
+            mongoose.connection.model('Order') ?? OrderModel
+        ]).catch(() => {})
 
-        // Get the current logged-in user
-        const session = await getServerSession(authOptions)
-        if (!session || !session.user) {
+        // Get user from token - properly await the async function
+        const user = await getUserFromToken(request)
+        if (!user) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'Authentication required'
+                    canReview: false,
+                    error: 'User not authenticated'
                 },
                 { status: 401 }
             )
         }
 
-        // Get query parameters
+        // Get product ID from query params
         const searchParams = request.nextUrl.searchParams
         const productId = searchParams.get('productId')
 
@@ -37,49 +37,97 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(
                 {
                     success: false,
+                    canReview: false,
                     error: 'Product ID is required'
                 },
                 { status: 400 }
             )
         }
 
-        // Get the user
-        const user = await UserModel.findOne({ email: session.user.email })
-        if (!user) {
+        // Check if product exists
+        const product = await productModel.findById(productId)
+        if (!product) {
             return NextResponse.json(
                 {
                     success: false,
-                    error: 'User not found'
+                    canReview: false,
+                    error: 'Product not found'
                 },
                 { status: 404 }
             )
         }
 
-        // Check if the user has already reviewed this product
+        // Check if user has already reviewed this product
         const existingReview = await ReviewModel.findOne({
             user_id: user._id,
             product_id: productId
         })
 
-        return NextResponse.json({
-            success: true,
-            exists: !!existingReview,
-            review: existingReview
-                ? {
-                      _id: existingReview._id,
-                      rating: existingReview.rating,
-                      title: existingReview.title,
-                      comment: existingReview.comment,
-                      createdAt: existingReview.createdAt
-                  }
-                : null
+        if (existingReview) {
+            return NextResponse.json(
+                {
+                    success: true,
+                    canReview: false,
+                    reason: 'already_reviewed'
+                },
+                { status: 200 }
+            )
+        }
+
+        // Check if user has purchased this product (has a delivered order with this product)
+        const userOrders = await OrderModel.find({
+            user_id: user._id,
+            status: 'delivered'
         })
+
+        let hasPurchased = false
+
+        for (const order of userOrders) {
+            const productInOrder = order.product_ordered.some((item: any) => {
+                const itemProductId =
+                    typeof item === 'object' && item.product_id
+                        ? typeof item.product_id === 'object'
+                            ? item.product_id._id.toString()
+                            : item.product_id.toString()
+                        : item.toString()
+
+                return itemProductId === productId
+            })
+
+            if (productInOrder) {
+                hasPurchased = true
+                break
+            }
+        }
+
+        // For demonstration purposes, we'll allow anyone to review
+        // In a real application, you might want to uncomment the below code to enforce purchase verification
+        // if (!hasPurchased) {
+        //     return NextResponse.json(
+        //         {
+        //             success: true,
+        //             canReview: false,
+        //             reason: 'not_purchased'
+        //         },
+        //         { status: 200 }
+        //     )
+        // }
+
+        // User can review
+        return NextResponse.json(
+            {
+                success: true,
+                canReview: true
+            },
+            { status: 200 }
+        )
     } catch (error) {
-        console.error('Error checking review:', error)
+        console.error('Error checking if user can review:', error)
         return NextResponse.json(
             {
                 success: false,
-                error: 'Failed to check review status'
+                canReview: false,
+                error: 'Failed to check review eligibility'
             },
             { status: 500 }
         )

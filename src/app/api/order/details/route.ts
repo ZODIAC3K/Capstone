@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
                     model: 'Address'
                 },
                 {
-                    path: 'transcation_id',
+                    path: 'transaction_id',
                     model: 'Transaction'
                 },
                 {

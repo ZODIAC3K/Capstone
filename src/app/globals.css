@@ -1,0 +1,437 @@
+/* Fix for product title text overflow */
+.shop__item-content-top .title {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: 180px !important;
+}
+
+/* Make product titles in creator profile page truncate properly */
+.shop__item-content-top .title a,
+.product-name a,
+.productsGrid .productTitle {
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: block !important;
+}
+
+/* Fix for product cards on all pages */
+.productCard .productTitle {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
+/* Fix for category and creator name overflow */
+.shop__item-cat,
+.shop__item-cat a,
+.shop__item-creator,
+.shop__item-creator p,
+.shop__item-creator a {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    max-width: 100% !important;
+}
+
+/* Ensure all product card text content stays within bounds */
+.shop__item-content {
+    width: 100% !important;
+    overflow: hidden !important;
+}
+
+/* Additional fixes for creator profile page product cards */
+.productInfo .productCategory,
+.productInfo .productCreator {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    display: block !important;
+    max-width: 100% !important;
+}
+
+/* Additional fixes to ensure shop item layout */
+.shop__item {
+    position: relative !important;
+    overflow: hidden !important;
+    width: 300px !important;
+    height: auto !important;
+    min-height: 406px !important;
+    box-sizing: border-box !important;
+    padding: 19px !important;
+}
+
+/* Make sure shop items grid adapts to wider cards */
+.shop-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 20px !important;
+}
+
+.productsGrid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 20px !important;
+}
+
+/* Force shop item content to proper width */
+.shop__item-content {
+    padding: 0 10px 15px !important;
+    box-sizing: border-box !important;
+    min-height: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+/* Fix display of creator name with ellipsis */
+.shop__item-creator p {
+    display: flex !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.shop__item-creator p::before {
+    content: "by " !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    margin-right: 4px !important;
+}
+
+.shop__item-creator p a {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 20px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+
+/* More specific creator name fixes */
+.shop__item-content .shop__item-creator p,
+.productInfo .productCreator {
+    max-width: 100% !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+}
+
+/* Container width fixes to prevent overflow */
+@media (max-width: 767px) {
+    .shop__item-content-top .title {
+        max-width: 170px !important;
+    }
+
+    .shop__item-price {
+        font-size: 16px !important;
+        margin-left: 10px !important;
+    }
+
+    .shop__item {
+        width: 100% !important;
+    }
+}
+
+/* Fix creator text display */
+.shop__item-creator,
+.shop__item-creator p,
+.shop__item-creator a,
+.productCreator {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+/* Ensure shop item thumb has proper size */
+.shop__item-thumb {
+    height: auto !important;
+    min-height: 262px !important;
+}
+
+/* Remove overzealous global rule */
+a {
+    max-width: 100%;
+}
+
+/* Better spacing between elements in product cards */
+.shop__item-content-top {
+    margin-bottom: 8px !important;
+}
+
+.shop__item-cat {
+    margin-bottom: 8px !important;
+}
+
+/* Ensure price alignment and proper spacing */
+.shop__item-price {
+    margin-left: 12px !important;
+    flex-shrink: 0 !important;
+    text-align: right !important;
+}
+
+/* Better support for product image */
+.shop__item-thumb {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+.shop__item-thumb img {
+    max-width: 100% !important;
+    max-height: 230px !important;
+    object-fit: contain !important;
+}
+
+/* Main shop grid enhancements */
+.shop__items-wrapper {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)) !important;
+    gap: 20px !important;
+    width: 100% !important;
+}
+
+/* Fix creator profile page card layout */
+.shop__item-creator p {
+    margin: 0 !important;
+}
+
+/* Fix specific card styling issues */
+.productCard {
+    width: 300px !important;
+    max-width: 100% !important;
+    margin: 0 auto 35px !important;
+}
+
+@media (min-width: 1200px) {
+    .shop__item {
+        width: 300px !important;
+    }
+}
+
+/* Ensure consistent spacing in product card content area */
+.shop__item-content>* {
+    margin-bottom: 5px !important;
+}
+
+.shop__item-content>*:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Fix inconsistent card heights */
+.shop__item {
+    height: auto !important;
+    min-height: 406px !important;
+}
+
+/* Ensure proper spacing at the bottom of cards */
+.shop__item-content {
+    padding-bottom: 15px !important;
+}
+
+/* Fix width issues on small screens */
+@media (max-width: 320px) {
+    .shop__item {
+        width: 280px !important;
+    }
+
+    .shop__item-content-top .title {
+        max-width: 150px !important;
+    }
+}
+
+/* Fix for bottom creator text */
+.shop__item-creator {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-right: 5px !important;
+    box-sizing: border-box !important;
+    display: block !important;
+}
+
+/* Fix the "by" text and link structure */
+.shop__item-creator p {
+    width: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+}
+
+.shop__item-creator p a {
+    display: inline-block !important;
+    max-width: calc(100% - 20px) !important;
+    /* Account for the "by" text */
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+}
+
+/* Ensure product card content areas have enough space */
+.shop__item-content {
+    padding: 0 15px 15px !important;
+    min-height: 100px !important;
+}
+
+/* Further adjust spacing and layout on product page */
+.shop__items-wrapper .row .col-xl-4,
+.shop__items-wrapper .row .col-lg-4,
+.shop__items-wrapper .row .col-md-6 {
+    width: 300px !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+}
+
+/* Ensure category and creator name have proper margins */
+.shop__item-cat {
+    margin-bottom: 5px !important;
+}
+
+/* Make "by" text and creator name display correctly */
+.shop__item-creator p span,
+.shop__item-creator p strong {
+    flex-shrink: 0 !important;
+}
+
+/* Fix card rendering on shop component */
+.shop__items {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 20px !important;
+    justify-content: center !important;
+}
+
+.shop__items .col-xl-4,
+.shop__items .col-lg-4,
+.shop__items .col-md-6 {
+    padding: 0 !important;
+    width: 300px !important;
+    max-width: 100% !important;
+}
+
+/* Add stronger overrides for creator text */
+body .shop__item-creator p {
+    display: flex !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+}
+
+body .shop__item-creator p span,
+body .shop__item-creator p b {
+    display: inline-block !important;
+    margin-right: 4px !important;
+    flex-shrink: 0 !important;
+}
+
+body .shop__item-creator p a {
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+    max-width: calc(100% - 25px) !important;
+}
+
+/* Hide overflow specifically */
+body .shop__item-content {
+    overflow: hidden !important;
+}
+
+/* Force normal word wrapping on extremely long words */
+.shop__item * {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+}
+
+/* Add specific fixes for different product card variations */
+.productCard .productMeta,
+.productCard .productPrice,
+.productCard .productCategory {
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+}
+
+/* More containment for creator profile page */
+.ProductSection .productCard {
+    overflow: hidden !important;
+}
+
+/* Fix shop item with specific layout */
+.shop__item-line {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Fix creator text layout once and for all */
+.shop__item-creator {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+}
+
+/* Restructure the "by CREATOR" text for better control */
+.shop__item-creator p {
+    display: flex !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+}
+
+.shop__item-creator p::before {
+    content: "by " !important;
+    display: inline-block !important;
+    flex-shrink: 0 !important;
+    margin-right: 4px !important;
+}
+
+.shop__item-creator p a {
+    flex: 1 !important;
+    min-width: 0 !important;
+    max-width: calc(100% - 20px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    display: inline-block !important;
+}
+
+/* Fix product card padding and content height */
+.shop__item-content {
+    padding: 0 10px 15px !important;
+    box-sizing: border-box !important;
+    min-height: 100px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+}
+
+/* Ensure proper spacing in shop item */
+.shop__item-content>* {
+    margin-bottom: 8px !important;
+}
+
+.shop__item-content>*:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Fix spacing and grid for larger screens */
+@media (min-width: 992px) {
+    .shop__items {
+        justify-content: flex-start !important;
+    }
+
+    .shop__item {
+        width: 300px !important;
+        margin: 0 0 35px !important;
+    }
+}

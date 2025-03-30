@@ -17,6 +17,7 @@ import {
 } from 'react-icons/fa'
 import { toast } from 'react-toastify'
 import Link from 'next/link'
+import Header from '@/layout/header/header'
 
 interface OrderItem {
     product_id: {
@@ -74,7 +75,7 @@ interface Order {
     amount_paid: number
     address: string | Address
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
-    transcation_id: string | Transaction
+    transaction_id: string | Transaction
     createdAt: string
     updatedAt: string
 }
@@ -205,8 +206,8 @@ export default function OrderDetailsPage() {
 
     // Get transaction status (handle both expanded and ID-only references)
     const getTransactionStatus = (order: Order) => {
-        if (isObjectReference(order.transcation_id)) {
-            return order.transcation_id.status
+        if (isObjectReference(order.transaction_id)) {
+            return order.transaction_id.status
         }
 
         // Default status based on order status if transaction is not expanded
@@ -223,8 +224,8 @@ export default function OrderDetailsPage() {
 
     // Get Razorpay payment ID if available
     const getRazorpayId = (order: Order) => {
-        if (isObjectReference(order.transcation_id) && order.transcation_id.razorpay_payment_id) {
-            return order.transcation_id.razorpay_payment_id
+        if (isObjectReference(order.transaction_id) && order.transaction_id.razorpay_payment_id) {
+            return order.transaction_id.razorpay_payment_id
         }
         return null
     }
@@ -412,300 +413,307 @@ export default function OrderDetailsPage() {
     const address = getAddressDetails(order)
 
     return (
-        <div className='bg-dark text-white min-vh-100 p-4'>
-            <div className='container'>
-                {/* Header */}
-                <div className='d-flex align-items-center mb-4'>
-                    <button onClick={() => router.push('/order')} className='btn btn-outline-light me-3'>
-                        <FaArrowLeft />
-                    </button>
-                    <div>
-                        <h1 className='h3 m-0'>Order Details</h1>
-                        <p className='text-secondary m-0'>
-                            Order ID: <span className='text-white'>{order._id}</span>
-                        </p>
+        <>
+            <Header />
+            <div className='bg-dark text-white min-vh-100 p-4 pt-5 mt-5'>
+                <div className='container mt-4'>
+                    {/* Header */}
+                    <div className='d-flex align-items-center mb-4'>
+                        <button onClick={() => router.push('/order')} className='btn btn-outline-light me-3'>
+                            <FaArrowLeft />
+                        </button>
+                        <div>
+                            <h1 className='h3 m-0'>Order Details</h1>
+                            <p className='text-secondary m-0'>
+                                Order ID: <span className='text-white'>{order._id}</span>
+                            </p>
+                        </div>
+                        <div className='ms-auto'>
+                            <span className={`badge ${getStatusBadgeClass(order.status)}`}>
+                                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                            </span>
+                        </div>
                     </div>
-                    <div className='ms-auto'>
-                        <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                        </span>
-                    </div>
-                </div>
 
-                {/* Order Info Cards */}
-                <div className='row mb-4'>
-                    {/* Order Summary */}
-                    <div className='col-md-4 mb-3'>
-                        <div className='card bg-dark border-secondary h-100'>
-                            <div className='card-header bg-dark border-secondary'>
-                                <h5 className='card-title mb-0 text-white'>Order Summary</h5>
-                            </div>
-                            <div className='card-body'>
-                                <div className='mb-3'>
-                                    <div className='fw-bold text-white-50 mb-1'>Order Date</div>
-                                    <div className='text-white'>
-                                        {order && order.createdAt && formatDate(order.createdAt)}
-                                    </div>
+                    {/* Order Info Cards */}
+                    <div className='row mb-4'>
+                        {/* Order Summary */}
+                        <div className='col-md-4 mb-3'>
+                            <div className='card bg-dark border-secondary h-100'>
+                                <div className='card-header bg-dark border-secondary'>
+                                    <h5 className='card-title mb-0 text-white'>Order Summary</h5>
                                 </div>
-                                <div className='mb-3'>
-                                    <div className='fw-bold text-white-50 mb-1'>Status</div>
-                                    <div>
-                                        <span className={`badge ${getStatusBadgeClass(order?.status || 'pending')}`}>
-                                            {order?.status || 'Pending'}
-                                        </span>
+                                <div className='card-body'>
+                                    <div className='mb-3'>
+                                        <div className='fw-bold text-white-50 mb-1'>Order Date</div>
+                                        <div className='text-white'>
+                                            {order && order.createdAt && formatDate(order.createdAt)}
+                                        </div>
                                     </div>
-                                </div>
-
-                                <div className='d-flex align-items-center'>
-                                    <div className='bg-secondary p-2 rounded me-3'>
-                                        <FaMoneyBillWave />
-                                    </div>
-                                    <div>
-                                        <div className='text-white-50 small'>Payment Status</div>
+                                    <div className='mb-3'>
+                                        <div className='fw-bold text-white-50 mb-1'>Status</div>
                                         <div>
                                             <span
-                                                className={`badge ${getPaymentStatusBadgeClass(getTransactionStatus(order))}`}
+                                                className={`badge ${getStatusBadgeClass(order?.status || 'pending')}`}
                                             >
-                                                {getTransactionStatus(order).charAt(0).toUpperCase() +
-                                                    getTransactionStatus(order).slice(1)}
+                                                {order?.status || 'Pending'}
                                             </span>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    {/* Shipping Address */}
-                    <div className='col-md-4 mb-3'>
-                        <div className='card bg-dark border-secondary h-100'>
-                            <div className='card-header bg-dark border-secondary'>
-                                <h5 className='card-title mb-0 text-white'>Shipping Address</h5>
-                            </div>
-                            <div className='card-body text-white'>
-                                <div className='d-flex align-items-start mb-3'>
-                                    <div className='bg-secondary p-2 rounded me-3 mt-1'>
-                                        <FaMapMarkerAlt />
-                                    </div>
-                                    <div>
-                                        <div>{address.line1}</div>
-                                        {address.line2 && <div>{address.line2}</div>}
-                                        {address.city && (
+                                    <div className='d-flex align-items-center'>
+                                        <div className='bg-secondary p-2 rounded me-3'>
+                                            <FaMoneyBillWave />
+                                        </div>
+                                        <div>
+                                            <div className='text-white-50 small'>Payment Status</div>
                                             <div>
-                                                {address.city}, {address.state} {address.pincode}
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Payment Details */}
-                    <div className='col-md-4 mb-3'>
-                        <div className='card bg-dark border-secondary h-100'>
-                            <div className='card-header bg-dark border-secondary'>
-                                <h5 className='card-title mb-0 text-white'>Payment Details</h5>
-                            </div>
-                            <div className='card-body'>
-                                <div className='col-md-6 mb-3'>
-                                    <div className='text-end'>
-                                        <div className='d-flex justify-content-between mb-2'>
-                                            <span className='text-white-50'>Subtotal:</span>
-                                            <span className='text-white fw-bold'>
-                                                {currency.symbol}
-                                                {order?.total_amount?.toFixed(2) || '0.00'}
-                                            </span>
-                                        </div>
-                                        {order?.total_amount !== order?.amount_paid && (
-                                            <div className='d-flex justify-content-between mb-2'>
-                                                <span className='text-white-50'>Discount:</span>
-                                                <span className='text-success'>
-                                                    -{currency.symbol}
-                                                    {(order?.total_amount - order?.amount_paid).toFixed(2)}
+                                                <span
+                                                    className={`badge ${getPaymentStatusBadgeClass(getTransactionStatus(order))}`}
+                                                >
+                                                    {getTransactionStatus(order).charAt(0).toUpperCase() +
+                                                        getTransactionStatus(order).slice(1)}
                                                 </span>
                                             </div>
-                                        )}
-                                        <div className='d-flex justify-content-between'>
-                                            <span className='fw-bold text-white-50'>Total:</span>
-                                            <span className='fw-bold text-white'>
-                                                {currency.symbol}
-                                                {order?.amount_paid?.toFixed(2) || '0.00'}
-                                            </span>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
+                        </div>
 
-                                {getRazorpayId(order) && (
-                                    <div className='mt-3 pt-2 border-top border-secondary'>
-                                        <div className='text-white-50 small'>Transaction ID</div>
-                                        <div className='text-truncate'>{getRazorpayId(order)}</div>
+                        {/* Shipping Address */}
+                        <div className='col-md-4 mb-3'>
+                            <div className='card bg-dark border-secondary h-100'>
+                                <div className='card-header bg-dark border-secondary'>
+                                    <h5 className='card-title mb-0 text-white'>Shipping Address</h5>
+                                </div>
+                                <div className='card-body text-white'>
+                                    <div className='d-flex align-items-start mb-3'>
+                                        <div className='bg-secondary p-2 rounded me-3 mt-1'>
+                                            <FaMapMarkerAlt />
+                                        </div>
+                                        <div>
+                                            <div>{address.line1}</div>
+                                            {address.line2 && <div>{address.line2}</div>}
+                                            {address.city && (
+                                                <div>
+                                                    {address.city}, {address.state} {address.pincode}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
-                                )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                {/* Order Items */}
-                <div className='card bg-dark border-secondary mb-4'>
-                    <div className='card-header bg-dark border-secondary'>
-                        <h5 className='card-title mb-0 text-white'>Order Items</h5>
-                    </div>
-                    <div className='card-body p-0'>
-                        <div className='table-responsive'>
-                            <table className='table table-dark mb-0'>
-                                <thead className='border-bottom border-secondary'>
-                                    <tr>
-                                        <th className='text-white-50'>Product</th>
-                                        <th className='text-white-50'>Size</th>
-                                        <th className='text-white-50'>Quantity</th>
-                                        <th className='text-white-50'>Price</th>
-                                        <th className='text-white-50 text-end'>Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {order?.product_ordered?.map((_, index) => {
-                                        const item = getProductDetails(order, index)
-                                        return (
-                                            <tr key={index} className='border-bottom border-secondary'>
-                                                <td className='text-white'>{item.title}</td>
-                                                <td className='text-white'>{item.size}</td>
-                                                <td className='text-white'>{item.quantity}</td>
-                                                <td className='text-white'>
+                        {/* Payment Details */}
+                        <div className='col-md-4 mb-3'>
+                            <div className='card bg-dark border-secondary h-100'>
+                                <div className='card-header bg-dark border-secondary'>
+                                    <h5 className='card-title mb-0 text-white'>Payment Details</h5>
+                                </div>
+                                <div className='card-body'>
+                                    <div className='col-md-6 mb-3'>
+                                        <div className='text-end'>
+                                            <div className='d-flex justify-content-between mb-2'>
+                                                <span className='text-white-50'>Subtotal:</span>
+                                                <span className='text-white fw-bold'>
                                                     {currency.symbol}
-                                                    {item.price.toFixed(2)}
-                                                </td>
-                                                <td className='text-white text-end'>
+                                                    {order?.total_amount?.toFixed(2) || '0.00'}
+                                                </span>
+                                            </div>
+                                            {order?.total_amount !== order?.amount_paid && (
+                                                <div className='d-flex justify-content-between mb-2'>
+                                                    <span className='text-white-50'>Discount:</span>
+                                                    <span className='text-success'>
+                                                        -{currency.symbol}
+                                                        {(order?.total_amount - order?.amount_paid).toFixed(2)}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            <div className='d-flex justify-content-between'>
+                                                <span className='fw-bold text-white-50'>Total:</span>
+                                                <span className='fw-bold text-white'>
                                                     {currency.symbol}
-                                                    {(item.price * item.quantity).toFixed(2)}
-                                                </td>
-                                            </tr>
-                                        )
-                                    })}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+                                                    {order?.amount_paid?.toFixed(2) || '0.00'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                {/* Order Timeline */}
-                <div className='card bg-dark border-secondary mb-4'>
-                    <div className='card-header bg-dark border-secondary'>
-                        <h5 className='card-title mb-0 text-white'>Order Timeline</h5>
-                    </div>
-                    <div className='card-body'>
-                        <div className='order-timeline'>
-                            <div className={`timeline-item ${order?.status === 'pending' ? 'active' : 'completed'}`}>
-                                <div className='timeline-marker'></div>
-                                <div className='timeline-content'>
-                                    <h5 className='text-white'>Order Placed</h5>
-                                    <p className='text-white-50'>
-                                        {order && order.createdAt && formatDate(order.createdAt)}
-                                    </p>
-                                </div>
-                            </div>
-                            <div className={`timeline-item ${getTimelineItemClass(order?.status, 'processing')}`}>
-                                <div className='timeline-marker'></div>
-                                <div className='timeline-content'>
-                                    <h5 className='text-white'>Processing</h5>
-                                    <p className='text-white-50'>Order is being prepared</p>
-                                </div>
-                            </div>
-                            <div className={`timeline-item ${getTimelineItemClass(order?.status, 'shipped')}`}>
-                                <div className='timeline-marker'></div>
-                                <div className='timeline-content'>
-                                    <h5 className='text-white'>Shipped</h5>
-                                    <p className='text-white-50'>Order has been shipped</p>
-                                </div>
-                            </div>
-                            <div className={`timeline-item ${getTimelineItemClass(order?.status, 'delivered')}`}>
-                                <div className='timeline-marker'></div>
-                                <div className='timeline-content'>
-                                    <h5 className='text-white'>Delivered</h5>
-                                    <p className='text-white-50'>Order has been delivered</p>
+                                    {getRazorpayId(order) && (
+                                        <div className='mt-3 pt-2 border-top border-secondary'>
+                                            <div className='text-white-50 small'>Transaction ID</div>
+                                            <div className='text-truncate'>{getRazorpayId(order)}</div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
 
-                {/* Action buttons */}
-                <div className='d-flex justify-content-between'>
-                    <Link href='/order' className='btn btn-outline-light'>
-                        Back to Orders
-                    </Link>
+                    {/* Order Items */}
+                    <div className='card bg-dark border-secondary mb-4'>
+                        <div className='card-header bg-dark border-secondary'>
+                            <h5 className='card-title mb-0 text-white'>Order Items</h5>
+                        </div>
+                        <div className='card-body p-0'>
+                            <div className='table-responsive'>
+                                <table className='table table-dark mb-0'>
+                                    <thead className='border-bottom border-secondary'>
+                                        <tr>
+                                            <th className='text-white-50'>Product</th>
+                                            <th className='text-white-50'>Size</th>
+                                            <th className='text-white-50'>Quantity</th>
+                                            <th className='text-white-50'>Price</th>
+                                            <th className='text-white-50 text-end'>Total</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {order?.product_ordered?.map((_, index) => {
+                                            const item = getProductDetails(order, index)
+                                            return (
+                                                <tr key={index} className='border-bottom border-secondary'>
+                                                    <td className='text-white'>{item.title}</td>
+                                                    <td className='text-white'>{item.size}</td>
+                                                    <td className='text-white'>{item.quantity}</td>
+                                                    <td className='text-white'>
+                                                        {currency.symbol}
+                                                        {item.price.toFixed(2)}
+                                                    </td>
+                                                    <td className='text-white text-end'>
+                                                        {currency.symbol}
+                                                        {(item.price * item.quantity).toFixed(2)}
+                                                    </td>
+                                                </tr>
+                                            )
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div>
-                        {canCancelOrder(order) && (
-                            <Link href={`/order?action=cancel&id=${order._id}`} className='btn btn-danger me-2'>
-                                Cancel Order
-                            </Link>
-                        )}
+                    {/* Order Timeline */}
+                    <div className='card bg-dark border-secondary mb-4'>
+                        <div className='card-header bg-dark border-secondary'>
+                            <h5 className='card-title mb-0 text-white'>Order Timeline</h5>
+                        </div>
+                        <div className='card-body'>
+                            <div className='order-timeline'>
+                                <div
+                                    className={`timeline-item ${order?.status === 'pending' ? 'active' : 'completed'}`}
+                                >
+                                    <div className='timeline-marker'></div>
+                                    <div className='timeline-content'>
+                                        <h5 className='text-white'>Order Placed</h5>
+                                        <p className='text-white-50'>
+                                            {order && order.createdAt && formatDate(order.createdAt)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className={`timeline-item ${getTimelineItemClass(order?.status, 'processing')}`}>
+                                    <div className='timeline-marker'></div>
+                                    <div className='timeline-content'>
+                                        <h5 className='text-white'>Processing</h5>
+                                        <p className='text-white-50'>Order is being prepared</p>
+                                    </div>
+                                </div>
+                                <div className={`timeline-item ${getTimelineItemClass(order?.status, 'shipped')}`}>
+                                    <div className='timeline-marker'></div>
+                                    <div className='timeline-content'>
+                                        <h5 className='text-white'>Shipped</h5>
+                                        <p className='text-white-50'>Order has been shipped</p>
+                                    </div>
+                                </div>
+                                <div className={`timeline-item ${getTimelineItemClass(order?.status, 'delivered')}`}>
+                                    <div className='timeline-marker'></div>
+                                    <div className='timeline-content'>
+                                        <h5 className='text-white'>Delivered</h5>
+                                        <p className='text-white-50'>Order has been delivered</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                        {canRequestRefund(order) && (
-                            <Link href={`/order?action=refund&id=${order._id}`} className='btn btn-warning me-2'>
-                                Request Refund
-                            </Link>
-                        )}
+                    {/* Action buttons */}
+                    <div className='d-flex justify-content-between'>
+                        <Link href='/order' className='btn btn-outline-light'>
+                            Back to Orders
+                        </Link>
 
-                        {order.status === 'delivered' && (
-                            <Link href={`/review?orderId=${order._id}`} className='btn btn-success'>
-                                Write a Review
-                            </Link>
-                        )}
+                        <div>
+                            {canCancelOrder(order) && (
+                                <Link href={`/order?action=cancel&id=${order._id}`} className='btn btn-danger me-2'>
+                                    Cancel Order
+                                </Link>
+                            )}
+
+                            {canRequestRefund(order) && (
+                                <Link href={`/order?action=refund&id=${order._id}`} className='btn btn-warning me-2'>
+                                    Request Refund
+                                </Link>
+                            )}
+
+                            {order.status === 'delivered' && (
+                                <Link href={`/review?orderId=${order._id}`} className='btn btn-success'>
+                                    Write a Review
+                                </Link>
+                            )}
+                        </div>
                     </div>
                 </div>
+
+                {/* CSS for timeline */}
+                <style jsx>{`
+                    .order-timeline {
+                        position: relative;
+                        padding-left: 30px;
+                    }
+
+                    .order-timeline::before {
+                        content: '';
+                        position: absolute;
+                        top: 0;
+                        bottom: 0;
+                        left: 15px;
+                        width: 2px;
+                        background-color: #444;
+                    }
+
+                    .timeline-item {
+                        position: relative;
+                        margin-bottom: 20px;
+                    }
+
+                    .timeline-marker {
+                        position: absolute;
+                        left: -30px;
+                        width: 30px;
+                        height: 30px;
+                        border-radius: 50%;
+                        background-color: #444;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        z-index: 1;
+                    }
+
+                    .timeline-content {
+                        padding-left: 10px;
+                    }
+
+                    .timeline-item.completed .timeline-marker {
+                        background-color: #22c55e;
+                    }
+
+                    .timeline-item.active .timeline-marker {
+                        background-color: #0d6efd;
+                        box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
+                    }
+                `}</style>
             </div>
-
-            {/* CSS for timeline */}
-            <style jsx>{`
-                .order-timeline {
-                    position: relative;
-                    padding-left: 30px;
-                }
-
-                .order-timeline::before {
-                    content: '';
-                    position: absolute;
-                    top: 0;
-                    bottom: 0;
-                    left: 15px;
-                    width: 2px;
-                    background-color: #444;
-                }
-
-                .timeline-item {
-                    position: relative;
-                    margin-bottom: 20px;
-                }
-
-                .timeline-marker {
-                    position: absolute;
-                    left: -30px;
-                    width: 30px;
-                    height: 30px;
-                    border-radius: 50%;
-                    background-color: #444;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    z-index: 1;
-                }
-
-                .timeline-content {
-                    padding-left: 10px;
-                }
-
-                .timeline-item.completed .timeline-marker {
-                    background-color: #22c55e;
-                }
-
-                .timeline-item.active .timeline-marker {
-                    background-color: #0d6efd;
-                    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.25);
-                }
-            `}</style>
-        </div>
+        </>
     )
 }

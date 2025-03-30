@@ -124,7 +124,7 @@ const CreateCreatorForm = ({
             // Set method based on whether we're creating or updating
             const method = existingData ? 'PUT' : 'POST'
 
-            const response = await fetch('http://localhost:3000/api/creator', {
+            const response = await fetch('/api/creator', {
                 method,
                 body: submitFormData,
                 credentials: 'include'
@@ -319,25 +319,52 @@ const AddProductComponent = ({
         const fetchCategories = async () => {
             setIsLoading(true)
             try {
-                const response = await fetch('http://localhost:3000/api/category', {
+                console.log('Fetching categories...')
+                const response = await fetch('/api/category', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    signal: AbortSignal.timeout(5000)
+                    credentials: 'include'
                 })
 
+                console.log('Category API response status:', response.status)
+
                 if (!response.ok) {
-                    console.warn(`API returned status: ${response.status}`)
-                    throw new Error(`API error: ${response.status}`)
+                    console.warn(`Category API returned status: ${response.status}`)
+                    const errorText = await response.text()
+                    console.error('Error response:', errorText)
+                    throw new Error(`API error: ${response.status} - ${errorText}`)
                 }
 
                 const data = await response.json()
-                setCategories(data.categories || [])
+                console.log('Category API response data:', data)
+
+                if (data.success && Array.isArray(data.data)) {
+                    console.log('Setting categories from API response:', data.data)
+                    setCategories(data.data)
+                } else {
+                    console.warn('Invalid category data structure, using fallback:', data)
+                    // Fall back to hardcoded categories
+                    setCategories([
+                        {
+                            _id: '67e6768061f43a6bd033d39f',
+                            category_name: 'T-Shirt'
+                        },
+                        {
+                            _id: '67e676aa61f43a6bd033d3a5',
+                            category_name: 'Shirt'
+                        },
+                        {
+                            _id: 'dev-sweater-id',
+                            category_name: 'Sweater'
+                        }
+                    ])
+                }
             } catch (err: any) {
                 console.error('Error fetching categories:', err)
                 setError(err.message)
-
+                console.warn('Using fallback categories due to error')
                 // Fall back to hardcoded categories for development
                 setCategories([
                     {
@@ -360,21 +387,45 @@ const AddProductComponent = ({
 
         const fetchModels = async () => {
             try {
-                const response = await fetch('http://localhost:3000/api/object', {
+                console.log('Fetching models...')
+                const response = await fetch('/api/object', {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    signal: AbortSignal.timeout(5000)
+                    credentials: 'include'
                 })
 
+                console.log('Model API response status:', response.status)
+
                 if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`)
+                    const errorText = await response.text()
+                    console.error('Error response:', errorText)
+                    throw new Error(`API error: ${response.status} - ${errorText}`)
                 }
 
                 const data = await response.json()
+                console.log('Model API response data:', data)
+
                 if (data.success && Array.isArray(data.data)) {
+                    console.log('Setting models from API response:', data.data)
                     setModels(data.data)
+                } else {
+                    console.warn('Invalid model data structure, using fallback:', data)
+                    setModels([
+                        {
+                            _id: '67e34283d001c2fc0ec7110c',
+                            name: 'shirt'
+                        },
+                        {
+                            _id: '67e34343d001c2fc0ec71112',
+                            name: 'shirt2'
+                        },
+                        {
+                            _id: '67e34386d001c2fc0ec71114',
+                            name: 'sweater'
+                        }
+                    ])
                 }
             } catch (err) {
                 console.error('Error fetching models:', err)
@@ -502,7 +553,7 @@ const AddProductComponent = ({
             // Send data to the API
             // Use PATCH for updating, POST for creating new
             const method = product ? 'PATCH' : 'POST'
-            const url = 'http://localhost:3000/api/product'
+            const url = '/api/product'
 
             const response = await fetch(url, {
                 method,
@@ -773,13 +824,13 @@ export default function CreatorProfilePage() {
         }
     }, [])
 
-	useEffect(() => {
+    useEffect(() => {
         const fetchCreatorProfile = async () => {
             try {
                 setLoading(true)
                 console.log('Fetching creator profile...')
                 // Try with explicit method and full URL
-                const response = await fetch('http://localhost:3000/api/creator', {
+                const response = await fetch('/api/creator', {
                     method: 'GET',
                     credentials: 'include'
                 })
@@ -958,17 +1009,17 @@ export default function CreatorProfilePage() {
 
     const coverImageUrl = creator.creatorCoverImage ? getImageUrl(creator.creatorCoverImage) : '/placeholder-cover.png'
 
-	return (
-		<Wrapper>
-			{/* header start */}
-			<Header />
-			{/* header end */}
+    return (
+        <Wrapper>
+            {/* header start */}
+            <Header />
+            {/* header end */}
 
-			{/* main area start */}
+            {/* main area start */}
             <main className='main--area'>
-				{/* breadcrumb area start */}
+                {/* breadcrumb area start */}
                 <div className={styles.breadcrumbWrapper}>
-				<BreadcrumbArea
+                    <BreadcrumbArea
                         title={creator.name || 'Creator Profile'}
                         subtitle='CREATOR PROFILE'
                         brd_img={profileImageUrl}
@@ -979,7 +1030,7 @@ export default function CreatorProfilePage() {
                         imageClassName={styles.profileImageStyle}
                     />
                 </div>
-				{/* breadcrumb area end */}
+                {/* breadcrumb area end */}
 
                 {/* team details area - Biography Section */}
                 <div className={styles.teamDetailsWrapper}>
@@ -1074,14 +1125,14 @@ export default function CreatorProfilePage() {
                         </div>
                     )}
                 </div>
-			</main>
-			{/* main area end */}
+            </main>
+            {/* main area end */}
 
-			{/* footer start */}
+            {/* footer start */}
             <div className={styles.footerSpacing}>
                 <Footer className={styles.customFooter} />
             </div>
-			{/* footer end */}
-		</Wrapper>
+            {/* footer end */}
+        </Wrapper>
     )
 }

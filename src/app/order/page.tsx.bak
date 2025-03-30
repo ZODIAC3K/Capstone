@@ -63,14 +63,14 @@ interface Order {
     amount_paid: number
     address: string | Address
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded'
-    transaction_id: string | Transaction
+    transcation_id: string | Transaction
     createdAt: string
     updatedAt: string
 }
 
 export default function OrderPage() {
-    // Currency configuration
-    const [currency, setCurrency] = useState({
+	// Currency configuration
+	const [currency, setCurrency] = useState({
         symbol: '₹',
         code: 'INR'
     })
@@ -152,7 +152,7 @@ export default function OrderPage() {
                             amount_paid: order.amount_paid,
                             address: order.address,
                             status: order.status,
-                            transaction_id: order.transaction_id,
+                            transcation_id: order.transcation_id,
                             createdAt: order.createdAt,
                             updatedAt: order.updatedAt
                         }
@@ -215,8 +215,8 @@ export default function OrderPage() {
         fetchOrders()
     }, [])
 
-    // Filter orders based on search query and selected filters
-    useEffect(() => {
+	// Filter orders based on search query and selected filters
+	useEffect(() => {
         if (!orders.length) {
             setFilteredOrders([])
             return
@@ -224,11 +224,11 @@ export default function OrderPage() {
 
         let result = [...orders]
 
-        // Filter by search query
-        if (searchQuery) {
+		// Filter by search query
+		if (searchQuery) {
             const query = searchQuery.toLowerCase()
-            result = result.filter(
-                (order) =>
+			result = result.filter(
+				(order) =>
                     order._id.toLowerCase().includes(query) ||
                     order.user_id.email.toLowerCase().includes(query) ||
                     order.status.toLowerCase().includes(query)
@@ -238,19 +238,19 @@ export default function OrderPage() {
         // Filter by order status
         if (selectedStatus !== 'All Statuses') {
             result = result.filter((order) => order.status.toLowerCase() === selectedStatus.toLowerCase())
-        }
+		}
 
-        // Filter by payment status
+		// Filter by payment status
         if (selectedPaymentStatus !== 'All Payment Statuses') {
             result = result.filter((order) => {
                 if (selectedPaymentStatus === 'Paid') {
-                    return order.transaction_id.status === 'successful'
+                    return order.transcation_id.status === 'successful'
                 } else if (selectedPaymentStatus === 'Refunded') {
                     return order.status === 'refunded'
                 } else if (selectedPaymentStatus === 'Pending') {
-                    return order.transaction_id.status === 'pending'
+                    return order.transcation_id.status === 'pending'
                 } else if (selectedPaymentStatus === 'Failed') {
-                    return order.transaction_id.status === 'failed'
+                    return order.transcation_id.status === 'failed'
                 }
                 return true
             })
@@ -260,7 +260,7 @@ export default function OrderPage() {
         setCurrentPage(1) // Reset to first page when filters change
     }, [searchQuery, selectedStatus, selectedPaymentStatus, orders])
 
-    // Calculate pagination
+	// Calculate pagination
     const indexOfLastOrder = currentPage * ordersPerPage
     const indexOfFirstOrder = indexOfLastOrder - ordersPerPage
     const currentOrders = filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder)
@@ -268,7 +268,7 @@ export default function OrderPage() {
 
     // Function to handle order cancellation
     const handleOrderCancel = async () => {
-        if (selectedOrder) {
+		if (selectedOrder) {
             try {
                 // Show loading state
                 setCancelLoading(true)
@@ -442,32 +442,32 @@ export default function OrderPage() {
         }
     }
 
-    // Function to determine if user can cancel an order
-    const canCancelOrder = (order: Order) => {
+	// Function to determine if user can cancel an order
+	const canCancelOrder = (order: Order) => {
         return order.status === 'pending' || order.status === 'processing'
     }
 
-    // Function to determine if user can request a refund
-    const canRequestRefund = (order: Order) => {
+	// Function to determine if user can request a refund
+	const canRequestRefund = (order: Order) => {
         // For expanded transaction
-        if (isObjectReference(order.transaction_id)) {
+        if (isObjectReference(order.transcation_id)) {
             return (
                 order.status === 'delivered' &&
-                order.transaction_id.status === 'successful' &&
+                order.transcation_id.status === 'successful' &&
                 new Date(order.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000) // Within 30 days
             )
         }
 
         // If transaction is just an ID, assume it's successful if order is delivered
-        return (
+		return (
             order.status === 'delivered' && new Date(order.createdAt) > new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         )
     }
 
     // Get transaction status (handle both expanded and ID-only references)
     const getTransactionStatus = (order: Order) => {
-        if (isObjectReference(order.transaction_id)) {
-            return order.transaction_id.status
+        if (isObjectReference(order.transcation_id)) {
+            return order.transcation_id.status
         }
 
         // Default status based on order status if transaction is not expanded
@@ -484,21 +484,21 @@ export default function OrderPage() {
 
     // Get transaction ID (handle both expanded and ID-only references)
     const getTransactionId = (order: Order) => {
-        if (isObjectReference(order.transaction_id)) {
-            return order.transaction_id._id
+        if (isObjectReference(order.transcation_id)) {
+            return order.transcation_id._id
         }
-        return order.transaction_id
+        return order.transcation_id
     }
 
     // Get Razorpay payment ID if available
     const getRazorpayId = (order: Order) => {
-        if (isObjectReference(order.transaction_id) && order.transaction_id.razorpay_payment_id) {
-            return order.transaction_id.razorpay_payment_id
+        if (isObjectReference(order.transcation_id) && order.transcation_id.razorpay_payment_id) {
+            return order.transcation_id.razorpay_payment_id
         }
         return null
     }
 
-    // CSS classes for status badges
+	// CSS classes for status badges
     const getStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
             case 'pending':
@@ -513,12 +513,12 @@ export default function OrderPage() {
                 return 'bg-danger text-white'
             case 'refunded':
                 return 'bg-secondary text-white'
-            default:
+			default:
                 return 'bg-secondary'
         }
-    }
+		}
 
-    // CSS classes for payment status badges
+	// CSS classes for payment status badges
     const getPaymentStatusBadgeClass = (status: string) => {
         switch (status.toLowerCase()) {
             case 'successful':
@@ -527,7 +527,7 @@ export default function OrderPage() {
                 return 'bg-warning text-dark'
             case 'failed':
                 return 'bg-danger text-white'
-            default:
+			default:
                 return 'bg-secondary'
         }
     }
@@ -591,7 +591,7 @@ export default function OrderPage() {
         )
     }
 
-    return (
+	return (
         <>
             <Header />
             <div className='bg-dark text-white min-vh-100 p-4 pt-5 mt-5'>
@@ -601,9 +601,9 @@ export default function OrderPage() {
                         <div className='me-3'>
                             <div className='bg-dark p-2 rounded border border-light'>
                                 <FaShoppingBag size={32} className='text-white' />
-                            </div>
-                        </div>
-                        <div>
+							</div>
+						</div>
+						<div>
                             <h1 className='h3 m-0'>My Orders</h1>
                             <p className='text-white-50 m-0'>View and manage your order history</p>
                         </div>
@@ -611,84 +611,84 @@ export default function OrderPage() {
                             <button className='btn btn-outline-light' onClick={fetchOrders} title='Refresh Orders'>
                                 <FaSyncAlt />
                             </button>
-                        </div>
-                    </div>
+						</div>
+					</div>
 
-                    {/* Filter area */}
+					{/* Filter area */}
                     <div className='bg-dark p-4 rounded mb-4'>
                         <div className='row g-3'>
                             <div className='col-12 col-md-5'>
                                 <div className='input-group'>
                                     <span className='input-group-text bg-dark text-white border-secondary'>
-                                        <FaSearch />
-                                    </span>
-                                    <input
+										<FaSearch />
+									</span>
+									<input
                                         type='text'
                                         className='form-control bg-dark text-white border-secondary'
                                         placeholder='Search orders...'
-                                        value={searchQuery}
+										value={searchQuery}
                                         onChange={(e) => setSearchQuery(e.target.value)}
-                                    />
-                                </div>
-                            </div>
+									/>
+								</div>
+							</div>
                             <div className='col-12 col-md-3'>
                                 <div className='input-group'>
                                     <span className='input-group-text bg-dark text-white border-secondary'>
-                                        <FaFilter />
-                                    </span>
-                                    <select
+										<FaFilter />
+									</span>
+									<select
                                         className='form-select bg-dark text-white border-secondary'
-                                        value={selectedStatus}
+										value={selectedStatus}
                                         onChange={(e) => setSelectedStatus(e.target.value)}
-                                    >
-                                        <option>All Statuses</option>
+									>
+										<option>All Statuses</option>
                                         <option>Pending</option>
-                                        <option>Processing</option>
-                                        <option>Shipped</option>
-                                        <option>Delivered</option>
+										<option>Processing</option>
+										<option>Shipped</option>
+										<option>Delivered</option>
                                         <option>Cancelled</option>
-                                        <option>Refunded</option>
-                                    </select>
-                                </div>
-                            </div>
+										<option>Refunded</option>
+									</select>
+								</div>
+							</div>
                             <div className='col-12 col-md-4'>
                                 <div className='input-group'>
                                     <span className='input-group-text bg-dark text-white border-secondary'>
-                                        <FaRupeeSign />
-                                    </span>
-                                    <select
+										<FaRupeeSign />
+									</span>
+									<select
                                         className='form-select bg-dark text-white border-secondary'
-                                        value={selectedPaymentStatus}
+										value={selectedPaymentStatus}
                                         onChange={(e) => setSelectedPaymentStatus(e.target.value)}
-                                    >
-                                        <option>All Payment Statuses</option>
-                                        <option>Paid</option>
+									>
+										<option>All Payment Statuses</option>
+										<option>Paid</option>
                                         <option>Pending</option>
                                         <option>Failed</option>
-                                        <option>Refunded</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+										<option>Refunded</option>
+									</select>
+								</div>
+							</div>
+						</div>
+					</div>
 
-                    {/* Orders table */}
+					{/* Orders table */}
                     <div className='table-responsive bg-dark rounded'>
                         <table className='table table-dark table-hover mb-0'>
-                            <thead>
+							<thead>
                                 <tr className='border-bottom border-secondary'>
-                                    <th>Order ID</th>
-                                    <th>Product</th>
+									<th>Order ID</th>
+									<th>Product</th>
                                     <th>Title</th>
-                                    <th>Status</th>
-                                    <th>Payment</th>
+									<th>Status</th>
+									<th>Payment</th>
                                     <th>Amount</th>
                                     <th>Action</th>
                                     <th>Details</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentOrders.length > 0 ? (
+								</tr>
+							</thead>
+							<tbody>
+								{currentOrders.length > 0 ? (
                                     currentOrders.map((order) => {
                                         const productSummary = getOrderSummary(order)
 
@@ -706,10 +706,7 @@ export default function OrderPage() {
                                                 <td>
                                                     <div className='d-flex align-items-center'>
                                                         {productSummary.imageUrl ? (
-                                                            <div
-                                                                className='me-3'
-                                                                style={{ width: '48px', height: '48px' }}
-                                                            >
+                                                            <div className='me-3' style={{ width: '48px', height: '48px' }}>
                                                                 <img
                                                                     src={productSummary.imageUrl}
                                                                     alt='Product'
@@ -730,22 +727,22 @@ export default function OrderPage() {
                                                             </div>
                                                         )}
                                                     </div>
-                                                </td>
-                                                <td>
+											</td>
+											<td>
                                                     <span className='d-block'>{productSummary.title}</span>
                                                     {productSummary.count > 1 && (
                                                         <small className='text-white-50'>
                                                             {productSummary.count} items
                                                         </small>
                                                     )}
-                                                </td>
-                                                <td>
+											</td>
+											<td>
                                                     <span className={`badge ${getStatusBadgeClass(order.status)}`}>
-                                                        {order.status}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span
+													{order.status}
+												</span>
+											</td>
+											<td>
+												<span
                                                         className={`badge ${getPaymentStatusBadgeClass(getTransactionStatus(order))}`}
                                                     >
                                                         {getTransactionStatus(order)}
@@ -755,39 +752,39 @@ export default function OrderPage() {
                                                     <span className='fw-bold'>
                                                         {currency.symbol}
                                                         {order.amount_paid.toFixed(2)}
-                                                    </span>
-                                                </td>
-                                                <td>
+												</span>
+											</td>
+											<td>
                                                     <small className='text-white'>{formatDate(order.createdAt)}</small>
                                                 </td>
                                                 <td className='text-center'>
                                                     <div className='d-flex justify-content-end'>
-                                                        {canCancelOrder(order) && (
-                                                            <button
-                                                                type='button'
-                                                                className='btn btn-sm btn-outline-danger'
-                                                                onClick={() => {
-                                                                    setSelectedOrder(order)
-                                                                    setShowCancelModal(true)
-                                                                }}
-                                                            >
-                                                                Cancel
-                                                            </button>
-                                                        )}
+												{canCancelOrder(order) && (
+													<button
+                                                        type='button'
+                                                        className='btn btn-sm btn-outline-danger'
+													onClick={() => {
+                                                            setSelectedOrder(order)
+                                                            setShowCancelModal(true)
+                                                        }}
+                                                    >
+                                                        Cancel
+													</button>
+												)}
 
-                                                        {canRequestRefund(order) && (
-                                                            <button
-                                                                type='button'
-                                                                className='btn btn-sm btn-outline-warning'
-                                                                onClick={() => {
-                                                                    setSelectedOrder(order)
-                                                                    setShowRefundRequestModal(true)
-                                                                }}
-                                                            >
-                                                                Refund
-                                                            </button>
-                                                        )}
-                                                    </div>
+												{canRequestRefund(order) && (
+													<button
+                                                        type='button'
+                                                        className='btn btn-sm btn-outline-warning'
+													onClick={() => {
+                                                            setSelectedOrder(order)
+                                                            setShowRefundRequestModal(true)
+                                                        }}
+                                                    >
+                                                        Refund
+													</button>
+												)}
+														</div>
                                                 </td>
                                                 <td>
                                                     <Link
@@ -796,12 +793,12 @@ export default function OrderPage() {
                                                     >
                                                         View Details
                                                     </Link>
-                                                </td>
-                                            </tr>
+											</td>
+										</tr>
                                         )
                                     })
-                                ) : (
-                                    <tr>
+								) : (
+									<tr>
                                         <td colSpan={8} className='text-center py-5'>
                                             <div className='mb-3'>
                                                 <FaShoppingBag size={40} className='text-muted' />
@@ -816,55 +813,52 @@ export default function OrderPage() {
                                                       ? 'Try a different filter'
                                                       : 'Start shopping to see orders here'}
                                             </p>
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+										</td>
+									</tr>
+								)}
+							</tbody>
+						</table>
+					</div>
 
-                    {/* Pagination */}
+					{/* Pagination */}
                     {filteredOrders.length > 0 && (
                         <div className='d-flex justify-content-between align-items-center mt-3'>
                             <div className='text-white-50'>
-                                Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)}{' '}
-                                of {filteredOrders.length} orders
+                                Showing {indexOfFirstOrder + 1} to {Math.min(indexOfLastOrder, filteredOrders.length)} of{' '}
+                                {filteredOrders.length} orders
                             </div>
-                            <div>
+						<div>
                                 <ul className='pagination pagination-sm mb-0'>
                                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
-                                        <button
+									<button
                                             className='page-link bg-dark text-white border-secondary'
-                                            onClick={() => setCurrentPage(currentPage - 1)}
-                                        >
-                                            Previous
-                                        </button>
+										onClick={() => setCurrentPage(currentPage - 1)}
+									>
+										Previous
+									</button>
                                     </li>
                                     {Array.from({ length: totalPages }, (_, i) => (
-                                        <li
-                                            key={i + 1}
-                                            className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}
-                                        >
-                                            <button
-                                                className='page-link bg-dark text-white border-secondary'
-                                                onClick={() => setCurrentPage(i + 1)}
-                                            >
-                                                {i + 1}
-                                            </button>
-                                        </li>
-                                    ))}
-                                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
-                                        <button
+                                        <li key={i + 1} className={`page-item ${currentPage === i + 1 ? 'active' : ''}`}>
+									<button
                                             className='page-link bg-dark text-white border-secondary'
-                                            onClick={() => setCurrentPage(currentPage + 1)}
+                                            onClick={() => setCurrentPage(i + 1)}
                                         >
-                                            Next
-                                        </button>
+                                            {i + 1}
+									</button>
+                                        </li>
+									))}
+                                    <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+									<button
+                                            className='page-link bg-dark text-white border-secondary'
+										onClick={() => setCurrentPage(currentPage + 1)}
+									>
+										Next
+									</button>
                                     </li>
                                 </ul>
                             </div>
-                        </div>
-                    )}
+							</div>
+						)}
 
                     {/* Order Cancellation Modal */}
                     {showCancelModal && selectedOrder && (
@@ -873,46 +867,45 @@ export default function OrderPage() {
                                 <div className='modal-content bg-dark text-white border-secondary'>
                                     <div className='modal-header border-secondary'>
                                         <h5 className='modal-title'>Confirm Order Cancellation</h5>
-                                        <button
+										<button
                                             type='button'
                                             className='btn-close btn-close-white'
-                                            onClick={() => setShowCancelModal(false)}
-                                        ></button>
-                                    </div>
+											onClick={() => setShowCancelModal(false)}
+										></button>
+									</div>
                                     <div className='modal-body'>
                                         <p>Are you sure you want to cancel this order?</p>
                                         <div className='d-flex align-items-center mb-3 bg-black p-3 rounded'>
                                             <div className='me-3'>
                                                 <FaShoppingBag size={20} />
-                                            </div>
-                                            <div>
+											</div>
+											<div>
                                                 <div className='fw-bold'>Order ID: {selectedOrder._id}</div>
                                                 <div className='small text-white-50'>
                                                     {formatDate(selectedOrder.createdAt)}
-                                                </div>
-                                            </div>
-                                        </div>
+												</div>
+											</div>
+										</div>
                                         <div className='alert alert-warning'>
                                             <small>
-                                                Cancelling will immediately stop this order from being processed. If
-                                                payment has been made, it may take 5-7 business days for a refund to be
-                                                processed.
+                                                Cancelling will immediately stop this order from being processed. If payment
+                                                has been made, it may take 5-7 business days for a refund to be processed.
                                             </small>
                                         </div>
                                     </div>
                                     <div className='modal-footer border-secondary'>
-                                        <button
+									<button
                                             type='button'
                                             className='btn btn-outline-light'
-                                            onClick={() => setShowCancelModal(false)}
+											onClick={() => setShowCancelModal(false)}
                                             disabled={cancelLoading}
-                                        >
-                                            Close
-                                        </button>
-                                        <button
+										>
+                                                Close
+											</button>
+									<button
                                             type='button'
                                             className='btn btn-danger'
-                                            onClick={handleOrderCancel}
+											onClick={handleOrderCancel}
                                             disabled={cancelLoading}
                                         >
                                             {cancelLoading ? (
@@ -923,52 +916,52 @@ export default function OrderPage() {
                                             ) : (
                                                 'Cancel Order'
                                             )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
 
-                    {/* Refund Request Modal */}
+					{/* Refund Request Modal */}
                     {showRefundRequestModal && selectedOrder && (
                         <div className='modal show d-block' style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                             <div className='modal-dialog modal-dialog-centered'>
                                 <div className='modal-content bg-dark text-white border-secondary'>
                                     <div className='modal-header border-secondary'>
                                         <h5 className='modal-title'>Request Refund</h5>
-                                        <button
+										<button
                                             type='button'
                                             className='btn-close btn-close-white'
                                             onClick={() => setShowRefundRequestModal(false)}
-                                        ></button>
-                                    </div>
+										></button>
+									</div>
                                     <div className='modal-body'>
                                         <p>Are you sure you want to request a refund for this order?</p>
                                         <div className='d-flex align-items-center mb-3 bg-black p-3 rounded'>
                                             <div className='me-3'>
                                                 <FaShoppingBag size={20} />
-                                            </div>
-                                            <div>
+											</div>
+											<div>
                                                 <div className='fw-bold'>Order ID: {selectedOrder._id}</div>
                                                 <div className='small text-white-50'>
                                                     {formatDate(selectedOrder.createdAt)}
                                                 </div>
-                                            </div>
-                                        </div>
+											</div>
+										</div>
 
                                         <div className='form-group mb-3'>
                                             <label htmlFor='refundReason' className='form-label'>
                                                 Reason for Refund *
-                                            </label>
-                                            <textarea
+												</label>
+											<textarea
                                                 className='form-control bg-dark text-white border-secondary'
                                                 id='refundReason'
-                                                rows={4}
-                                                value={refundReason}
+												rows={4}
+												value={refundReason}
                                                 onChange={(e) => setRefundReason(e.target.value)}
                                                 required
-                                                placeholder="Please explain why you're requesting a refund..."
+												placeholder="Please explain why you're requesting a refund..."
                                             ></textarea>
                                             <div className='form-text'>
                                                 Providing a detailed reason will help us process your request faster.
@@ -977,24 +970,24 @@ export default function OrderPage() {
 
                                         <div className='alert alert-warning'>
                                             <small>
-                                                Once approved, refunds typically take 5-7 business days to be credited
-                                                back to your original payment method.
-                                            </small>
-                                        </div>
-                                    </div>
+                                                Once approved, refunds typically take 5-7 business days to be credited back
+                                                to your original payment method.
+												</small>
+											</div>
+										</div>
                                     <div className='modal-footer border-secondary'>
-                                        <button
+									<button
                                             type='button'
                                             className='btn btn-outline-light'
                                             onClick={() => setShowRefundRequestModal(false)}
                                             disabled={refundLoading}
                                         >
-                                            Close
-                                        </button>
-                                        <button
+                                                Close
+											</button>
+									<button
                                             type='button'
                                             className='btn btn-warning'
-                                            onClick={handleRefundRequest}
+											onClick={handleRefundRequest}
                                             disabled={refundLoading || !refundReason.trim()}
                                         >
                                             {refundLoading ? (
@@ -1005,12 +998,13 @@ export default function OrderPage() {
                                             ) : (
                                                 'Request Refund'
                                             )}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					)}
                 </div>
             </div>
         </>

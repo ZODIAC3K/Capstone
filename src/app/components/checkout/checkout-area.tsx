@@ -379,7 +379,7 @@ export default function CheckoutArea() {
                 quantity_ordered: cart.items.map((item) => item.quantity),
                 coupon_used: appliedCoupon ? [appliedCoupon.couponId] : [],
                 offer_used: appliedOffer ? [appliedOffer.offerId] : [],
-                transcation_id: transactionId // Use the MongoDB ObjectId from the transaction
+                transaction_id: transactionId // Use the MongoDB ObjectId from the transaction
             }
 
             // Log the order data for debugging
@@ -442,8 +442,14 @@ export default function CheckoutArea() {
                     autoClose: 3000
                 })
 
-                // Redirect to a success page or order history
-                router.push('/profile')
+                // Instead of automatically redirecting, create a success page with options
+                // Store the order ID in localStorage
+                if (orderResponseData.data && orderResponseData.data._id) {
+                    localStorage.setItem('lastOrderId', orderResponseData.data._id)
+                }
+
+                // Redirect to success page with options
+                router.push('/checkout/success')
             } else {
                 console.error('Order API error:', orderResponseData.error || 'Unknown error')
 

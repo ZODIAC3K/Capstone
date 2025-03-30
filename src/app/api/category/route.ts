@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json(
             {
                 success: true,
-                data: categoriesWithCounts
+                data: categoriesWithCounts,
+                categories: categoriesWithCounts // Include for backward compatibility with older code
             },
             { status: 200 }
         )

@@ -57,10 +57,10 @@ export async function POST(request: NextRequest) {
                 coupon_used,
                 offer_used,
                 address_id,
-                transcation_id
+                transaction_id
             } = await request.json()
 
-            if (!transcation_id) {
+            if (!transaction_id) {
                 await session.abortTransaction()
                 session.endSession()
                 return NextResponse.json({ success: false, error: 'Transaction ID is required' }, { status: 400 })
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
                         total_amount, // Original total
                         amount_paid, // Amount after discounts
                         address: address_id,
-                        transcation_id,
+                        transaction_id,
                         status: 'pending'
                     }
                 ],
@@ -359,7 +359,7 @@ export async function GET(request: NextRequest) {
                         model: 'Address'
                     },
                     {
-                        path: 'transcation_id',
+                        path: 'transaction_id',
                         model: 'Transaction'
                     },
                     {
@@ -460,7 +460,7 @@ export async function GET(request: NextRequest) {
                         model: 'Address'
                     },
                     {
-                        path: 'transcation_id',
+                        path: 'transaction_id',
                         model: 'Transaction'
                     }
                 ])
@@ -721,7 +721,7 @@ export async function PATCH(request: NextRequest) {
                 model: 'Address'
             },
             {
-                path: 'transcation_id',
+                path: 'transaction_id',
                 model: 'Transaction'
             },
             {
@@ -737,13 +737,13 @@ export async function PATCH(request: NextRequest) {
         ])
 
         // Handle transaction status update for cancellations
-        if (status === 'cancelled' && updatedOrder.transcation_id) {
+        if (status === 'cancelled' && updatedOrder.transaction_id) {
             try {
                 // Get transaction ID - handle both object and string formats
                 const transactionId =
-                    typeof updatedOrder.transcation_id === 'object'
-                        ? updatedOrder.transcation_id._id
-                        : updatedOrder.transcation_id
+                    typeof updatedOrder.transaction_id === 'object'
+                        ? updatedOrder.transaction_id._id
+                        : updatedOrder.transaction_id
 
                 await TransactionModel.findByIdAndUpdate(transactionId, { $set: { status: 'failed' } })
             } catch (err) {
