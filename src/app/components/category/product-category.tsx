@@ -6,7 +6,9 @@ import { useEffect, useState } from 'react'
 interface Category {
     _id: string
     category_name: string
-    count?: number
+    image_url: string
+    count: number
+    is_active: boolean
 }
 
 export default function ProductCategory() {
@@ -54,18 +56,22 @@ export default function ProductCategory() {
                         categories.map((category, index) => (
                             <div
                                 key={category._id}
-                                className={index === 0 || index === 5 ? 'col-lg-6' : 'col-xl-3 col-lg-6'}
+                                className={
+                                    index === 0 || index === categories.length - 1 ? 'col-lg-6' : 'col-xl-3 col-lg-6'
+                                }
                             >
                                 <div className='shop__category'>
                                     <div className='shop__category-thumb'>
                                         <Image
-                                            src={`/assets/img/products/product-${(index % 6) + 1}.png`}
+                                            src={category.image_url}
                                             alt={category.category_name}
                                             width={250}
                                             height={250}
                                             style={{
-                                                height: index === 0 || index === 5 ? '270px' : '250px',
-                                                width: index === 0 || index === 5 ? '270px' : '250px',
+                                                height:
+                                                    index === 0 || index === categories.length - 1 ? '270px' : '250px',
+                                                width:
+                                                    index === 0 || index === categories.length - 1 ? '270px' : '250px',
                                                 objectFit: 'cover'
                                             }}
                                         />
@@ -76,8 +82,8 @@ export default function ProductCategory() {
                                                 {category.category_name}
                                             </Link>
                                         </h4>
-                                        {category.count !== undefined && (
-                                            <span className='badge bg-primary ms-2'>{category.count}</span>
+                                        {category.count > 0 && (
+                                            <span className='badge bg-primary ms-2'>{category.count} items</span>
                                         )}
                                     </div>
                                 </div>
