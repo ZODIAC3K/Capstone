@@ -1,0 +1,145 @@
+API ROUTES OVERVIEW
+==================
+
+This document provides a comprehensive overview of all API endpoints available in the project, explaining the functionality of each HTTP method for every route.
+
+/api/login
+----------
+POST: Authenticates a user by verifying email and password credentials. On successful authentication, sets HTTP-only cookies for accessToken and refreshToken, and returns basic user information. Requires email verification before allowing login.
+
+/api/users
+----------
+POST: Creates a new user account with name, email, password, and optional mobile number. Sends a verification email upon successful registration.
+GET: Retrieves user account information when authenticated. Returns personal details excluding sensitive information.
+PATCH: Updates user profile information such as name, email, or mobile number. Requires authentication.
+
+/api/verify-email
+----------------
+GET: Verifies a user's email address using a token sent via email during registration or when updating email address.
+
+/api/resend-verification
+-----------------------
+POST: Resends a verification email to the user's registered email address. Rate-limited to prevent abuse.
+
+/api/product
+-----------
+GET: Retrieves products with extensive filtering options including category, price range, search terms, and sorting. Supports pagination and can fetch either a single product by ID or a collection of products.
+POST: Creates a new product listing with images, 3D model files, shader files, and product details. Requires creator authentication.
+PATCH: Updates an existing product's details, images, or files. Only the creator who owns the product or an admin can perform updates.
+DELETE: Removes a product from the catalog. Limited to product owners and administrators.
+
+/api/category
+------------
+GET: Fetches all product categories along with counts of products in each category.
+POST: Creates a new product category with name, description, and image. Admin-only functionality.
+PATCH: Updates an existing category's name, description, image, or active status. Admin-only functionality.
+DELETE: Removes a category if it's not associated with products. Admin-only functionality.
+
+/api/order
+---------
+GET: Retrieves a user's order history or a specific order by ID. Admins can access all orders, while regular users can only view their own orders. Supports filtering by status and pagination.
+POST: Creates a new order from cart items or directly with specified products, with associated transaction and shipping information.
+PATCH: Updates an order's status (processing, shipped, delivered) or adds tracking information. Admins can update any order, while users can only cancel their orders in certain states.
+DELETE: Removes an order from the system (admin-only, primarily for data management).
+
+/api/order/details
+-----------------
+GET: Provides detailed information about a specific order, including products, customer information, addresses, and transaction details. Authentication-protected with the same access controls as the main order endpoint.
+
+/api/cart
+--------
+GET: Retrieves the current user's shopping cart contents, including product details, quantities, sizes, and total price.
+POST: Adds a product to the user's cart with specified quantity and size.
+PATCH: Updates quantities or sizes of products already in the cart.
+DELETE: Removes specific items from the cart or clears the entire cart.
+
+/api/review
+----------
+GET: Fetches reviews for a specific product, with pagination support.
+POST: Submits a new product review with rating, title, and content. Only allows users who have purchased the product to review it.
+DELETE: Removes a review. Limited to the review author or administrators.
+
+/api/review/check
+---------------
+GET: Checks if a user is eligible to review a specific product based on purchase history, and whether they've already reviewed it.
+
+/api/creator
+-----------
+GET: Retrieves creator profiles and their published products. Can fetch a specific creator by ID or all creators.
+POST: Creates a new creator profile with name, bio, and optional profile/cover images.
+PATCH: Updates an existing creator profile information or images.
+DELETE: Removes a creator profile (rarely used, as it would orphan products).
+
+/api/refund
+----------
+GET: Retrieves return/refund requests for a user or a specific order. Admins can see all requests, users only see their own.
+POST: Submits a new return/refund request for an order with reason and details.
+PATCH: Updates the status of a return/refund request (pending, approved, rejected). Status updates are admin-only.
+
+/api/address
+-----------
+GET: Retrieves the user's saved addresses.
+POST: Adds a new address to the user's address book.
+PATCH: Updates an existing address.
+DELETE: Removes an address from the user's address book.
+
+/api/coupon
+----------
+GET: Fetches available coupons or validates a specific coupon code. Returns discount information and usage limitations.
+POST: Creates a new coupon code with discount amount, expiry date, and usage limitations. Admin-only functionality.
+PATCH: Updates an existing coupon's details or deactivates it. Admin-only.
+DELETE: Removes a coupon from the system. Admin-only.
+
+/api/offer
+---------
+GET: Retrieves active offers and promotions.
+POST: Creates a new promotional offer. Admin-only.
+PATCH: Updates an existing offer. Admin-only.
+DELETE: Removes an offer. Admin-only.
+
+/api/transaction
+--------------
+GET: Retrieves transaction history for a user or details of a specific transaction.
+POST: Creates a new payment transaction record.
+PATCH: Updates transaction status (rarely used directly, typically handled by payment webhook).
+
+/api/contact
+-----------
+POST: Processes contact form submissions, sending the message to admin email and a confirmation to the sender.
+
+/api/send-email
+--------------
+POST: Internal API for sending transactional emails (order confirmations, password resets, etc.).
+
+/api/genAI
+---------
+POST: Generates AI images from text prompts using Stability AI integration.
+
+/api/admin/order (moved from /order/admin)
+--------------
+GET: Provides a comprehensive admin interface for managing all orders in the system.
+
+Authentication System
+-------------------
+The authentication system uses JWT tokens stored in HTTP-only cookies:
+- accessToken: Short-lived token (1 hour) for API authentication
+- refreshToken: Longer-lived token (7 days) for obtaining new access tokens
+- Tokens contain user ID and limited user information
+- Authentication middleware validates these tokens for protected routes
+- Admin routes have additional authorization checks
+
+Data Formats
+-----------
+All API endpoints follow a consistent response format:
+- Success: { success: true, data: {...} }
+- Error: { success: false, error: "Error message" }
+- List endpoints include pagination: { success: true, data: { items: [...], pagination: {...} } }
+
+HTTP Status Codes:
+- 200: Success
+- 201: Resource created
+- 400: Bad request (validation errors)
+- 401: Unauthorized (missing/invalid authentication)
+- 403: Forbidden (authenticated but not authorized)
+- 404: Resource not found
+- 500: Server error 

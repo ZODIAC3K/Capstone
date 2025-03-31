@@ -20,38 +20,69 @@ const ContactForm = () => {
         register,
         handleSubmit,
         formState: { errors },
-        reset
+        reset,
+        getValues
     } = useForm<IFormInput>()
 
     const onSubmit: SubmitHandler<IFormInput> = async (data) => {
         try {
             setIsSubmitting(true)
             setDebugInfo(null)
+            setShowFallback(false)
 
             console.log('Submitting form data:', data)
 
-            const response = await fetch('/api/contact', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            })
+            // Set a timeout to ensure the form doesn't hang indefinitely
+            const timeoutId = setTimeout(() => {
+                if (isSubmitting) {
+                    setDebugInfo(
+                        'Request timeout: The server took too long to respond. Please try the direct email option.'
+                    )
+                    setShowFallback(true)
+                    setIsSubmitting(false)
+                }
+            }, 30000) // 30 second timeout
 
-            const responseData = await response.json()
-            console.log('Response from server:', response.status, responseData)
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                })
 
-            if (!response.ok) {
-                setDebugInfo(`Error ${response.status}: ${JSON.stringify(responseData)}`)
-                throw new Error(responseData.error || 'Failed to send message')
+                clearTimeout(timeoutId) // Clear the timeout if request completes
+
+                const responseData = await response.json()
+                console.log('Response from server:', response.status, responseData)
+
+                if (!response.ok) {
+                    // If server indicates we should show fallback option
+                    if (responseData.fallback) {
+                        setShowFallback(true)
+                    }
+
+                    setDebugInfo(`Error ${response.status}: ${JSON.stringify(responseData)}`)
+                    throw new Error(responseData.error || 'Failed to send message')
+                }
+
+                notifySuccess('Message sent successfully!')
+                reset()
+            } catch (fetchError) {
+                clearTimeout(timeoutId) // Clear timeout on fetch error
+                throw fetchError
             }
-
-            notifySuccess('Message sent successfully!')
-            reset()
         } catch (error) {
             console.error('Contact form error:', error)
             if (error instanceof Error) {
-                notifyError(error.message)
+                // Show a more user-friendly message for timeout errors
+                if (error.message.includes('timeout') || error.message.includes('timed out')) {
+                    notifyError('Connection timeout. Please try the direct email option below.')
+                } else {
+                    notifyError(error.message)
+                }
+
                 if (!debugInfo) {
                     setDebugInfo(`Error: ${error.message}`)
                 }
@@ -67,11 +98,14 @@ const ContactForm = () => {
     }
 
     const handleFallbackEmail = () => {
-        const subject = encodeURIComponent(document.getElementById('subject')?.value || 'Contact Form Submission')
+        // Get current form values even if the form hasn't been submitted
+        const formValues = getValues()
+
+        const subject = encodeURIComponent(formValues.subject || 'Contact Form Submission')
         const body = encodeURIComponent(
-            `Name: ${document.getElementById('name')?.value || ''}\n` +
-                `Email: ${document.getElementById('email')?.value || ''}\n\n` +
-                `Message:\n${document.getElementById('message')?.value || ''}`
+            `Name: ${formValues.name || ''}\n` +
+                `Email: ${formValues.email || ''}\n\n` +
+                `Message:\n${formValues.message || ''}`
         )
         window.open(`mailto:harshdeepanshustrix@gmail.com?subject=${subject}&body=${body}`, '_blank')
     }
