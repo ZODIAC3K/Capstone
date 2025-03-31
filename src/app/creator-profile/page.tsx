@@ -1059,6 +1059,10 @@ export default function CreatorProfilePage() {
                             <h3 className={styles.statLabel}>Total Sales</h3>
                             <p className={styles.statValue}>₹{creator.totalSales || 0}</p>
                         </div>
+                        <div className={styles.statItem}>
+                            <h3 className={styles.statLabel}>Earned</h3>
+                            <p className={styles.statValue}>₹{Math.round((creator.totalSales || 0) * 0.4)}</p>
+                        </div>
 
                         {/* Edit Profile Button */}
                         <div className='ml-auto'>

@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 // prop type
 type IProps = {
@@ -7,12 +8,27 @@ type IProps = {
 }
 
 const SearchPopup = ({ isSearchOpen, setIsSearchOpen }: IProps) => {
+    const router = useRouter()
+    const [searchQuery, setSearchQuery] = useState('')
+
     // handle close search
     const handleCloseSearch = (audioPath: string) => {
         setIsSearchOpen(false)
         const audio = new Audio(audioPath)
         audio.play()
     }
+
+    // handle search submit
+    const handleSearchSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (searchQuery.trim()) {
+            // Close the search popup
+            setIsSearchOpen(false)
+            // Redirect to shop page with search query
+            router.push(`/shop?search=${encodeURIComponent(searchQuery.trim())}`)
+        }
+    }
+
     return (
         <div className={`${isSearchOpen ? 'search__active' : ''}`}>
             <div className={`search__popup-wrap`}>
@@ -27,12 +43,19 @@ const SearchPopup = ({ isSearchOpen, setIsSearchOpen }: IProps) => {
                         <div className='row'>
                             <div className='col-12'>
                                 <h2 className='title'>
-                                    ... <span>Search Here</span> ...
+                                    ... <span>Search Products</span> ...
                                 </h2>
                                 <div className='search__form'>
-                                    <form action='#'>
-                                        <input type='text' name='search' placeholder='Type keywords here' required />
-                                        <button className='search-btn'>
+                                    <form onSubmit={handleSearchSubmit}>
+                                        <input
+                                            type='text'
+                                            name='search'
+                                            placeholder='Search for products...'
+                                            value={searchQuery}
+                                            onChange={(e) => setSearchQuery(e.target.value)}
+                                            required
+                                        />
+                                        <button type='submit' className='search-btn'>
                                             <i className='flaticon-loupe'></i>
                                         </button>
                                     </form>

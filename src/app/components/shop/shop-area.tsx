@@ -258,10 +258,6 @@ const ShopArea = () => {
                                 <Pagination pageCount={totalPages} handlePageClick={handlePageClick} />
                             </div>
                         )}
-
-                        <button type='submit' className={styles.addButton} disabled={loading}>
-                            {loading ? 'Adding...' : 'Add New Product'}
-                        </button>
                     </div>
                 </div>
             </div>

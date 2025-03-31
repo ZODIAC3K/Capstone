@@ -3,7 +3,6 @@ import React from 'react'
 import Link from 'next/link'
 import banner_bg from '@/assets/img/slider/banner_bg_shape5-1.png'
 import shape from '@/assets/img/icons/shape.svg'
-import shape03 from '@/assets/img/icons/shape03.svg'
 import SvgIconCom from '../common/svg-icon-anim'
 
 const HeroBannerTwo = () => {
@@ -20,33 +19,12 @@ const HeroBannerTwo = () => {
                             <p className='wow bounceInLeft' data-wow-delay='.4s'>
                                 Design, Style, and Shop with AI
                             </p>
-                            <div className='d-flex justify-content-center align-items-center gap-4'>
+                            <div className='d-flex justify-content-center align-items-center'>
                                 <div
                                     className='banner__btn d-flex justify-content-center wow bounceInLeft'
                                     data-wow-delay='.6s'
                                 >
-                                    {/* <Link
-										href="/contact"
-										className="tg-btn-3 tg-svg mx-auto"
-									>
-										<SvgIconCom
-											icon={shape03}
-											id="svg-1"
-										/>
-										<span className="text-white">Shop</span>
-									</Link> */}
-                                    <div className='about__content-btns m-0'>
-                                        <Link href='/contact' className='tg-btn-3 tg-svg'>
-                                            <SvgIconCom icon={shape} id='svg-6' />
-                                            <span>Customize</span>
-                                        </Link>
-                                    </div>
-                                </div>
-                                <div
-                                    className='banner__btn d-flex justify-content-center wow bounceInLeft'
-                                    data-wow-delay='.6s'
-                                >
-                                    <Link href='/contact' className='tg-btn-1 tg-svg '>
+                                    <Link href='/shop' className='tg-btn-1 tg-svg'>
                                         <SvgIconCom icon={shape} id='svg-6' />
                                         <span>Shop</span>
                                     </Link>
