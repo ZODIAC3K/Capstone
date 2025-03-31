@@ -4,6 +4,7 @@ import ShopSidebar from './shop-sidebar'
 import ShopItem from './shop-item'
 import Pagination from '../ui/pagination'
 import { useRouter, useSearchParams } from 'next/navigation'
+import styles from './shop-area.module.css'
 
 interface Product {
     _id: string
@@ -257,6 +258,10 @@ const ShopArea = () => {
                                 <Pagination pageCount={totalPages} handlePageClick={handlePageClick} />
                             </div>
                         )}
+
+                        <button type='submit' className={styles.addButton} disabled={loading}>
+                            {loading ? 'Adding...' : 'Add New Product'}
+                        </button>
                     </div>
                 </div>
             </div>

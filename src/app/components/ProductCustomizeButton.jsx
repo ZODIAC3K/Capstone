@@ -55,18 +55,28 @@ const ProductCustomizeButton = ({ productId, onCustomizationComplete, customClas
 
     return (
         <>
-            <button
-                onClick={handleButtonClick}
-                className={buttonClass}
-                style={!customClass ? { backgroundColor: '#16a34a !important' } : undefined}
-            >
-                Design Your Own Product
-            </button>
+            <div className='flex justify-end mt-6'>
+                <button
+                    onClick={handleButtonClick}
+                    className='bg-[#16a34a] text-white rounded-[16px] px-6 h-[52px] min-w-[200px] font-medium text-base flex items-center justify-center'
+                    style={{
+                        backgroundColor: '#16a34a',
+                        borderRadius: '24px',
+                        padding: '14px 28px',
+                        fontSize: '16px',
+                        fontWeight: '500',
+                        height: '56px',
+                        minWidth: '240px',
+                        border: 'none',
+                        outline: 'none'
+                    }}
+                >
+                    Design Your Own Product
+                </button>
+            </div>
 
             {/* The Customization Modal */}
             <CustomizeModal isOpen={isCustomizerOpen} onClose={closeCustomizer} onSave={handleSave} />
-
-            {/* Removed all preview elements as they're shown in the parent component */}
         </>
     )
 }

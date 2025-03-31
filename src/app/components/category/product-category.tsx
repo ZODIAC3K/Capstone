@@ -1,59 +1,39 @@
+'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-// images
-import cate_1 from '@/assets/img/products/product-03.png'
-import cate_2 from '@/assets/img/products/product-5-2.png'
-import cate_3 from '@/assets/img/products/product-5-3.png'
-import cate_4 from '@/assets/img/products/product-5-4.png'
-import cate_5 from '@/assets/img/products/product-5-5.png'
-import cate_6 from '@/assets/img/products/product-5-6.png'
+import { useEffect, useState } from 'react'
 
-const categoryData = [
-    {
-        id: 1,
-        imgSrc: cate_1,
-        title: 'Full Sleeve T-shirt',
-        columnClass: 'col-lg-6',
-        imgStyle: { height: '250px', width: '250px' }
-    },
-    {
-        id: 2,
-        imgSrc: cate_2,
-        title: 'Bath Robes',
-        columnClass: 'col-xl-3 col-lg-6',
-        imgStyle: { height: 'auto' }
-    },
-    {
-        id: 3,
-        imgSrc: cate_3,
-        title: 'shorts',
-        columnClass: 'col-xl-3 col-lg-6',
-        imgStyle: { height: '250px', width: '250px' }
-    },
-    {
-        id: 4,
-        imgSrc: cate_4,
-        title: 'Waist Coat',
-        columnClass: 'col-xl-3 col-lg-6',
-        imgStyle: { height: '250px', width: '250px' }
-    },
-    {
-        id: 5,
-        imgSrc: cate_5,
-        title: 'workwear',
-        columnClass: 'col-xl-3 col-lg-6',
-        imgStyle: { height: '250px', width: '250px' }
-    },
-    {
-        id: 6,
-        imgSrc: cate_6,
-        title: 'hoodies',
-        columnClass: 'col-lg-6',
-        imgStyle: { height: '270px', width: '270px' }
-    }
-]
+interface Category {
+    _id: string
+    category_name: string
+    count?: number
+}
 
 export default function ProductCategory() {
+    const [categories, setCategories] = useState<Category[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await fetch('/api/category')
+                if (!response.ok) {
+                    throw new Error('Failed to fetch categories')
+                }
+                const data = await response.json()
+                if (data.success) {
+                    setCategories(data.data)
+                }
+            } catch (error) {
+                console.error('Error fetching categories:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchCategories()
+    }, [])
+
     return (
         <section
             className='product-category__area section-pt-120 section-pb-120'
@@ -64,20 +44,46 @@ export default function ProductCategory() {
         >
             <div className='container custom-container4'>
                 <div className='row gy-4'>
-                    {categoryData.map((category) => (
-                        <div key={category.id} className={category.columnClass}>
-                            <div className='shop__category'>
-                                <div className='shop__category-thumb'>
-                                    <Image src={category.imgSrc} alt={category.title} style={category.imgStyle} />
-                                </div>
-                                <div className='shop__category-content'>
-                                    <h4 className='title'>
-                                        <Link href='/shop'>{category.title}</Link>
-                                    </h4>
-                                </div>
+                    {loading ? (
+                        <div className='col-12 text-center'>
+                            <div className='spinner-border text-primary' role='status'>
+                                <span className='visually-hidden'>Loading...</span>
                             </div>
                         </div>
-                    ))}
+                    ) : (
+                        categories.map((category, index) => (
+                            <div
+                                key={category._id}
+                                className={index === 0 || index === 5 ? 'col-lg-6' : 'col-xl-3 col-lg-6'}
+                            >
+                                <div className='shop__category'>
+                                    <div className='shop__category-thumb'>
+                                        <Image
+                                            src={`/assets/img/products/product-${(index % 6) + 1}.png`}
+                                            alt={category.category_name}
+                                            width={250}
+                                            height={250}
+                                            style={{
+                                                height: index === 0 || index === 5 ? '270px' : '250px',
+                                                width: index === 0 || index === 5 ? '270px' : '250px',
+                                                objectFit: 'cover'
+                                            }}
+                                        />
+                                    </div>
+                                    <div className='shop__category-content'>
+                                        <h4 className='title'>
+                                            <Link href={`/shop?category=${category._id}`}>
+                                                {category.category_name}
+                                            </Link>
+                                        </h4>
+                                        {category.count !== undefined && (
+                                            <span className='badge bg-primary ms-2'>{category.count}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
         </section>

@@ -1,63 +1,90 @@
+'use client'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
 import { CompareSvg } from '../svg'
-import { product_data_two } from '@/data/product-data'
+import ShopItem from './shop-item'
+
+interface Product {
+    _id: string
+    title: string
+    description: string
+    price: {
+        amount: number
+        currency: string
+    }
+    image_id: {
+        _id: string
+        image_url: string
+    }
+    creator_id: {
+        _id: string
+        name: string
+    }
+    category_id: {
+        _id: string
+        category_name: string
+    }[]
+    sales_count: number
+    rating: number
+}
 
 export default function ShopAreaTwo() {
+    const [products, setProducts] = useState<Product[]>([])
+    const [loading, setLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchNewProducts = async () => {
+            try {
+                const response = await fetch('/api/product?sortBy=createdAt&sortOrder=desc&limit=8')
+                if (!response.ok) {
+                    throw new Error('Failed to fetch new products')
+                }
+                const data = await response.json()
+                if (data.success) {
+                    setProducts(data.data)
+                }
+            } catch (error) {
+                console.error('Error fetching new products:', error)
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        fetchNewProducts()
+    }, [])
+
     return (
         <section className='shop-area'>
             <div className='container custom-container4'>
                 <div className='section__title text-center mb-60 title-shape-none'>
                     <h3 className='title'>NEW COLLECTION</h3>
                 </div>
-                <div className='row justify-content-center gy-4'>
-                    {product_data_two.map((item) => (
-                        <div key={item.id} className='col-xl-3 col-md-6'>
-                            <div className='shop__item2'>
-                                <div className='shop__item-thumb'>
-                                    <Link href={`/shop-details/${item.id}`}>
-                                        <Image
-                                            src={item.img}
-                                            alt={item.title}
-                                            style={{
-                                                height: item.height,
-                                                width: item.width
-                                            }}
-                                        />
-                                    </Link>
-                                    <div className='actions-btn-wrap'>
-                                        <span className='icon-btn'>
-                                            <i className='fas fa-plus'></i>
-                                        </span>
-                                        <div className='action-btn'>
-                                            <a href='#' className='icon-btn'>
-                                                <i className='far fa-heart'></i>
-                                            </a>
-                                            <a href='#' className='icon-btn'>
-                                                <CompareSvg />
-                                            </a>
-                                            <a href='#' className='icon-btn'>
-                                                <i className='far fa-eye'></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div className='shop__item-content'>
-                                    <div className='shop__item-rating'>
-                                        <i className='fas fa-star'></i>
-                                        {item.rating}
-                                    </div>
-                                    <h4 className='title'>
-                                        <Link href={`/shop-details/${item.id}`}>{item.title}</Link>
-                                    </h4>
-                                    <div className='shop__item-price'>
-                                        <i className='fas fa-rupee-sign'></i> {item.price}
-                                    </div>
-                                </div>
-                            </div>
+                {loading ? (
+                    <div className='text-center'>
+                        <div className='spinner-border text-primary' role='status'>
+                            <span className='visually-hidden'>Loading...</span>
                         </div>
-                    ))}
-                </div>
+                    </div>
+                ) : (
+                    <div className='row justify-content-center gy-4'>
+                        {products.map((product) => (
+                            <div key={product._id} className='col-xl-3 col-md-6'>
+                                <ShopItem
+                                    item={{
+                                        id: product._id,
+                                        img: product.image_id.image_url,
+                                        title: product.title,
+                                        price: Number(product.price.amount),
+                                        currency: product.price.currency,
+                                        creator: product.creator_id.name,
+                                        category: product.category_id[0]?.category_name || 'Uncategorized'
+                                    }}
+                                />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </section>
     )
